@@ -12,6 +12,8 @@ import {
 } from "@/lib/chat-storage";
 import { DEFAULT_MODEL } from "@/lib/ai/models";
 
+type ResponseStyle = "balanced" | "concise" | "detailed" | "creative";
+
 export default function ChatPage() {
   const [conversations, setConversations] = useState<
     StoredConversation[]
@@ -21,6 +23,8 @@ export default function ChatPage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
+  const [responseStyle, setResponseStyle] =
+    useState<ResponseStyle>("balanced");
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
 
@@ -28,6 +32,26 @@ export default function ChatPage() {
     const stored = getConversations();
 
     setConversations(stored);
+
+    const savedPreferences = localStorage.getItem(
+      "zentrix-ai-preferences"
+    );
+
+    if (savedPreferences) {
+      try {
+        const preferences = JSON.parse(savedPreferences);
+
+        if (
+          ["balanced", "concise", "detailed", "creative"].includes(
+            preferences.responseStyle
+          )
+        ) {
+          setResponseStyle(preferences.responseStyle);
+        }
+      } catch {
+        // Keep the default response style.
+      }
+    }
 
     const params = new URLSearchParams(window.location.search);
     const requestedConversation = params.get("conversation");
@@ -44,7 +68,6 @@ export default function ChatPage() {
 
   useEffect(() => {
     if (!storageReady) return;
-
     saveConversations(conversations);
   }, [conversations, storageReady]);
 
@@ -171,6 +194,7 @@ export default function ChatPage() {
             content: item.content,
           })),
           model: selectedModel,
+          responseStyle,
         }),
         signal: controller.signal,
       });
@@ -262,4 +286,4 @@ export default function ChatPage() {
       )}
     </div>
   );
-        }
+            }
