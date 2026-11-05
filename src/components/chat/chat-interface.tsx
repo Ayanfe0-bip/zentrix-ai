@@ -19,6 +19,8 @@ interface ChatInterfaceProps {
   onStop?: () => void;
   selectedModel: string;
   onModelChange: (model: string) => void;
+  isSaved?: boolean;
+  onToggleSave?: () => void;
 }
 
 const suggestions = [
@@ -58,9 +60,10 @@ export default function ChatInterface({
   onStop,
   selectedModel = DEFAULT_MODEL,
   onModelChange,
+  isSaved = false,
+  onToggleSave,
 }: ChatInterfaceProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -156,6 +159,31 @@ export default function ChatInterface({
               </div>
             ) : (
               <div className="mx-auto w-full max-w-4xl px-4 py-5 sm:px-8">
+                <div className="mb-5 flex items-center justify-between">
+                  <p className="text-xs text-slate-500">
+                    Conversation
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={onToggleSave}
+                    disabled={!onToggleSave || isGenerating}
+                    aria-label={
+                      isSaved
+                        ? "Remove bookmark"
+                        : "Save conversation"
+                    }
+                    className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                      isSaved
+                        ? "border-violet-400/30 bg-violet-500/15 text-violet-300"
+                        : "border-white/10 bg-white/[0.03] text-slate-300 hover:border-violet-400/30 hover:bg-violet-500/10 hover:text-white"
+                    }`}
+                  >
+                    <span>{isSaved ? "★" : "☆"}</span>
+                    {isSaved ? "Saved" : "Save chat"}
+                  </button>
+                </div>
+
                 {messages.map((message) => (
                   <ChatMessage
                     key={message.id}
