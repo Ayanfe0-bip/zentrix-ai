@@ -4,6 +4,7 @@ import { useCallback, useState } from "react";
 import ChatInterface from "@/components/chat/chat-interface";
 import type { ChatMessageData } from "@/components/chat/chat-message";
 import type { ChatHistoryItem } from "@/components/layout/app-sidebar";
+import { DEFAULT_MODEL } from "@/lib/ai/models";
 
 interface Conversation {
   id: string;
@@ -16,6 +17,7 @@ export default function ChatPage() {
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
+  const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
 
@@ -116,6 +118,7 @@ export default function ChatPage() {
             role: item.role,
             content: item.content,
           })),
+          model: selectedModel,
         }),
         signal: controller.signal,
       });
@@ -124,7 +127,8 @@ export default function ChatPage() {
         const result = await response.json().catch(() => ({}));
 
         throw new Error(
-          result.error || "Unable to generate a response. Please try again."
+          result.error ||
+            "Unable to generate a response. Please try again."
         );
       }
 
@@ -189,6 +193,8 @@ export default function ChatPage() {
         onSelectChat={handleSelectChat}
         isGenerating={isGenerating}
         onStop={handleStop}
+        selectedModel={selectedModel}
+        onModelChange={setSelectedModel}
       />
 
       {error && (
