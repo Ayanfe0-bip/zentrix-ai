@@ -7,6 +7,7 @@ import ChatMessage from "@/components/chat/chat-message";
 import ChatInput from "@/components/chat/chat-input";
 import type { ChatMessageData } from "@/components/chat/chat-message";
 import type { ChatHistoryItem } from "@/components/layout/app-sidebar";
+import { DEFAULT_MODEL } from "@/lib/ai/models";
 
 interface ChatInterfaceProps {
   messages: ChatMessageData[];
@@ -16,6 +17,8 @@ interface ChatInterfaceProps {
   chats?: ChatHistoryItem[];
   isGenerating?: boolean;
   onStop?: () => void;
+  selectedModel: string;
+  onModelChange: (model: string) => void;
 }
 
 const suggestions = [
@@ -53,9 +56,10 @@ export default function ChatInterface({
   chats = [],
   isGenerating = false,
   onStop,
+  selectedModel = DEFAULT_MODEL,
+  onModelChange,
 }: ChatInterfaceProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedModel, setSelectedModel] = useState("Auto Select");
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -87,7 +91,7 @@ export default function ChatInterface({
           title="AI Chat"
           subtitle="Your intelligent workspace"
           modelName={selectedModel}
-          onModelChange={setSelectedModel}
+          onModelChange={onModelChange}
           onMenuClick={() => setSidebarOpen(true)}
           onNewChat={handleNewChat}
         />
@@ -195,4 +199,4 @@ export default function ChatInterface({
       </section>
     </main>
   );
-      }
+                        }
