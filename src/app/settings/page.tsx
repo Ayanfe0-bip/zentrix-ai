@@ -68,6 +68,11 @@ export default function SettingsPage() {
 
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+
+      window.dispatchEvent(
+        new Event("zentrix-theme-updated")
+      );
+
       setNotice("Your preferences have been saved.");
     } catch {
       setNotice("Unable to save preferences on this device.");
@@ -409,4 +414,4 @@ export default function SettingsPage() {
       </main>
     </div>
   );
-                        }
+                      }
