@@ -26,12 +26,25 @@ export default function ChatPage() {
 
   useEffect(() => {
     const stored = getConversations();
+
     setConversations(stored);
+
+    const params = new URLSearchParams(window.location.search);
+    const requestedConversation = params.get("conversation");
+
+    if (
+      requestedConversation &&
+      stored.some((item) => item.id === requestedConversation)
+    ) {
+      setActiveChatId(requestedConversation);
+    }
+
     setStorageReady(true);
   }, []);
 
   useEffect(() => {
     if (!storageReady) return;
+
     saveConversations(conversations);
   }, [conversations, storageReady]);
 
@@ -58,11 +71,19 @@ export default function ChatPage() {
     setIsGenerating(false);
     setError("");
     setActiveChatId(null);
+
+    window.history.replaceState({}, "", "/chat");
   }, [abortController]);
 
   const handleSelectChat = useCallback((id: string) => {
     setActiveChatId(id);
     setError("");
+
+    window.history.replaceState(
+      {},
+      "",
+      `/chat?conversation=${encodeURIComponent(id)}`
+    );
   }, []);
 
   function handleToggleSave() {
@@ -97,6 +118,12 @@ export default function ChatPage() {
       ]);
 
       setActiveChatId(conversationId);
+
+      window.history.replaceState(
+        {},
+        "",
+        `/chat?conversation=${encodeURIComponent(conversationId)}`
+      );
     }
 
     const userMessage: ChatMessageData = {
@@ -235,4 +262,4 @@ export default function ChatPage() {
       )}
     </div>
   );
-          }
+        }
