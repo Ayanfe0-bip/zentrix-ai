@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useEffect,
   useRef,
   useState,
   type KeyboardEvent,
@@ -15,6 +16,8 @@ interface ChatInputProps {
   placeholder?: string;
 }
 
+const PREFERENCES_KEY = "zentrix-ai-preferences";
+
 export default function ChatInput({
   onSend,
   onStop,
@@ -23,7 +26,24 @@ export default function ChatInput({
   placeholder = "Message ZENTRIX...",
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
+  const [enterToSend, setEnterToSend] = useState(true);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(PREFERENCES_KEY);
+
+      if (stored) {
+        const preferences = JSON.parse(stored);
+
+        if (typeof preferences.enterToSend === "boolean") {
+          setEnterToSend(preferences.enterToSend);
+        }
+      }
+    } catch {
+      setEnterToSend(true);
+    }
+  }, []);
 
   function resizeTextarea() {
     const textarea = textareaRef.current;
@@ -31,7 +51,10 @@ export default function ChatInput({
     if (!textarea) return;
 
     textarea.style.height = "auto";
-    textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`;
+    textarea.style.height = `${Math.min(
+      textarea.scrollHeight,
+      180
+    )}px`;
   }
 
   function handleSend(event?: FormEvent<HTMLFormElement>) {
@@ -51,13 +74,27 @@ export default function ChatInput({
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    if (event.key === "Enter" && !event.shiftKey) {
+    const isSendShortcut =
+      event.key === "Enter" &&
+      (event.ctrlKey || event.metaKey);
+
+    const isNormalSend =
+      event.key === "Enter" &&
+      enterToSend &&
+      !event.shiftKey &&
+      !event.ctrlKey &&
+      !event.metaKey;
+
+    if (isSendShortcut || isNormalSend) {
       event.preventDefault();
       handleSend();
     }
   }
 
-  const canSend = message.trim().length > 0 && !disabled && !isGenerating;
+  const canSend =
+    message.trim().length > 0 &&
+    !disabled &&
+    !isGenerating;
 
   return (
     <div className="w-full">
@@ -85,11 +122,13 @@ export default function ChatInput({
         <div className="flex items-center justify-between gap-3 px-4 pb-3">
           <div className="flex items-center gap-2">
             <span className="hidden text-[10px] text-slate-500 sm:inline">
-              Shift + Enter for a new line
+              {enterToSend
+                ? "Shift + Enter for a new line"
+                : "Ctrl + Enter to send"}
             </span>
 
             <span className="text-[10px] text-slate-600 sm:hidden">
-              Enter to send
+              {enterToSend ? "Enter to send" : "Ctrl + Enter to send"}
             </span>
           </div>
 
@@ -133,4 +172,4 @@ export default function ChatInput({
       </p>
     </div>
   );
-    }
+  }
