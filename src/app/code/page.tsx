@@ -14,6 +14,7 @@ export default function CodeAssistantPage() {
   const [result, setResult] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
 
   async function handleAskAI() {
     if (!task.trim() || loading) return;
@@ -21,9 +22,10 @@ export default function CodeAssistantPage() {
     setLoading(true);
     setError("");
     setResult("");
+    setCopied(false);
 
     const prompt = [
-      `You are ZENTRIX AI's expert programming assistant.`,
+      "You are ZENTRIX AI's expert programming assistant.",
       `Programming language: ${language}.`,
       `User's request: ${task}`,
       code.trim()
@@ -64,8 +66,20 @@ export default function CodeAssistantPage() {
     }
   }
 
+  async function copyResponse() {
+    if (!result) return;
+
+    try {
+      await navigator.clipboard.writeText(result);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      setError("Unable to copy. Please select and copy the response manually.");
+    }
+  }
+
   return (
-    <main className="flex h-[100dvh] w-full overflow-hidden bg-[#070817] text-white">
+    <main className="flex h-[100dvh] w-full overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
       <AppSidebar
         activeItem="Code Assistant"
         isOpen={sidebarOpen}
@@ -84,7 +98,7 @@ export default function CodeAssistantPage() {
         <div className="flex-1 overflow-y-auto">
           <div className="mx-auto max-w-6xl px-4 py-7 sm:px-7 lg:px-10">
             <div className="mb-8">
-              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-violet-400">
+              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-violet-500">
                 ZENTRIX Developer Studio
               </span>
 
@@ -93,24 +107,26 @@ export default function CodeAssistantPage() {
                 <span className="gradient-text"> extraordinary.</span>
               </h2>
 
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-slate-400">
+              <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)]">
                 Write code, debug errors, understand programming concepts,
                 and bring your software ideas to life with ZENTRIX AI.
               </p>
             </div>
 
             <div className="grid gap-6 lg:grid-cols-2">
-              <section className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0d1023]">
-                <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-4">
+              {/* Code editor */}
+              <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-4">
                   <div className="flex items-center gap-2">
-                    <span className="h-2.5 w-2.5 rounded-full bg-violet-400" />
+                    <span className="h-2.5 w-2.5 rounded-full bg-violet-500" />
                     <h3 className="text-sm font-semibold">Code Editor</h3>
                   </div>
 
                   <select
                     value={language}
                     onChange={(event) => setLanguage(event.target.value)}
-                    className="rounded-lg border border-white/10 bg-[#171b32] px-3 py-2 text-xs text-slate-200 outline-none"
+                    aria-label="Programming language"
+                    className="max-w-full rounded-lg border border-[var(--border)] bg-[var(--surface-light)] px-3 py-2 text-xs text-[var(--foreground)] outline-none focus:border-violet-500"
                   >
                     <option>JavaScript</option>
                     <option>TypeScript</option>
@@ -130,49 +146,56 @@ export default function CodeAssistantPage() {
                     value={code}
                     onChange={(event) => setCode(event.target.value)}
                     spellCheck={false}
+                    aria-label="Code editor"
                     placeholder={`// Paste or write your ${language} code here...`}
-                    className="min-h-[300px] w-full resize-y rounded-xl border border-white/[0.06] bg-[#080b18] p-4 font-mono text-sm leading-7 text-cyan-100 outline-none transition placeholder:text-slate-600 focus:border-violet-500/40"
+                    className="min-h-[300px] w-full resize-y rounded-xl border border-[var(--border)] bg-[var(--background)] p-4 font-mono text-sm leading-7 text-[var(--foreground)] outline-none transition placeholder:text-[var(--muted)] focus:border-violet-500/50"
                   />
                 </div>
 
                 <div className="flex items-center justify-between px-4 pb-4">
-                  <span className="text-[11px] text-slate-500">
+                  <span className="text-[11px] text-[var(--muted)]">
                     {code.length} characters
                   </span>
 
                   <button
                     type="button"
                     onClick={() => setCode("")}
-                    className="rounded-lg px-3 py-2 text-xs text-slate-400 transition hover:bg-white/5 hover:text-white"
+                    disabled={!code}
+                    className="rounded-lg px-3 py-2 text-xs text-[var(--muted)] transition hover:bg-violet-500/10 hover:text-violet-500 disabled:opacity-40"
                   >
                     Clear editor
                   </button>
                 </div>
               </section>
 
-              <section className="flex flex-col overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0d1023]">
-                <div className="flex items-center gap-2 border-b border-white/[0.07] px-4 py-4">
-                  <span className="h-2.5 w-2.5 rounded-full bg-cyan-400" />
+              {/* AI task panel */}
+              <section className="flex flex-col overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
+                <div className="flex items-center gap-2 border-b border-[var(--border)] px-4 py-4">
+                  <span className="h-2.5 w-2.5 rounded-full bg-cyan-500" />
                   <h3 className="text-sm font-semibold">Ask ZENTRIX</h3>
                 </div>
 
                 <div className="flex flex-1 flex-col p-4">
-                  <label className="mb-3 text-xs font-medium text-slate-400">
+                  <label
+                    htmlFor="developer-task"
+                    className="mb-3 text-xs font-medium text-[var(--muted)]"
+                  >
                     What would you like to accomplish?
                   </label>
 
                   <textarea
+                    id="developer-task"
                     value={task}
                     onChange={(event) => setTask(event.target.value)}
                     placeholder="Example: Find and fix the errors in my code. Explain what went wrong..."
-                    className="min-h-[130px] w-full resize-y rounded-xl border border-white/[0.07] bg-[#080b18] p-4 text-sm leading-7 text-white outline-none transition placeholder:text-slate-600 focus:border-violet-500/40"
+                    className="min-h-[130px] w-full resize-y rounded-xl border border-[var(--border)] bg-[var(--background)] p-4 text-sm leading-7 text-[var(--foreground)] outline-none transition placeholder:text-[var(--muted)] focus:border-violet-500/50"
                   />
 
                   <button
                     type="button"
                     onClick={handleAskAI}
                     disabled={!task.trim() || loading}
-                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-violet-950/30 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-5 py-3.5 text-sm font-semibold text-white shadow-lg shadow-violet-950/20 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {loading ? (
                       <>
@@ -184,54 +207,57 @@ export default function CodeAssistantPage() {
                     )}
                   </button>
 
-                  <p className="mt-3 text-center text-[11px] text-slate-500">
+                  <p className="mt-3 text-center text-[11px] text-[var(--muted)]">
                     Your selected AI model will process this request.
                   </p>
                 </div>
               </section>
             </div>
 
-            <section className="mt-6 overflow-hidden rounded-2xl border border-white/[0.08] bg-[#0d1023]">
-              <div className="flex items-center justify-between border-b border-white/[0.07] px-4 py-4">
+            {/* AI response */}
+            <section className="mt-6 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
+              <div className="flex items-center justify-between gap-3 border-b border-[var(--border)] px-4 py-4">
                 <div className="flex items-center gap-2">
-                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
+                  <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
                   <h3 className="text-sm font-semibold">AI Response</h3>
                 </div>
 
                 {result && (
                   <button
                     type="button"
-                    onClick={() =>
-                      navigator.clipboard.writeText(result)
-                    }
-                    className="rounded-lg border border-white/10 px-3 py-2 text-xs text-slate-300 transition hover:bg-white/5"
+                    onClick={copyResponse}
+                    className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs text-[var(--muted)] transition hover:border-violet-500/40 hover:text-violet-500"
                   >
-                    Copy response
+                    {copied ? "Copied!" : "Copy response"}
                   </button>
                 )}
               </div>
 
               <div className="min-h-[180px] p-5">
                 {loading ? (
-                  <div className="flex items-center gap-3 py-8 text-sm text-violet-300">
-                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-violet-400/30 border-t-violet-400" />
+                  <div className="flex items-center gap-3 py-8 text-sm text-violet-500">
+                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-violet-400/30 border-t-violet-500" />
                     Analyzing your request...
                   </div>
                 ) : error ? (
-                  <p className="py-6 text-sm leading-7 text-rose-400">
-                    {error}
-                  </p>
+                  <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+                    <p className="text-sm leading-7 text-red-500">
+                      {error}
+                    </p>
+                  </div>
                 ) : result ? (
-                  <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-7 text-slate-300">
+                  <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-7 text-[var(--foreground)]">
                     {result}
                   </pre>
                 ) : (
                   <div className="flex min-h-[130px] flex-col items-center justify-center text-center">
-                    <span className="mb-3 text-3xl text-violet-400">✦</span>
-                    <p className="text-sm font-medium text-slate-300">
+                    <span className="mb-3 text-3xl text-violet-500">✦</span>
+
+                    <p className="text-sm font-medium text-[var(--foreground)]">
                       Your AI response will appear here.
                     </p>
-                    <p className="mt-2 text-xs text-slate-500">
+
+                    <p className="mt-2 text-xs text-[var(--muted)]">
                       Ask a programming question to get started.
                     </p>
                   </div>
@@ -239,11 +265,13 @@ export default function CodeAssistantPage() {
               </div>
             </section>
 
-            <div className="mt-6 rounded-2xl border border-violet-500/15 bg-violet-500/[0.04] p-5">
-              <p className="text-sm font-semibold text-violet-300">
+            {/* Developer tip */}
+            <div className="mt-6 rounded-2xl border border-violet-500/20 bg-violet-500/[0.05] p-5">
+              <p className="text-sm font-semibold text-violet-500">
                 Developer tip
               </p>
-              <p className="mt-2 text-xs leading-6 text-slate-400">
+
+              <p className="mt-2 text-xs leading-6 text-[var(--muted)]">
                 Give ZENTRIX your code and describe the problem clearly.
                 You can ask it to explain, debug, improve, or rewrite your
                 code.
@@ -254,4 +282,4 @@ export default function CodeAssistantPage() {
       </section>
     </main>
   );
-          }
+}
