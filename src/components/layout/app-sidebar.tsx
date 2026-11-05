@@ -152,24 +152,39 @@ export default function AppSidebar({
     };
   }, []);
 
+  useEffect(() => {
+    function handleEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        onClose?.();
+      }
+    }
+
+    window.addEventListener("keydown", handleEscape);
+
+    return () => {
+      window.removeEventListener("keydown", handleEscape);
+    };
+  }, [onClose]);
+
   return (
     <>
       {isOpen && (
         <button
           type="button"
-          aria-label="Close sidebar"
+          aria-label="Close navigation menu"
           onClick={onClose}
           className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
         />
       )}
 
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r border-white/[0.08] bg-[#090c1d] transition-transform duration-300 lg:static lg:translate-x-0 ${
+        aria-label="Main navigation"
+        className={`fixed inset-y-0 left-0 z-50 flex w-[280px] flex-col border-r border-[var(--border)] bg-[var(--surface)] transition-transform duration-300 lg:static lg:translate-x-0 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <div className="flex h-[76px] items-center justify-between border-b border-white/[0.07] px-5">
-          <Link href="/" onClick={onClose}>
+        <div className="flex h-[76px] shrink-0 items-center justify-between border-b border-[var(--border)] px-5">
+          <Link href="/" onClick={onClose} aria-label="ZENTRIX AI home">
             <ZentrixLogo />
           </Link>
 
@@ -177,7 +192,7 @@ export default function AppSidebar({
             type="button"
             onClick={onClose}
             aria-label="Close sidebar"
-            className="rounded-lg p-2 text-slate-400 hover:bg-white/10 hover:text-white lg:hidden"
+            className="rounded-lg p-2 text-slate-400 transition hover:bg-black/5 hover:text-violet-500 lg:hidden"
           >
             <SidebarIcon name="close" />
           </button>
@@ -186,8 +201,11 @@ export default function AppSidebar({
         <div className="px-4 pt-6">
           <button
             type="button"
-            onClick={onNewChat}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-900/20 transition hover:brightness-110"
+            onClick={() => {
+              onNewChat?.();
+              onClose?.();
+            }}
+            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-900/20 transition hover:brightness-110 active:scale-[0.98]"
           >
             <SidebarIcon name="plus" className="h-4 w-4" />
             New Conversation
@@ -207,20 +225,25 @@ export default function AppSidebar({
                 key={item.label}
                 href={item.href}
                 onClick={onClose}
-                className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${
+                aria-current={active ? "page" : undefined}
+                className={`flex items-center gap-3 rounded-xl border px-3 py-3 text-sm transition ${
                   active
-                    ? "border border-violet-500/20 bg-violet-500/10 text-violet-300"
-                    : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
+                    ? "border-violet-500/20 bg-violet-500/10 text-violet-400"
+                    : "border-transparent text-slate-500 hover:bg-black/[0.04] hover:text-violet-500"
                 }`}
               >
                 <SidebarIcon name={item.icon} />
                 <span>{item.label}</span>
+
+                {active && (
+                  <span className="ml-auto h-1.5 w-1.5 rounded-full bg-violet-500" />
+                )}
               </Link>
             );
           })}
         </nav>
 
-        <div className="mx-4 mt-7 border-t border-white/[0.07]" />
+        <div className="mx-4 mt-7 border-t border-[var(--border)]" />
 
         <div className="flex min-h-0 flex-1 flex-col px-4 pt-6">
           <div className="mb-4 flex items-center justify-between px-3">
@@ -244,7 +267,7 @@ export default function AppSidebar({
                     onSelectChat?.(chat.id);
                     onClose?.();
                   }}
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm text-slate-400 transition hover:bg-white/[0.05] hover:text-white"
+                  className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm text-slate-500 transition hover:bg-black/[0.04] hover:text-violet-500"
                 >
                   <SidebarIcon
                     name="chat"
@@ -262,14 +285,15 @@ export default function AppSidebar({
           </div>
         </div>
 
-        <div className="border-t border-white/[0.07] p-4">
+        <div className="shrink-0 border-t border-[var(--border)] p-4">
           <Link
             href="/profile"
             onClick={onClose}
+            aria-current={activeItem === "Profile" ? "page" : undefined}
             className={`mb-2 flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${
               activeItem === "Profile"
-                ? "bg-violet-500/10 text-violet-300"
-                : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
+                ? "bg-violet-500/10 text-violet-400"
+                : "text-slate-500 hover:bg-black/[0.04] hover:text-violet-500"
             }`}
           >
             <SidebarIcon name="profile" />
@@ -279,10 +303,11 @@ export default function AppSidebar({
           <Link
             href="/settings"
             onClick={onClose}
+            aria-current={activeItem === "Settings" ? "page" : undefined}
             className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${
               activeItem === "Settings"
-                ? "bg-violet-500/10 text-violet-300"
-                : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
+                ? "bg-violet-500/10 text-violet-400"
+                : "text-slate-500 hover:bg-black/[0.04] hover:text-violet-500"
             }`}
           >
             <SidebarIcon name="settings" />
@@ -292,14 +317,14 @@ export default function AppSidebar({
           <Link
             href="/profile"
             onClick={onClose}
-            className="mt-4 flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 transition hover:bg-white/[0.05]"
+            className="mt-4 flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--surface-light)] p-3 transition hover:border-violet-500/30"
           >
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 text-sm font-bold text-white">
               {profileInitials}
             </div>
 
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-semibold text-white">
+              <p className="truncate text-sm font-semibold text-[var(--foreground)]">
                 {profileName}
               </p>
 
@@ -312,4 +337,4 @@ export default function AppSidebar({
       </aside>
     </>
   );
-          }
+    }
