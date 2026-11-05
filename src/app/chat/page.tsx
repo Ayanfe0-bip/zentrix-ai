@@ -7,6 +7,7 @@ import type { ChatHistoryItem } from "@/components/layout/app-sidebar";
 import {
   getConversations,
   saveConversations,
+  toggleConversationSaved,
   type StoredConversation,
 } from "@/lib/chat-storage";
 import { DEFAULT_MODEL } from "@/lib/ai/models";
@@ -25,14 +26,12 @@ export default function ChatPage() {
 
   useEffect(() => {
     const stored = getConversations();
-
     setConversations(stored);
     setStorageReady(true);
   }, []);
 
   useEffect(() => {
     if (!storageReady) return;
-
     saveConversations(conversations);
   }, [conversations, storageReady]);
 
@@ -41,6 +40,7 @@ export default function ChatPage() {
   );
 
   const messages = activeConversation?.messages ?? [];
+  const isSaved = activeConversation?.saved ?? false;
 
   const chatHistory: ChatHistoryItem[] = conversations.map(
     (conversation) => ({
@@ -64,6 +64,13 @@ export default function ChatPage() {
     setActiveChatId(id);
     setError("");
   }, []);
+
+  function handleToggleSave() {
+    if (!activeChatId || isGenerating) return;
+
+    const updated = toggleConversationSaved(activeChatId);
+    setConversations(updated);
+  }
 
   async function handleSend(message: string) {
     if (isGenerating || !storageReady) return;
@@ -214,6 +221,8 @@ export default function ChatPage() {
         onStop={handleStop}
         selectedModel={selectedModel}
         onModelChange={setSelectedModel}
+        isSaved={isSaved}
+        onToggleSave={handleToggleSave}
       />
 
       {error && (
@@ -226,4 +235,4 @@ export default function ChatPage() {
       )}
     </div>
   );
-    }
+          }
