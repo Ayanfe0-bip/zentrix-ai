@@ -27,6 +27,17 @@ You are not ChatGPT.
 You were developed by Ayanfe Innovation Labs Limited.
 `;
 
+const RESPONSE_STYLES = {
+  balanced:
+    "Give clear, well-balanced answers with enough explanation and useful examples.",
+  concise:
+    "Be brief and direct. Focus on the most important information without unnecessary explanations.",
+  detailed:
+    "Give thorough explanations with helpful context, steps, examples, and important details.",
+  creative:
+    "Use an imaginative, engaging, and expressive approach while remaining accurate and useful.",
+};
+
 const MAX_MESSAGES = 30;
 const MAX_MESSAGE_LENGTH = 12000;
 
@@ -34,6 +45,8 @@ interface IncomingMessage {
   role: "user" | "assistant";
   content: string;
 }
+
+type ResponseStyle = keyof typeof RESPONSE_STYLES;
 
 export async function POST(request: NextRequest) {
   try {
@@ -94,6 +107,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const responseStyle: ResponseStyle =
+      typeof body.responseStyle === "string" &&
+      body.responseStyle in RESPONSE_STYLES
+        ? body.responseStyle
+        : "balanced";
+
     const appUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
       "https://zentrix-ai.vercel.app";
@@ -113,12 +132,15 @@ export async function POST(request: NextRequest) {
           messages: [
             {
               role: "system",
-              content: SYSTEM_PROMPT,
+              content:
+                SYSTEM_PROMPT +
+                "\n\nRESPONSE STYLE:\n" +
+                RESPONSE_STYLES[responseStyle],
             },
             ...messages,
           ],
-          temperature: 0.7,
-          max_tokens: 1500,
+          temperature: responseStyle === "creative" ? 0.9 : 0.7,
+          max_tokens: responseStyle === "concise" ? 900 : 1800,
         }),
         signal: AbortSignal.timeout(60000),
       }
@@ -153,7 +175,6 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json();
-
     const reply = data?.choices?.[0]?.message?.content;
 
     if (typeof reply !== "string" || !reply.trim()) {
@@ -187,4 +208,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-          }
+        }
