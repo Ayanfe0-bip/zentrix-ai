@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useEffect, useState } from "react";
 import ZentrixLogo from "@/components/zentrix-logo";
 
 export interface ChatHistoryItem {
@@ -18,16 +19,8 @@ interface AppSidebarProps {
 }
 
 const navigationItems = [
-  {
-    label: "AI Chat",
-    href: "/chat",
-    icon: "chat",
-  },
-  {
-    label: "Code Assistant",
-    href: "/code",
-    icon: "code",
-  },
+  { label: "AI Chat", href: "/chat", icon: "chat" },
+  { label: "Code Assistant", href: "/code", icon: "code" },
   {
     label: "Saved Conversations",
     href: "/saved",
@@ -60,6 +53,12 @@ function SidebarIcon({
       <>
         <circle cx="12" cy="12" r="3" />
         <path d="m19.4 15 .1.1 1.4 1.1-1.4 2.4-1.7-.6a8 8 0 0 1-1.5.9l-.3 1.8h-2.8l-.3-1.8a8 8 0 0 1-1.5-.9l-1.7.6-1.4-2.4 1.4-1.1a8 8 0 0 1 0-1.8l-1.4-1.1 1.4-2.4 1.7.6a8 8 0 0 1 1.5-.9l.3-1.8h2.8l.3 1.8a8 8 0 0 1 1.5.9l1.7-.6 1.4 2.4-1.4 1.1a8 8 0 0 1 0 1.8z" />
+      </>
+    ),
+    profile: (
+      <>
+        <circle cx="12" cy="8" r="4" />
+        <path d="M5 21a7 7 0 0 1 14 0" />
       </>
     ),
     plus: <path d="M12 5v14m-7-7h14" />,
@@ -97,6 +96,44 @@ export default function AppSidebar({
   onClose,
   isOpen = true,
 }: AppSidebarProps) {
+  const [profileName, setProfileName] = useState("ZENTRIX User");
+  const [profileInitials, setProfileInitials] = useState("Z");
+
+  useEffect(() => {
+    function loadProfile() {
+      try {
+        const stored = localStorage.getItem("zentrix-ai-profile");
+
+        if (!stored) return;
+
+        const profile = JSON.parse(stored);
+
+        if (typeof profile.displayName === "string") {
+          setProfileName(profile.displayName);
+
+          const initials = profile.displayName
+            .split(" ")
+            .filter(Boolean)
+            .slice(0, 2)
+            .map((word: string) => word[0].toUpperCase())
+            .join("");
+
+          setProfileInitials(initials || "Z");
+        }
+      } catch {
+        // Keep the default sidebar identity.
+      }
+    }
+
+    loadProfile();
+
+    window.addEventListener("storage", loadProfile);
+
+    return () => {
+      window.removeEventListener("storage", loadProfile);
+    };
+  }, []);
+
   return (
     <>
       {isOpen && (
@@ -209,6 +246,19 @@ export default function AppSidebar({
 
         <div className="border-t border-white/[0.07] p-4">
           <Link
+            href="/profile"
+            onClick={onClose}
+            className={`mb-2 flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${
+              activeItem === "Profile"
+                ? "bg-violet-500/10 text-violet-300"
+                : "text-slate-400 hover:bg-white/[0.05] hover:text-white"
+            }`}
+          >
+            <SidebarIcon name="profile" />
+            My Profile
+          </Link>
+
+          <Link
             href="/settings"
             onClick={onClose}
             className={`flex items-center gap-3 rounded-xl px-3 py-3 text-sm transition ${
@@ -221,22 +271,26 @@ export default function AppSidebar({
             Settings
           </Link>
 
-          <div className="mt-4 flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3">
+          <Link
+            href="/profile"
+            onClick={onClose}
+            className="mt-4 flex items-center gap-3 rounded-xl border border-white/[0.07] bg-white/[0.02] p-3 transition hover:bg-white/[0.05]"
+          >
             <div className="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-cyan-500 text-sm font-bold text-white">
-              Z
+              {profileInitials}
             </div>
 
             <div className="min-w-0 flex-1">
               <p className="truncate text-sm font-semibold text-white">
-                ZENTRIX User
+                {profileName}
               </p>
               <p className="text-xs text-slate-500">
                 Free Workspace
               </p>
             </div>
-          </div>
+          </Link>
         </div>
       </aside>
     </>
   );
-  }
+            }
