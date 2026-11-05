@@ -20,8 +20,11 @@ export default function Topbar({
   modelName = DEFAULT_MODEL,
   onModelChange,
 }: TopbarProps) {
+  const showModelSelector = Boolean(onModelChange);
+  const showNewChat = Boolean(onNewChat);
+
   return (
-    <header className="relative z-30 flex h-[76px] items-center justify-between border-b border-white/[0.07] bg-[#090c1d]/90 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
+    <header className="relative z-30 flex h-[76px] shrink-0 items-center justify-between border-b border-white/[0.07] bg-[#090c1d]/90 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
       <div className="flex min-w-0 items-center gap-3">
         <button
           type="button"
@@ -35,6 +38,7 @@ export default function Topbar({
             stroke="currentColor"
             strokeWidth="1.8"
             className="h-5 w-5"
+            aria-hidden="true"
           >
             <path
               d="M4 6h16M4 12h16M4 18h16"
@@ -55,28 +59,34 @@ export default function Topbar({
       </div>
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-        <ModelSelector
-          selectedModel={modelName}
-          onModelChange={(model) => onModelChange?.(model)}
-        />
+        {showModelSelector && (
+          <ModelSelector
+            selectedModel={modelName}
+            onModelChange={onModelChange}
+          />
+        )}
 
-        <button
-          type="button"
-          onClick={onNewChat}
-          aria-label="Start new conversation"
-          className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-900/20 transition hover:brightness-110 sm:hidden"
-        >
-          <span className="text-xl">+</span>
-        </button>
+        {showNewChat && (
+          <>
+            <button
+              type="button"
+              onClick={onNewChat}
+              aria-label="Start new conversation"
+              className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-900/20 transition hover:brightness-110 sm:hidden"
+            >
+              <span className="text-xl">+</span>
+            </button>
 
-        <button
-          type="button"
-          onClick={onNewChat}
-          className="hidden items-center gap-2 rounded-xl border border-violet-500/30 bg-violet-500/10 px-4 py-2.5 text-xs font-semibold text-violet-300 transition hover:bg-violet-500/20 sm:flex"
-        >
-          <span className="text-base">+</span>
-          New Chat
-        </button>
+            <button
+              type="button"
+              onClick={onNewChat}
+              className="hidden items-center gap-2 rounded-xl border border-violet-500/30 bg-violet-500/10 px-4 py-2.5 text-xs font-semibold text-violet-300 transition hover:bg-violet-500/20 sm:flex"
+            >
+              <span className="text-base">+</span>
+              New Chat
+            </button>
+          </>
+        )}
       </div>
     </header>
   );
