@@ -34,9 +34,11 @@ export default function SettingsPage() {
       const stored = localStorage.getItem(STORAGE_KEY);
 
       if (stored) {
+        const parsed = JSON.parse(stored);
+
         setPreferences({
           ...DEFAULT_PREFERENCES,
-          ...JSON.parse(stored),
+          ...parsed,
         });
       }
     } catch {
@@ -45,6 +47,13 @@ export default function SettingsPage() {
 
     setReady(true);
   }, []);
+
+  useEffect(() => {
+    if (!ready) return;
+
+    document.documentElement.dataset.theme = preferences.theme;
+    document.documentElement.style.colorScheme = preferences.theme;
+  }, [preferences.theme, ready]);
 
   function updatePreference<K extends keyof Preferences>(
     key: K,
@@ -151,6 +160,7 @@ export default function SettingsPage() {
                     <h3 className="text-lg font-semibold text-white">
                       Appearance
                     </h3>
+
                     <p className="mt-1 text-sm text-slate-500">
                       Choose your preferred workspace appearance.
                     </p>
@@ -161,6 +171,7 @@ export default function SettingsPage() {
                       <button
                         key={theme}
                         type="button"
+                        aria-pressed={preferences.theme === theme}
                         onClick={() => updatePreference("theme", theme)}
                         className={`rounded-xl border p-4 text-left transition ${
                           preferences.theme === theme
@@ -171,21 +182,29 @@ export default function SettingsPage() {
                         <div className="mb-3 text-2xl">
                           {theme === "dark" ? "🌙" : "☀️"}
                         </div>
+
                         <p className="text-sm font-semibold capitalize text-white">
                           {theme} mode
                         </p>
+
                         <p className="mt-1 text-xs text-slate-500">
                           {theme === "dark"
                             ? "Midnight workspace"
-                            : "Bright workspace preference"}
+                            : "Bright workspace"}
                         </p>
+
+                        {preferences.theme === theme && (
+                          <span className="mt-3 inline-block text-xs font-semibold text-violet-400">
+                            Currently active
+                          </span>
+                        )}
                       </button>
                     ))}
                   </div>
 
                   <p className="mt-3 text-xs text-slate-500">
-                    Theme preference is saved. Full light-mode styling
-                    will be connected in a later update.
+                    Your selected theme is applied to the global workspace
+                    and saved on this device.
                   </p>
                 </section>
 
@@ -193,6 +212,7 @@ export default function SettingsPage() {
                   <h3 className="text-lg font-semibold text-white">
                     AI Response Style
                   </h3>
+
                   <p className="mb-5 mt-1 text-sm text-slate-500">
                     Choose how you prefer AI responses to be written.
                   </p>
@@ -239,6 +259,7 @@ export default function SettingsPage() {
                           <p className="text-sm font-semibold text-white">
                             {style.label}
                           </p>
+
                           <p className="mt-1 text-xs text-slate-500">
                             {style.description}
                           </p>
@@ -254,8 +275,8 @@ export default function SettingsPage() {
                   </div>
 
                   <p className="mt-3 text-xs text-slate-500">
-                    Your selected response style is saved locally.
-                    This preference is applied to your new AI responses.
+                    Your selected response style is saved locally and
+                    applied to new AI responses.
                   </p>
                 </section>
 
@@ -273,6 +294,7 @@ export default function SettingsPage() {
                       <p className="text-sm font-medium text-white">
                         Enter to send
                       </p>
+
                       <p className="mt-1 text-xs text-slate-500">
                         Use Enter as your message send shortcut.
                       </p>
@@ -281,6 +303,7 @@ export default function SettingsPage() {
                     <button
                       type="button"
                       role="switch"
+                      aria-label="Enter to send"
                       aria-checked={preferences.enterToSend}
                       onClick={() =>
                         updatePreference(
@@ -324,10 +347,12 @@ export default function SettingsPage() {
                         <p className="text-sm font-medium text-white">
                           Export conversations
                         </p>
+
                         <p className="mt-1 text-xs text-slate-500">
                           Download your conversation history as JSON.
                         </p>
                       </div>
+
                       <span className="text-lg text-cyan-300">↓</span>
                     </button>
 
@@ -340,10 +365,12 @@ export default function SettingsPage() {
                         <p className="text-sm font-medium text-red-300">
                           Clear conversation history
                         </p>
+
                         <p className="mt-1 text-xs text-slate-500">
                           Permanently delete chats stored on this device.
                         </p>
                       </div>
+
                       <span className="text-lg text-red-300">⌫</span>
                     </button>
                   </div>
@@ -359,6 +386,7 @@ export default function SettingsPage() {
                       <h3 className="font-bold text-white">
                         ZENTRIX AI
                       </h3>
+
                       <p className="text-xs text-slate-400">
                         Think Beyond. Build Without Limits.
                       </p>
@@ -381,4 +409,4 @@ export default function SettingsPage() {
       </main>
     </div>
   );
-    }
+                        }
