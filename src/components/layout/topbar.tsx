@@ -20,9 +20,6 @@ export default function Topbar({
   modelName = DEFAULT_MODEL,
   onModelChange,
 }: TopbarProps) {
-  const showModelSelector = Boolean(onModelChange);
-  const showNewChat = Boolean(onNewChat);
-
   return (
     <header className="relative z-30 flex h-[76px] shrink-0 items-center justify-between border-b border-white/[0.07] bg-[#090c1d]/90 px-4 backdrop-blur-xl sm:px-6 lg:px-8">
       <div className="flex min-w-0 items-center gap-3">
@@ -51,7 +48,6 @@ export default function Topbar({
           <h1 className="truncate text-base font-semibold text-white sm:text-lg">
             {title}
           </h1>
-
           <p className="hidden truncate text-xs text-slate-500 sm:block">
             {subtitle}
           </p>
@@ -59,14 +55,14 @@ export default function Topbar({
       </div>
 
       <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-        {showModelSelector && (
+        {onModelChange && (
           <ModelSelector
             selectedModel={modelName}
-            onModelChange={onModelChange}
+            onModelChange={(model) => onModelChange(model)}
           />
         )}
 
-        {showNewChat && (
+        {onNewChat && (
           <>
             <button
               type="button"
