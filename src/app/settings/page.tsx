@@ -255,7 +255,7 @@ export default function SettingsPage() {
 
                   <p className="mt-3 text-xs text-slate-500">
                     Your selected response style is saved locally.
-                    Connecting it to AI responses is a later integration step.
+                    This preference is applied to your new AI responses.
                   </p>
                 </section>
 
