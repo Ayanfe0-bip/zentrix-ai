@@ -1,25 +1,40 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import ChatInterface from "@/components/chat/chat-interface";
 import type { ChatMessageData } from "@/components/chat/chat-message";
 import type { ChatHistoryItem } from "@/components/layout/app-sidebar";
+import {
+  getConversations,
+  saveConversations,
+  type StoredConversation,
+} from "@/lib/chat-storage";
 import { DEFAULT_MODEL } from "@/lib/ai/models";
 
-interface Conversation {
-  id: string;
-  title: string;
-  messages: ChatMessageData[];
-}
-
 export default function ChatPage() {
-  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [conversations, setConversations] = useState<
+    StoredConversation[]
+  >([]);
+  const [storageReady, setStorageReady] = useState(false);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState("");
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
+
+  useEffect(() => {
+    const stored = getConversations();
+
+    setConversations(stored);
+    setStorageReady(true);
+  }, []);
+
+  useEffect(() => {
+    if (!storageReady) return;
+
+    saveConversations(conversations);
+  }, [conversations, storageReady]);
 
   const activeConversation = conversations.find(
     (conversation) => conversation.id === activeChatId
@@ -51,20 +66,22 @@ export default function ChatPage() {
   }, []);
 
   async function handleSend(message: string) {
-    if (isGenerating) return;
+    if (isGenerating || !storageReady) return;
 
     let conversationId = activeChatId;
 
     if (!conversationId) {
       conversationId = crypto.randomUUID();
 
-      const newConversation: Conversation = {
+      const newConversation: StoredConversation = {
         id: conversationId,
         title:
           message.length > 35
             ? `${message.slice(0, 35)}...`
             : message,
         messages: [],
+        updatedAt: new Date().toISOString(),
+        saved: false,
       };
 
       setConversations((previous) => [
@@ -96,6 +113,7 @@ export default function ChatPage() {
           ? {
               ...conversation,
               messages: updatedMessages,
+              updatedAt: new Date().toISOString(),
             }
           : conversation
       )
@@ -157,6 +175,7 @@ export default function ChatPage() {
                   ...conversation.messages,
                   assistantMessage,
                 ],
+                updatedAt: new Date().toISOString(),
               }
             : conversation
         )
