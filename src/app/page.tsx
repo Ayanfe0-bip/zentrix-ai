@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -20,7 +21,9 @@ export default function Home() {
           <div className="brand-icon">
             <BrainCircuit size={25} />
           </div>
-          <span>ZENTRIX<span className="brand-ai"> AI</span></span>
+          <span>
+            ZENTRIX<span className="brand-ai"> AI</span>
+          </span>
         </a>
 
         <div className="nav-links">
@@ -28,7 +31,7 @@ export default function Home() {
           <a href="#about">About</a>
         </div>
 
-        <a href="#start" className="nav-button">
+        <a href="/chat" className="nav-button">
           Get Started <ArrowUpRight size={16} />
         </a>
       </nav>
@@ -56,7 +59,7 @@ export default function Home() {
           </p>
 
           <div className="hero-actions">
-            <a href="#features" className="primary-button">
+            <a href="/chat" className="primary-button">
               Explore ZENTRIX
               <ArrowRight size={19} />
             </a>
@@ -112,6 +115,7 @@ export default function Home() {
       <section className="features-section" id="features">
         <div className="section-heading">
           <span>ONE INTELLIGENT PLATFORM</span>
+
           <h2>
             More than a chatbot.
             <br />
@@ -119,6 +123,7 @@ export default function Home() {
               A world of possibilities.
             </span>
           </h2>
+
           <p>
             Everything you need to turn ideas into meaningful results.
           </p>
@@ -161,7 +166,9 @@ export default function Home() {
         <h2>
           Your ideas deserve
           <br />
-          <span className="gradient-text">a powerful companion.</span>
+          <span className="gradient-text">
+            a powerful companion.
+          </span>
         </h2>
 
         <p>
@@ -170,9 +177,14 @@ export default function Home() {
           accessible, useful and inspiring.
         </p>
 
+        <a href="/chat" className="primary-button about-button">
+          Start Exploring
+          <ArrowRight size={18} />
+        </a>
+
         <div className="coming-soon">
           <span className="status-dot" />
-          THE ZENTRIX EXPERIENCE IS TAKING SHAPE
+          EXPLORE THE ZENTRIX EXPERIENCE
         </div>
       </section>
 
@@ -181,7 +193,10 @@ export default function Home() {
           <div className="brand-icon small">
             <BrainCircuit size={19} />
           </div>
-          <span>ZENTRIX<span className="brand-ai"> AI</span></span>
+
+          <span>
+            ZENTRIX<span className="brand-ai"> AI</span>
+          </span>
         </a>
 
         <p>Think Beyond. Build Without Limits.</p>
@@ -229,7 +244,7 @@ export default function Home() {
           place-items: center;
           border-radius: 13px;
           color: #c4b5fd;
-          background: linear-gradient(135deg, #6d28d9, #164e9b);
+          background: linear-gradient(135deg,#6d28d9,#164e9b);
           box-shadow: 0 0 25px rgba(139,92,246,.25);
         }
 
@@ -253,7 +268,8 @@ export default function Home() {
           color: white;
         }
 
-        .nav-button, .primary-button {
+        .nav-button,
+        .primary-button {
           display: inline-flex;
           align-items: center;
           justify-content: center;
@@ -268,7 +284,8 @@ export default function Home() {
           transition: .3s ease;
         }
 
-        .nav-button:hover, .primary-button:hover {
+        .nav-button:hover,
+        .primary-button:hover {
           transform: translateY(-3px);
           box-shadow: 0 12px 35px rgba(139,92,246,.35);
         }
@@ -290,7 +307,8 @@ export default function Home() {
           animation: fade-up .8s ease both;
         }
 
-        .status-badge, .coming-soon {
+        .status-badge,
+        .coming-soon {
           display: inline-flex;
           align-items: center;
           gap: 10px;
@@ -443,10 +461,27 @@ export default function Home() {
           color: #a78bfa;
         }
 
-        .card-top { top: 22px; left: 50%; transform: translateX(-50%); }
-        .card-left { left: -2px; top: 43%; }
-        .card-right { right: -2px; top: 43%; }
-        .card-bottom { bottom: 22px; left: 50%; transform: translateX(-50%); }
+        .card-top {
+          top: 22px;
+          left: 50%;
+          transform: translateX(-50%);
+        }
+
+        .card-left {
+          left: -2px;
+          top: 43%;
+        }
+
+        .card-right {
+          right: -2px;
+          top: 43%;
+        }
+
+        .card-bottom {
+          bottom: 22px;
+          left: 50%;
+          transform: translateX(-50%);
+        }
 
         .visual-glow {
           position: absolute;
@@ -469,14 +504,16 @@ export default function Home() {
           text-align: center;
         }
 
-        .section-heading > span, .about-section > span {
+        .section-heading > span,
+        .about-section > span {
           color: #22d3ee;
           font-size: 10px;
           font-weight: 700;
           letter-spacing: 2px;
         }
 
-        .section-heading h2, .about-section h2 {
+        .section-heading h2,
+        .about-section h2 {
           margin-top: 18px;
           font-family: "Space Grotesk", sans-serif;
           font-size: clamp(32px,4vw,48px);
@@ -561,8 +598,12 @@ export default function Home() {
           line-height: 1.9;
         }
 
+        .about-button {
+          margin-top: 10px;
+        }
+
         .coming-soon {
-          margin-top: 18px;
+          margin-top: 25px;
         }
 
         .footer {
@@ -592,7 +633,8 @@ export default function Home() {
             margin-right: auto;
           }
 
-          .hero-actions, .hero-trust {
+          .hero-actions,
+          .hero-trust {
             justify-content: center;
           }
 
@@ -655,9 +697,20 @@ export default function Home() {
             width: 60px;
           }
 
-          .orbit-one { width: 220px; height: 220px; }
-          .orbit-two { width: 290px; height: 290px; }
-          .orbit-three { width: 330px; height: 330px; }
+          .orbit-one {
+            width: 220px;
+            height: 220px;
+          }
+
+          .orbit-two {
+            width: 290px;
+            height: 290px;
+          }
+
+          .orbit-three {
+            width: 330px;
+            height: 330px;
+          }
 
           .floating-card {
             padding: 10px;
@@ -665,8 +718,13 @@ export default function Home() {
             gap: 6px;
           }
 
-          .card-left { left: -5px; }
-          .card-right { right: -5px; }
+          .card-left {
+            left: -5px;
+          }
+
+          .card-right {
+            right: -5px;
+          }
 
           .features-section {
             padding: 75px 17px;
@@ -701,7 +759,7 @@ function Feature({
   title,
   description,
 }: {
-  icon: React.ReactNode;
+  icon: ReactNode;
   title: string;
   description: string;
 }) {
