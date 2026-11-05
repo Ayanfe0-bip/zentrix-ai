@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import type { ReactNode } from "react";
 import ZentrixLogo from "@/components/zentrix-logo";
 
 export interface ChatHistoryItem {
@@ -35,7 +36,7 @@ function SidebarIcon({
   name: string;
   className?: string;
 }) {
-  const paths: Record<string, React.ReactNode> = {
+  const paths: Record<string, ReactNode> = {
     chat: (
       <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8A8.5 8.5 0 0 1 8.7 3.9a8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8z" />
     ),
@@ -100,37 +101,54 @@ export default function AppSidebar({
   const [profileInitials, setProfileInitials] = useState("Z");
 
   useEffect(() => {
-    function loadProfile() {
+    function loadProfile(event?: Event) {
       try {
-        const stored = localStorage.getItem("zentrix-ai-profile");
+        let profile: { displayName?: string } | null = null;
 
-        if (!stored) return;
+        if (event instanceof CustomEvent && event.detail) {
+          profile = event.detail;
+        } else {
+          const stored = localStorage.getItem("zentrix-ai-profile");
 
-        const profile = JSON.parse(stored);
+          if (stored) {
+            profile = JSON.parse(stored);
+          }
+        }
 
-        if (typeof profile.displayName === "string") {
-          setProfileName(profile.displayName);
+        if (
+          profile &&
+          typeof profile.displayName === "string" &&
+          profile.displayName.trim()
+        ) {
+          const name = profile.displayName.trim();
 
-          const initials = profile.displayName
-            .split(" ")
-            .filter(Boolean)
+          setProfileName(name);
+
+          const initials = name
+            .split(/\s+/)
             .slice(0, 2)
-            .map((word: string) => word[0].toUpperCase())
+            .map((word) => word[0].toUpperCase())
             .join("");
 
           setProfileInitials(initials || "Z");
+        } else {
+          setProfileName("ZENTRIX User");
+          setProfileInitials("Z");
         }
       } catch {
-        // Keep the default sidebar identity.
+        setProfileName("ZENTRIX User");
+        setProfileInitials("Z");
       }
     }
 
     loadProfile();
 
     window.addEventListener("storage", loadProfile);
+    window.addEventListener("zentrix-profile-updated", loadProfile);
 
     return () => {
       window.removeEventListener("storage", loadProfile);
+      window.removeEventListener("zentrix-profile-updated", loadProfile);
     };
   }, []);
 
@@ -284,6 +302,7 @@ export default function AppSidebar({
               <p className="truncate text-sm font-semibold text-white">
                 {profileName}
               </p>
+
               <p className="text-xs text-slate-500">
                 Free Workspace
               </p>
@@ -293,4 +312,4 @@ export default function AppSidebar({
       </aside>
     </>
   );
-            }
+          }
