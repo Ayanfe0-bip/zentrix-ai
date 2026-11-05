@@ -20,10 +20,8 @@ const PROFILE_KEY = "zentrix-ai-profile";
 
 export default function ProfilePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [profile, setProfile] =
-    useState<UserProfile>(DEFAULT_PROFILE);
-  const [form, setForm] =
-    useState<UserProfile>(DEFAULT_PROFILE);
+  const [profile, setProfile] = useState<UserProfile>(DEFAULT_PROFILE);
+  const [form, setForm] = useState<UserProfile>(DEFAULT_PROFILE);
   const [editing, setEditing] = useState(false);
   const [ready, setReady] = useState(false);
   const [notice, setNotice] = useState("");
@@ -87,15 +85,18 @@ export default function ProfilePage() {
     }
 
     try {
-      localStorage.setItem(
-        PROFILE_KEY,
-        JSON.stringify(cleaned)
-      );
+      localStorage.setItem(PROFILE_KEY, JSON.stringify(cleaned));
 
       setProfile(cleaned);
       setForm(cleaned);
       setEditing(false);
       setNotice("Your profile has been saved successfully.");
+
+      window.dispatchEvent(
+        new CustomEvent("zentrix-profile-updated", {
+          detail: cleaned,
+        })
+      );
     } catch {
       setNotice("Unable to save your profile on this device.");
     }
@@ -225,16 +226,9 @@ export default function ProfilePage() {
 
                       <input
                         type="text"
-                        value={
-                          editing
-                            ? form.displayName
-                            : profile.displayName
-                        }
+                        value={editing ? form.displayName : profile.displayName}
                         onChange={(event) =>
-                          updateField(
-                            "displayName",
-                            event.target.value
-                          )
+                          updateField("displayName", event.target.value)
                         }
                         readOnly={!editing}
                         maxLength={50}
@@ -249,22 +243,13 @@ export default function ProfilePage() {
                       </label>
 
                       <div className="flex items-center rounded-xl border border-white/10 bg-[#0c1022] px-4 focus-within:border-violet-400/50">
-                        <span className="text-sm text-violet-400">
-                          @
-                        </span>
+                        <span className="text-sm text-violet-400">@</span>
 
                         <input
                           type="text"
-                          value={
-                            editing
-                              ? form.username
-                              : profile.username
-                          }
+                          value={editing ? form.username : profile.username}
                           onChange={(event) =>
-                            updateField(
-                              "username",
-                              event.target.value
-                            )
+                            updateField("username", event.target.value)
                           }
                           readOnly={!editing}
                           maxLength={30}
@@ -280,9 +265,7 @@ export default function ProfilePage() {
                       </label>
 
                       <textarea
-                        value={
-                          editing ? form.bio : profile.bio
-                        }
+                        value={editing ? form.bio : profile.bio}
                         onChange={(event) =>
                           updateField("bio", event.target.value)
                         }
@@ -334,10 +317,10 @@ export default function ProfilePage() {
                       </h3>
 
                       <p className="mt-2 text-sm leading-6 text-slate-400">
-                        This profile is currently stored in your
-                        browser. It is not yet connected to a
-                        registered account or cloud synchronization.
-                        Your information remains on this device.
+                        This profile is currently stored in your browser.
+                        It is not yet connected to a registered account
+                        or cloud synchronization. Your information remains
+                        on this device.
                       </p>
                     </div>
                   </div>
@@ -349,4 +332,4 @@ export default function ProfilePage() {
       </main>
     </div>
   );
-}
+                      }
