@@ -2,6 +2,7 @@
 
 import { useState, ReactNode } from "react";
 import ZentrixLogo from "@/components/zentrix-logo";
+import MessageSources from "@/components/chat/message-sources";
 
 export interface ChatMessageData {
   id: string;
@@ -12,6 +13,21 @@ export interface ChatMessageData {
 
 interface ChatMessageProps {
   message: ChatMessageData;
+}
+
+function extractSources(content: string) {
+  const matches = content.matchAll(
+    /\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g
+  );
+
+  const sources = Array.from(matches, (match) => ({
+    title: match[1],
+    url: match[2],
+  }));
+
+  return Array.from(
+    new Map(sources.map((source) => [source.url, source])).values()
+  );
 }
 
 function renderInline(text: string): ReactNode[] {
@@ -91,6 +107,7 @@ function MarkdownContent({ content }: { content: string }) {
     if (trimmed.startsWith("```")) {
       const language = trimmed.slice(3).trim() || "Code";
       const codeLines: string[] = [];
+
       i++;
 
       while (i < lines.length && !lines[i].trim().startsWith("```")) {
@@ -109,6 +126,7 @@ function MarkdownContent({ content }: { content: string }) {
         >
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
             <span className="text-xs text-slate-400">{language}</span>
+
             <button
               type="button"
               onClick={() => navigator.clipboard.writeText(code)}
@@ -132,6 +150,7 @@ function MarkdownContent({ content }: { content: string }) {
 
     if (heading) {
       const level = heading[1].length;
+
       const classes = [
         "my-5 text-2xl font-bold text-white",
         "my-4 text-xl font-bold text-white",
@@ -164,6 +183,7 @@ function MarkdownContent({ content }: { content: string }) {
       elements.push(
         <hr key={i} className="my-6 border-white/10" />
       );
+
       i++;
       continue;
     }
@@ -182,6 +202,7 @@ function MarkdownContent({ content }: { content: string }) {
             .map((cell) => cell.trim());
 
         const headers = parseRow(trimmed);
+
         i += 2;
 
         const rows: string[][] = [];
@@ -240,7 +261,10 @@ function MarkdownContent({ content }: { content: string }) {
       const quoteLines: string[] = [];
 
       while (i < lines.length && lines[i].trim().startsWith(">")) {
-        quoteLines.push(lines[i].trim().replace(/^>\s?/, ""));
+        quoteLines.push(
+          lines[i].trim().replace(/^>\s?/, "")
+        );
+
         i++;
       }
 
@@ -263,7 +287,10 @@ function MarkdownContent({ content }: { content: string }) {
       const items: string[] = [];
 
       while (i < lines.length && /^(\s*)[-*+]\s+/.test(lines[i])) {
-        items.push(lines[i].trim().replace(/^[-*+]\s+/, ""));
+        items.push(
+          lines[i].trim().replace(/^[-*+]\s+/, "")
+        );
+
         i++;
       }
 
@@ -288,7 +315,10 @@ function MarkdownContent({ content }: { content: string }) {
       const items: string[] = [];
 
       while (i < lines.length && /^\d+[.)]\s+/.test(lines[i].trim())) {
-        items.push(lines[i].trim().replace(/^\d+[.)]\s+/, ""));
+        items.push(
+          lines[i].trim().replace(/^\d+[.)]\s+/, "")
+        );
+
         i++;
       }
 
@@ -314,7 +344,9 @@ function MarkdownContent({ content }: { content: string }) {
     while (
       i < lines.length &&
       lines[i].trim() &&
-      !/^(#{1,6}\s|```|>|[-*+]\s|\d+[.)]\s)/.test(lines[i].trim())
+      !/^(#{1,6}\s|```|>|[-*+]\s|\d+[.)]\s)/.test(
+        lines[i].trim()
+      )
     ) {
       paragraph.push(lines[i].trim());
       i++;
@@ -343,12 +375,19 @@ function MarkdownContent({ content }: { content: string }) {
 
 export default function ChatMessage({ message }: ChatMessageProps) {
   const [copied, setCopied] = useState(false);
+
   const isUser = message.role === "user";
+
+  const sources = isUser
+    ? []
+    : extractSources(message.content);
 
   async function copyMessage() {
     try {
       await navigator.clipboard.writeText(message.content);
+
       setCopied(true);
+
       window.setTimeout(() => setCopied(false), 1800);
     } catch {
       setCopied(false);
@@ -398,7 +437,11 @@ export default function ChatMessage({ message }: ChatMessageProps) {
               {message.content}
             </div>
           ) : (
-            <MarkdownContent content={message.content} />
+            <>
+              <MarkdownContent content={message.content} />
+
+              <MessageSources sources={sources} />
+            </>
           )}
         </div>
 
@@ -422,4 +465,4 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       )}
     </article>
   );
-            }
+                                }
