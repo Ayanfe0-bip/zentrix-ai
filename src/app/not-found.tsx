@@ -28,8 +28,8 @@ export default function NotFound() {
         </h2>
 
         <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-slate-400 sm:text-base">
-          The page you're looking for doesn't exist or may have
-          been moved. Don't worry. Your next great idea is still
+          The page you&apos;re looking for doesn&apos;t exist or may have
+          been moved. Don&apos;t worry. Your next great idea is still
           waiting for you.
         </p>
 
@@ -59,4 +59,4 @@ export default function NotFound() {
       </div>
     </main>
   );
-}
+      }
