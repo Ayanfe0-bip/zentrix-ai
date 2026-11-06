@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Sparkles } from "lucide-react";
 
 import AppSidebar from "@/components/layout/app-sidebar";
 import Topbar from "@/components/layout/topbar";
 import ChatMessage from "@/components/chat/chat-message";
 import ChatInput from "@/components/chat/chat-input";
+import ZentrixLogo from "@/components/zentrix-logo";
 
 import type { ChatMessageData } from "@/components/chat/chat-message";
 import type { ChatHistoryItem } from "@/components/layout/app-sidebar";
@@ -92,9 +92,12 @@ export default function ChatInterface({
 
               <div className="flex min-h-full flex-col items-center justify-center px-5 py-12">
 
-                <div className="mb-7 flex h-14 w-14 items-center justify-center rounded-2xl border border-violet-400/20 bg-gradient-to-br from-violet-500/20 to-cyan-400/10 shadow-[0_0_45px_rgba(139,92,246,0.12)]">
+                <div className="mb-7 flex h-20 w-20 items-center justify-center rounded-2xl border border-violet-400/20 bg-gradient-to-br from-violet-500/20 to-cyan-400/10 shadow-[0_0_45px_rgba(139,92,246,0.12)]">
 
-                  <Sparkles className="h-7 w-7 text-violet-300" />
+                  <ZentrixLogo
+                    size="large"
+                    showName={false}
+                  />
 
                 </div>
 
@@ -167,7 +170,12 @@ export default function ChatInterface({
                   <div className="flex items-center gap-3 py-6">
 
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-violet-400/20 bg-violet-500/10">
-                      <Sparkles className="h-4 w-4 animate-pulse text-violet-300" />
+
+                      <ZentrixLogo
+                        size="small"
+                        showName={false}
+                      />
+
                     </div>
 
                     <div className="flex items-center gap-1.5">
@@ -217,4 +225,4 @@ export default function ChatInterface({
 
     </main>
   );
-}
+      }
