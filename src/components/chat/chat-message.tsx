@@ -289,7 +289,7 @@ export default function ChatMessage({
     >
       {!isUser && (
         <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-violet-400/20 bg-violet-500/10">
-          <ZentrixLogo />
+          <ZentrixLogo size="small" showName={false} />
         </div>
       )}
 
