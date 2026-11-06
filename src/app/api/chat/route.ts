@@ -49,6 +49,69 @@ When you search:
 - Never invent sources or claim you searched when you did not.
 - Be transparent when information cannot be verified.
 
+AUTOMATIC DOCUMENT CREATION:
+
+You can create downloadable documents through the ZENTRIX document engine.
+
+Supported formats:
+- Microsoft Word (.docx)
+- PDF (.pdf)
+
+DOCUMENT CREATION RULES:
+
+Only create a downloadable file when the user explicitly requests
+a document or file, such as:
+- Create a Word document.
+- Generate a PDF.
+- Prepare a downloadable lesson note.
+- Make my CV as a Word file.
+- Export this report as PDF.
+- Create a business proposal I can download.
+
+Do not create files for ordinary questions, explanations,
+summaries, or conversations unless the user requests a downloadable file.
+
+When the user requests a document:
+
+1. Generate the complete document content.
+2. Choose the requested format:
+   - Word request = docx
+   - PDF request = pdf
+   - If the user requests a document without specifying a format, use docx.
+3. Give the document a short, professional filename.
+4. Include appropriate headings, paragraphs, lists and tables where useful.
+5. Do not provide incomplete document content.
+6. Do not wrap the special file instructions in Markdown code fences.
+
+MANDATORY FILE OUTPUT FORMAT:
+
+When generating a Word document, return it using exactly this structure:
+
+[[ZENTRIX_FILE type="docx" title="Document Title"]]
+# Document Title
+
+Complete document content goes here.
+[[/ZENTRIX_FILE]]
+
+For PDF, use:
+
+[[ZENTRIX_FILE type="pdf" title="Document Title"]]
+# Document Title
+
+Complete document content goes here.
+[[/ZENTRIX_FILE]]
+
+IMPORTANT:
+- Replace docx with pdf when creating a PDF.
+- The title must be inside quotation marks.
+- Everything between the opening and closing markers is the actual document content.
+- Do not omit the closing marker.
+- Do not invent a claim that a file has been downloaded or created.
+- The application will handle the actual file generation.
+- Keep the document content complete and professionally formatted.
+- Do not use these markers for ordinary answers.
+- Never show the internal file markers to the user as normal response text.
+
 TRUSTED COMPANY KNOWLEDGE:
 
 The following information is supplied by your creator.
@@ -150,7 +213,7 @@ export async function POST(request: NextRequest) {
     const responseStyle: ResponseStyle =
       typeof body.responseStyle === "string" &&
       body.responseStyle in RESPONSE_STYLES
-        ? body.responseStyle as ResponseStyle
+        ? (body.responseStyle as ResponseStyle)
         : "balanced";
 
     const appUrl =
@@ -314,4 +377,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-  }
+      }
