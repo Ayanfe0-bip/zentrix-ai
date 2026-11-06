@@ -74,18 +74,18 @@ export default function ChatInput({
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
-    const isSendShortcut =
+    const sendShortcut =
       event.key === "Enter" &&
       (event.ctrlKey || event.metaKey);
 
-    const isNormalSend =
+    const normalSend =
       event.key === "Enter" &&
       enterToSend &&
       !event.shiftKey &&
       !event.ctrlKey &&
       !event.metaKey;
 
-    if (isSendShortcut || isNormalSend) {
+    if (sendShortcut || normalSend) {
       event.preventDefault();
       handleSend();
     }
@@ -100,10 +100,8 @@ export default function ChatInput({
     <div className="w-full">
       <form
         onSubmit={handleSend}
-        className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#11162c]/90 shadow-2xl shadow-black/20 transition focus-within:border-violet-500/40 focus-within:shadow-violet-950/20"
+        className="relative overflow-hidden rounded-[26px] border border-white/10 bg-[#15182a] shadow-2xl shadow-black/30 transition-all duration-200 focus-within:border-violet-400/40 focus-within:shadow-violet-950/20"
       >
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-violet-400/50 to-transparent" />
-
         <textarea
           ref={textareaRef}
           value={message}
@@ -116,19 +114,15 @@ export default function ChatInput({
           placeholder={placeholder}
           rows={1}
           aria-label="Message ZENTRIX"
-          className="block max-h-[180px] min-h-[58px] w-full resize-none bg-transparent px-5 pb-3 pt-5 text-sm leading-6 text-white outline-none placeholder:text-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
+          className="block max-h-[180px] min-h-[58px] w-full resize-none bg-transparent px-5 pb-2 pt-5 text-[15px] leading-6 text-white outline-none placeholder:text-slate-500 disabled:cursor-not-allowed disabled:opacity-50"
         />
 
-        <div className="flex items-center justify-between gap-3 px-4 pb-3">
+        <div className="flex items-center justify-between gap-3 px-3 pb-3 pl-5">
           <div className="flex items-center gap-2">
-            <span className="hidden text-[10px] text-slate-500 sm:inline">
+            <span className="text-[10px] text-slate-500">
               {enterToSend
-                ? "Shift + Enter for a new line"
+                ? "Shift + Enter for new line"
                 : "Ctrl + Enter to send"}
-            </span>
-
-            <span className="text-[10px] text-slate-600 sm:hidden">
-              {enterToSend ? "Enter to send" : "Ctrl + Enter to send"}
             </span>
           </div>
 
@@ -137,7 +131,7 @@ export default function ChatInput({
               type="button"
               onClick={onStop}
               disabled={!onStop}
-              className="flex h-10 items-center gap-2 rounded-xl border border-red-400/20 bg-red-500/10 px-4 text-xs font-semibold text-red-300 transition hover:bg-red-500/20 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-10 items-center gap-2 rounded-full border border-red-400/20 bg-red-500/10 px-4 text-xs font-semibold text-red-300 transition hover:bg-red-500/20 disabled:opacity-50"
             >
               <span className="h-2.5 w-2.5 rounded-sm bg-red-400" />
               Stop
@@ -147,13 +141,13 @@ export default function ChatInput({
               type="submit"
               disabled={!canSend}
               aria-label="Send message"
-              className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-900/20 transition hover:scale-105 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-900/20 transition hover:scale-105 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
             >
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="2"
+                strokeWidth="2.2"
                 className="h-5 w-5"
               >
                 <path
@@ -167,9 +161,9 @@ export default function ChatInput({
         </div>
       </form>
 
-      <p className="mt-3 text-center text-[10px] leading-5 text-slate-500">
-        ZENTRIX AI can make mistakes.
+      <p className="mt-2 text-center text-[10px] leading-5 text-slate-500">
+        ZENTRIX AI can make mistakes. Verify important information.
       </p>
     </div>
   );
-  }
+}
