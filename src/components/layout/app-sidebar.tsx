@@ -22,6 +22,7 @@ interface AppSidebarProps {
 const navigationItems = [
   { label: "AI Chat", href: "/chat", icon: "chat" },
   { label: "Code Assistant", href: "/code", icon: "code" },
+  { label: "Plugin Marketplace", href: "/plugins", icon: "plugin" },
   {
     label: "Saved Conversations",
     href: "/saved",
@@ -46,6 +47,9 @@ function SidebarIcon({
         <path d="m8 6-6 6 6 6" />
         <path d="m14 4-4 16" />
       </>
+    ),
+    plugin: (
+      <path d="M9 3v3H6a2 2 0 0 0-2 2v3h3a2 2 0 1 1 0 4H4v3a2 2 0 0 0 2 2h3v-3a2 2 0 1 1 4 0v3h3a2 2 0 0 0 2-2v-3h-3a2 2 0 1 1 0-4h3V8a2 2 0 0 0-2-2h-3V3a2 2 0 1 0-4 0z" />
     ),
     bookmark: (
       <path d="M6 4.5A2.5 2.5 0 0 1 8.5 2h7A2.5 2.5 0 0 1 18 4.5V22l-6-4-6 4z" />
@@ -337,4 +341,4 @@ export default function AppSidebar({
       </aside>
     </>
   );
-    }
+            }
