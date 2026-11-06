@@ -11,8 +11,53 @@ import {
   type StoredConversation,
 } from "@/lib/chat-storage";
 import { DEFAULT_MODEL } from "@/lib/ai/models";
+import { downloadMessageAsDocx } from "@/lib/docx/generate-docx";
+import { downloadMessageAsPdf } from "@/lib/pdf/generate-pdf";
 
 type ResponseStyle = "balanced" | "concise" | "detailed" | "creative";
+
+interface GeneratedFile {
+  type: "docx" | "pdf";
+  title: string;
+  content: string;
+}
+
+function extractGeneratedFile(text: string): GeneratedFile | null {
+  const pattern =
+    /\[\[ZENTRIX_FILE\s+type="(docx|pdf)"\s+title="([^"]+)"\]\]([\s\S]*?)\[\[\/ZENTRIX_FILE\]\]/i;
+
+  const match = text.match(pattern);
+
+  if (!match) return null;
+
+  const content = match[3].trim();
+  const title = match[2].trim();
+
+  if (!content || !title) return null;
+
+  return {
+    type: match[1].toLowerCase() as "docx" | "pdf",
+    title,
+    content,
+  };
+}
+
+function getVisibleStreamingText(text: string): string {
+  const marker = "[[ZENTRIX_FILE";
+  const markerIndex = text.indexOf(marker);
+
+  if (markerIndex !== -1) {
+    return text.slice(0, markerIndex).trim();
+  }
+
+  for (let i = 1; i < marker.length; i++) {
+    if (text.endsWith(marker.slice(0, i))) {
+      return text.slice(0, -i).trim();
+    }
+  }
+
+  return text;
+}
 
 export default function ChatPage() {
   const [conversations, setConversations] = useState<StoredConversation[]>([]);
@@ -51,7 +96,10 @@ export default function ChatPage() {
     const params = new URLSearchParams(window.location.search);
     const requestedConversation = params.get("conversation");
 
-    if (requestedConversation && stored.some((item) => item.id === requestedConversation)) {
+    if (
+      requestedConversation &&
+      stored.some((item) => item.id === requestedConversation)
+    ) {
       setActiveChatId(requestedConversation);
     }
 
@@ -222,7 +270,12 @@ export default function ChatPage() {
 
       if (typeof token === "string" && token.length > 0) {
         reply += token;
-        updateAssistant(reply);
+
+        const visibleText = getVisibleStreamingText(reply);
+
+        if (visibleText) {
+          updateAssistant(visibleText);
+        }
       }
     }
 
@@ -245,6 +298,7 @@ export default function ChatPage() {
 
       if (!response.ok) {
         const result = await response.json().catch(() => ({}));
+
         throw new Error(
           result.error || "Unable to generate a response. Please try again."
         );
@@ -280,8 +334,43 @@ export default function ChatPage() {
         processEvent(buffer);
       }
 
-      if (!reply && !controller.signal.aborted) {
+      if (controller.signal.aborted) return;
+
+      if (!reply.trim()) {
         throw new Error("The AI returned an empty response. Please try again.");
+      }
+
+      // Detect and generate downloadable documents.
+      const generatedFile = extractGeneratedFile(reply);
+
+      if (generatedFile) {
+        try {
+          if (generatedFile.type === "docx") {
+            await downloadMessageAsDocx(
+              generatedFile.content,
+              generatedFile.title
+            );
+          } else {
+            downloadMessageAsPdf(
+              generatedFile.title,
+              generatedFile.content
+            );
+          }
+
+          updateAssistant(
+            `Your ${generatedFile.type === "docx" ? "Word document" : "PDF document"} **${generatedFile.title}** is ready. Your download should begin automatically.`
+          );
+        } catch (fileError) {
+          console.error("ZENTRIX document generation error:", fileError);
+
+          updateAssistant(
+            `I prepared the content for **${generatedFile.title}**, but the file could not be generated. Please try requesting it again.`
+          );
+
+          setError("The document could not be generated. Please try again.");
+        }
+      } else {
+        updateAssistant(reply);
       }
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") {
@@ -346,4 +435,4 @@ export default function ChatPage() {
       )}
     </div>
   );
-            }
+}
