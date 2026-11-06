@@ -44,6 +44,7 @@ function cleanInline(value: string): string {
 function parseInline(value: string): TextRun[] {
   const text = cleanInline(value);
   const runs: TextRun[] = [];
+
   const pattern =
     /(\*\*[^*]+\*\*|__[^_]+__|\*[^*]+\*|_[^_]+_|\x60[^\x60]+\x60)/g;
 
@@ -52,27 +53,35 @@ function parseInline(value: string): TextRun[] {
 
   while ((match = pattern.exec(text)) !== null) {
     if (match.index > lastIndex) {
-      runs.push(new TextRun(text.slice(lastIndex, match.index)));
+      runs.push(
+        new TextRun(text.slice(lastIndex, match.index)),
+      );
     }
 
     const token = match[0];
 
     if (token.startsWith("**") || token.startsWith("__")) {
-      runs.push(new TextRun({
-        text: token.slice(2, -2),
-        bold: true,
-      }));
+      runs.push(
+        new TextRun({
+          text: token.slice(2, -2),
+          bold: true,
+        }),
+      );
     } else if (token.startsWith("`")) {
-      runs.push(new TextRun({
-        text: token.slice(1, -1),
-        font: "Courier New",
-        color: "7C3AED",
-      }));
+      runs.push(
+        new TextRun({
+          text: token.slice(1, -1),
+          font: "Courier New",
+          color: "7C3AED",
+        }),
+      );
     } else {
-      runs.push(new TextRun({
-        text: token.slice(1, -1),
-        italics: true,
-      }));
+      runs.push(
+        new TextRun({
+          text: token.slice(1, -1),
+          italics: true,
+        }),
+      );
     }
 
     lastIndex = match.index + token.length;
@@ -108,10 +117,13 @@ function paragraph(
             }),
           ]
         : parseInline(text),
+
     alignment: options.alignment,
+
     indent: options.indent
       ? { left: options.indent }
       : undefined,
+
     spacing: {
       after: options.spacingAfter ?? 140,
       line: 300,
@@ -120,8 +132,10 @@ function paragraph(
 }
 
 function isTableRow(line: string): boolean {
-  return line.trim().startsWith("|") &&
-    line.trim().endsWith("|");
+  return (
+    line.trim().startsWith("|") &&
+    line.trim().endsWith("|")
+  );
 }
 
 function parseTable(lines: string[]): Table {
@@ -161,7 +175,9 @@ function parseTable(lines: string[]): Table {
       size: PAGE_WIDTH,
       type: WidthType.DXA,
     },
+
     columnWidths: Array(columnCount).fill(cellWidth),
+
     rows: rows.map(
       (row, rowIndex) =>
         new TableRow({
@@ -175,22 +191,26 @@ function parseTable(lines: string[]): Table {
                   size: cellWidth,
                   type: WidthType.DXA,
                 },
+
                 shading:
                   rowIndex === 0
                     ? { fill: "EEEAFE" }
                     : undefined,
+
                 margins: {
                   top: 100,
                   bottom: 100,
                   left: 120,
                   right: 120,
                 },
+
                 borders: {
                   top: border,
                   bottom: border,
                   left: border,
                   right: border,
                 },
+
                 children: [
                   new Paragraph({
                     children:
@@ -203,6 +223,7 @@ function parseTable(lines: string[]): Table {
                             }),
                           ]
                         : parseInline(value),
+
                     spacing: { after: 40 },
                   }),
                 ],
@@ -222,6 +243,7 @@ function markdownToBlocks(
     .split("\n");
 
   const blocks: Array<Paragraph | Table> = [];
+
   let index = 0;
   let inCodeBlock = false;
 
@@ -252,12 +274,14 @@ function markdownToBlocks(
       }
 
       blocks.push(parseTable(tableLines));
+
       blocks.push(
         new Paragraph({
           text: "",
           spacing: { after: 100 },
         }),
       );
+
       continue;
     }
 
@@ -280,6 +304,7 @@ function markdownToBlocks(
           new Paragraph({
             heading: headingLevel,
             children: parseInline(match[2]),
+
             spacing: {
               before: 260,
               after: 120,
@@ -309,14 +334,26 @@ function markdownToBlocks(
       continue;
     }
 
+    // FIXED BULLET CONFIGURATION
     if (!inCodeBlock && /^[-*+]\s+/.test(line)) {
       blocks.push(
         new Paragraph({
           children: parseInline(
             line.replace(/^[-*+]\s+/, ""),
           ),
-          bullet: { indent: 360 },
-          spacing: { after: 80 },
+
+          bullet: {
+            level: 0,
+          },
+
+          indent: {
+            left: 720,
+            hanging: 360,
+          },
+
+          spacing: {
+            after: 80,
+          },
         }),
       );
 
@@ -351,8 +388,14 @@ function markdownToBlocks(
               color: "334155",
             }),
           ],
-          shading: { fill: "F1F5F9" },
-          spacing: { after: 40 },
+
+          shading: {
+            fill: "F1F5F9",
+          },
+
+          spacing: {
+            after: 40,
+          },
         }),
       );
 
@@ -399,12 +442,14 @@ export async function downloadMessageAsDocx(
     children: [
       new Paragraph({
         alignment: AlignmentType.CENTER,
+
         children: [
           new TextRun({
             text: "Created with ZENTRIX AI  •  Page ",
             size: 18,
             color: "64748B",
           }),
+
           PageNumber.CURRENT,
         ],
       }),
@@ -414,6 +459,7 @@ export async function downloadMessageAsDocx(
   const document = new Document({
     creator: BRAND,
     title: cleanTitle,
+
     description:
       "Editable document generated by ZENTRIX AI",
 
@@ -425,6 +471,7 @@ export async function downloadMessageAsDocx(
               width: 11906,
               height: 16838,
             },
+
             margin: {
               top: 1440,
               right: 1275,
@@ -441,6 +488,7 @@ export async function downloadMessageAsDocx(
         children: [
           new Paragraph({
             alignment: AlignmentType.CENTER,
+
             children: [
               new TextRun({
                 text: BRAND,
@@ -450,11 +498,15 @@ export async function downloadMessageAsDocx(
                 characterSpacing: 24,
               }),
             ],
-            spacing: { after: 80 },
+
+            spacing: {
+              after: 80,
+            },
           }),
 
           new Paragraph({
             alignment: AlignmentType.CENTER,
+
             children: [
               new TextRun({
                 text:
@@ -464,6 +516,7 @@ export async function downloadMessageAsDocx(
                 characterSpacing: 12,
               }),
             ],
+
             border: {
               bottom: {
                 style: BorderStyle.SINGLE,
@@ -472,19 +525,26 @@ export async function downloadMessageAsDocx(
                 space: 8,
               },
             },
-            spacing: { after: 360 },
+
+            spacing: {
+              after: 360,
+            },
           }),
 
           new Paragraph({
             heading: HeadingLevel.TITLE,
             alignment: AlignmentType.CENTER,
+
             children: [
               new TextRun({
                 text: cleanTitle,
                 bold: true,
               }),
             ],
-            spacing: { after: 300 },
+
+            spacing: {
+              after: 300,
+            },
           }),
 
           ...markdownToBlocks(content),
@@ -503,11 +563,11 @@ export async function downloadMessageAsDocx(
   anchor.download = safeFilename(cleanTitle);
 
   window.document.body.appendChild(anchor);
+
   anchor.click();
   anchor.remove();
 
-  window.setTimeout(
-    () => URL.revokeObjectURL(url),
-    1000,
-  );
-    }
+  window.setTimeout(() => {
+    URL.revokeObjectURL(url);
+  }, 1000);
+  }
