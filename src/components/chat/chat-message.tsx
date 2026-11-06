@@ -4,6 +4,7 @@ import { useState, ReactNode } from "react";
 import katex from "katex";
 import ZentrixLogo from "@/components/zentrix-logo";
 import MessageSources from "@/components/chat/message-sources";
+import MessagePdfButton from "@/components/chat/message-pdf-button";
 
 export interface ChatMessageData {
   id: string;
@@ -601,6 +602,8 @@ export default function ChatMessage({
             >
               {copied ? "Copied!" : "Copy"}
             </button>
+
+            <MessagePdfButton content={message.content} />
           </div>
         )}
       </div>
@@ -612,4 +615,4 @@ export default function ChatMessage({
       )}
     </article>
   );
-}
+        }
