@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { AI_MODELS, DEFAULT_MODEL } from "@/lib/ai/models";
 
 export const runtime = "nodejs";
 
@@ -107,6 +108,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const requestedModel =
+      typeof body.model === "string" ? body.model : DEFAULT_MODEL;
+
+    const selectedModel = AI_MODELS.find(
+      (model) => model.id === requestedModel
+    );
+
+    if (!selectedModel) {
+      return NextResponse.json(
+        { error: "The selected AI model is not available." },
+        { status: 400 }
+      );
+    }
+
     const responseStyle: ResponseStyle =
       typeof body.responseStyle === "string" &&
       body.responseStyle in RESPONSE_STYLES
@@ -122,13 +137,13 @@ export async function POST(request: NextRequest) {
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: \`Bearer \${apiKey}\`,
           "Content-Type": "application/json",
           "HTTP-Referer": appUrl,
           "X-Title": "ZENTRIX AI",
         },
         body: JSON.stringify({
-          model: "openrouter/free",
+          model: selectedModel.id,
           messages: [
             {
               role: "system",
@@ -188,7 +203,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       reply: reply.trim(),
-      model: data.model || "openrouter/free",
+      model: data.model || selectedModel.id,
     });
   } catch (error) {
     console.error("ZENTRIX API error:", error);
