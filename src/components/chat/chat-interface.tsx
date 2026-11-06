@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import AppSidebar from "@/components/layout/app-sidebar";
 import Topbar from "@/components/layout/topbar";
 import ChatMessage from "@/components/chat/chat-message";
@@ -156,6 +157,32 @@ export default function ChatInterface({
                     </button>
                   ))}
                 </div>
+
+                <Link
+                  href="/plugins"
+                  className="group mt-7 flex w-full max-w-2xl flex-col gap-3 rounded-2xl border border-violet-400/20 bg-gradient-to-r from-violet-500/[0.10] to-cyan-500/[0.06] p-4 transition hover:border-violet-400/40 hover:from-violet-500/[0.16] hover:to-cyan-500/[0.10] sm:flex-row sm:items-center sm:justify-between sm:px-5"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-xl">
+                      🧩
+                    </div>
+
+                    <div>
+                      <h3 className="text-sm font-bold text-white">
+                        Discover ZENTRIX Plugins
+                      </h3>
+
+                      <p className="mt-1 text-xs text-slate-400">
+                        Explore powerful tools and expand your AI workspace.
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className="flex items-center gap-2 text-xs font-semibold text-violet-300 transition group-hover:text-cyan-300">
+                    Explore Marketplace
+                    <span aria-hidden="true">→</span>
+                  </span>
+                </Link>
               </div>
             ) : (
               <div className="mx-auto w-full max-w-4xl px-4 py-5 sm:px-8">
@@ -227,4 +254,4 @@ export default function ChatInterface({
       </section>
     </main>
   );
-                        }
+                }
