@@ -9,9 +9,18 @@ export const metadata: Metadata = {
     default: "ZENTRIX AI — Think Beyond. Build Without Limits.",
     template: "%s | ZENTRIX AI",
   },
+
   description:
     "Meet ZENTRIX AI, your intelligent companion for creativity, productivity, learning and software development.",
+
   applicationName: "ZENTRIX AI",
+
+  icons: {
+    icon: "/images/zentrix-ai-logo.jpg",
+    shortcut: "/images/zentrix-ai-logo.jpg",
+    apple: "/images/zentrix-ai-logo.jpg",
+  },
+
   keywords: [
     "ZENTRIX AI",
     "Artificial Intelligence",
@@ -19,11 +28,13 @@ export const metadata: Metadata = {
     "AI Coding Assistant",
     "Smart AI Chat",
   ],
+
   authors: [
     {
       name: "Ayanfe Innovation Labs Limited",
     },
   ],
+
   robots: {
     index: true,
     follow: true,
