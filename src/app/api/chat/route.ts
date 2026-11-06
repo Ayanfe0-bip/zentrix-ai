@@ -124,6 +124,10 @@ export async function POST(request: NextRequest) {
         ? body.responseStyle as ResponseStyle
         : "balanced";
 
+    // Web search is optional.
+    // Normal conversations will not activate paid search.
+    const searchWeb = body.searchWeb === true;
+
     const appUrl =
       process.env.NEXT_PUBLIC_APP_URL ||
       "https://zentrix-ai.vercel.app";
@@ -132,7 +136,7 @@ export async function POST(request: NextRequest) {
 
     const timeout = setTimeout(() => {
       controller.abort();
-    }, 60000);
+    }, searchWeb ? 90000 : 60000);
 
     request.signal.addEventListener(
       "abort",
@@ -152,20 +156,46 @@ export async function POST(request: NextRequest) {
         },
         body: JSON.stringify({
           model: selectedModel.id,
+
           messages: [
             {
               role: "system",
               content:
                 SYSTEM_PROMPT +
                 "\n\nRESPONSE STYLE:\n" +
-                RESPONSE_STYLES[responseStyle],
+                RESPONSE_STYLES[responseStyle] +
+                (searchWeb
+                  ? "\n\nThe user has enabled web search. Use current web results when useful. Cite factual claims with the source URLs supplied by the search tool. If search results are insufficient, say so clearly."
+                  : ""),
             },
             ...messages,
           ],
-          temperature: responseStyle === "creative" ? 0.9 : 0.7,
-          max_tokens: responseStyle === "concise" ? 900 : 1800,
+
+          ...(searchWeb
+            ? {
+                tools: [
+                  {
+                    type: "openrouter:web_search",
+                    parameters: {
+                      engine: "exa",
+                      max_results: 5,
+                      max_uses: 1,
+                    },
+                  },
+                ],
+                max_tool_calls: 1,
+              }
+            : {}),
+
+          temperature:
+            responseStyle === "creative" ? 0.9 : 0.7,
+
+          max_tokens:
+            responseStyle === "concise" ? 900 : 1800,
+
           stream: true,
         }),
+
         signal: controller.signal,
       }
     );
@@ -189,7 +219,11 @@ export async function POST(request: NextRequest) {
       }
 
       return NextResponse.json(
-        { error: "The AI provider could not process your request." },
+        {
+          error: searchWeb
+            ? "Web search could not be started. Check your OpenRouter credits and try again."
+            : "The AI provider could not process your request.",
+        },
         { status: 502 }
       );
     }
@@ -260,4 +294,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-         }
+                  }
