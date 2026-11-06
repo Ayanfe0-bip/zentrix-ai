@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AI_MODELS, DEFAULT_MODEL } from "@/lib/ai/models";
 import { COMPANY_KNOWLEDGE } from "@/lib/ai/company-knowledge";
+import { createAICompletion } from "@/lib/ai/provider";
 
 export const runtime = "nodejs";
 
@@ -41,7 +42,8 @@ You are not ChatGPT.
 
 AUTOMATIC INTERNET RESEARCH:
 
-You have access to an internet search tool.
+Use live internet research only when a search tool is
+actually available to the selected model.
 
 Decide independently when a question requires current,
 recent, external, or difficult-to-verify information.
@@ -56,10 +58,10 @@ Search when appropriate for:
 - Websites, products and online services.
 - Information you cannot confidently verify.
 
-Do not search unnecessarily for simple explanations,
-general knowledge, calculations or creative writing.
+Do not claim to have searched the internet if no search
+tool was actually available.
 
-When you search:
+When research is available:
 - Prefer reliable and authoritative sources.
 - Compare information when necessary.
 - Include clickable source links.
@@ -92,6 +94,43 @@ interface IncomingMessage {
 
 type ResponseStyle = keyof typeof RESPONSE_STYLES;
 
+const DIRECT_PROVIDERS = [
+  "Gemini",
+  "Groq",
+  "Mistral",
+  "Cloudflare",
+];
+
+function isDirectProvider(provider: string): boolean {
+  return DIRECT_PROVIDERS.includes(provider);
+}
+
+function createSSEResponse(content: string): Response {
+  const event = {
+    choices: [
+      {
+        delta: {
+          content,
+        },
+      },
+    ],
+  };
+
+  const streamText =
+    `data: ${JSON.stringify(event)}\n\n` +
+    "data: [DONE]\n\n";
+
+  return new Response(streamText, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/event-stream; charset=utf-8",
+      "Cache-Control": "no-cache, no-transform",
+      Connection: "keep-alive",
+      "X-Accel-Buffering": "no",
+    },
+  });
+}
+
 function detectDocumentRequest(
   message: string
 ): { type: "docx" | "pdf" } | null {
@@ -112,7 +151,6 @@ function detectDocumentRequest(
 }
 
 function extractDocumentTitle(content: string): string {
-  // Correctly extracts the first Markdown H1 heading.
   const heading = content.match(/^\s{0,3}#\s+(.+)$/m);
 
   let title = heading?.[1]?.trim() || "Untitled Document";
@@ -138,44 +176,21 @@ function createFileStream(
     `\n${content.trim()}\n` +
     `[[/ZENTRIX_FILE]]`;
 
-  const event = {
-    choices: [
-      {
-        delta: {
-          content: fileMarker,
-        },
-      },
-    ],
-  };
+  return createSSEResponse(fileMarker);
+}
 
-  const streamText =
-    `data: ${JSON.stringify(event)}\n\n` +
-    "data: [DONE]\n\n";
+function getErrorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
 
-  return new Response(streamText, {
-    status: 200,
-    headers: {
-      "Content-Type": "text/event-stream; charset=utf-8",
-      "Cache-Control": "no-cache, no-transform",
-      Connection: "keep-alive",
-      "X-Accel-Buffering": "no",
-    },
-  });
+  return "Unknown provider error.";
 }
 
 export async function POST(request: NextRequest) {
   let timeout: ReturnType<typeof setTimeout> | undefined;
 
   try {
-    const apiKey = process.env.OPENROUTER_API_KEY;
-
-    if (!apiKey) {
-      return NextResponse.json(
-        { error: "OpenRouter API key is not configured." },
-        { status: 503 }
-      );
-    }
-
     const body = await request.json();
 
     if (!Array.isArray(body.messages) || body.messages.length === 0) {
@@ -234,6 +249,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: "The selected AI model is unavailable." },
         { status: 400 }
+      );
+    }
+
+    const usesDirectProvider = isDirectProvider(
+      selectedModel.provider
+    );
+
+    if (
+      !usesDirectProvider &&
+      !process.env.OPENROUTER_API_KEY
+    ) {
+      return NextResponse.json(
+        { error: "OpenRouter API key is not configured." },
+        { status: 503 }
       );
     }
 
@@ -322,17 +351,11 @@ ${
 Return ONLY the finished document content in Markdown.
 `;
 
-      const response = await fetch(
-        "https://openrouter.ai/api/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer": appUrl,
-            "X-Title": "ZENTRIX AI",
-          },
-          body: JSON.stringify({
+      let content: string;
+
+      if (usesDirectProvider) {
+        try {
+          const generated = await createAICompletion({
             model: selectedModel.id,
             messages: [
               {
@@ -345,47 +368,92 @@ Return ONLY the finished document content in Markdown.
               },
             ],
             temperature: 0.4,
-            max_tokens: 5000,
-            stream: false,
-          }),
-          signal: controller.signal,
-        }
-      );
+            maxTokens: 5000,
+          });
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
+          content = generated.reply;
+        } catch (error) {
+          console.error(
+            `${selectedModel.provider} document error:`,
+            getErrorMessage(error)
+          );
 
-        console.error(
-          "OpenRouter document error:",
-          response.status,
-          errorData
-        );
+          clearTimeout(timeout);
 
-        clearTimeout(timeout);
-
-        if (response.status === 429) {
           return NextResponse.json(
             {
               error:
-                "AI usage limit reached. Please try again later.",
+                "The selected AI provider could not generate your document. Please try again.",
             },
-            { status: 429 }
+            { status: 502 }
+          );
+        }
+      } else {
+        const response = await fetch(
+          "https://openrouter.ai/api/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
+              "Content-Type": "application/json",
+              "HTTP-Referer": appUrl,
+              "X-Title": "ZENTRIX AI",
+            },
+            body: JSON.stringify({
+              model: selectedModel.id,
+              messages: [
+                {
+                  role: "system",
+                  content: documentInstructions,
+                },
+                {
+                  role: "user",
+                  content: latestUserMessage.content,
+                },
+              ],
+              temperature: 0.4,
+              max_tokens: 5000,
+              stream: false,
+            }),
+            signal: controller.signal,
+          }
+        );
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+
+          console.error(
+            "OpenRouter document error:",
+            response.status,
+            errorData
+          );
+
+          clearTimeout(timeout);
+
+          if (response.status === 429) {
+            return NextResponse.json(
+              {
+                error:
+                  "AI usage limit reached. Please try again later.",
+              },
+              { status: 429 }
+            );
+          }
+
+          return NextResponse.json(
+            {
+              error:
+                "ZENTRIX could not generate the document. Please try again.",
+            },
+            { status: 502 }
           );
         }
 
-        return NextResponse.json(
-          {
-            error:
-              "ZENTRIX could not generate the document. Please try again.",
-          },
-          { status: 502 }
-        );
+        const result = await response.json();
+
+        content =
+          result?.choices?.[0]?.message?.content;
       }
-
-      const result = await response.json();
-
-      const content =
-        result?.choices?.[0]?.message?.content;
 
       if (typeof content !== "string" || !content.trim()) {
         clearTimeout(timeout);
@@ -411,7 +479,55 @@ Return ONLY the finished document content in Markdown.
     }
 
     /*
-     * NORMAL CHAT
+     * NORMAL CHAT — DIRECT PROVIDERS
+     */
+
+    if (usesDirectProvider) {
+      try {
+        const generated = await createAICompletion({
+          model: selectedModel.id,
+          messages: [
+            {
+              role: "system",
+              content:
+                SYSTEM_PROMPT +
+                "\n\nRESPONSE STYLE:\n" +
+                RESPONSE_STYLES[responseStyle],
+            },
+            ...messages,
+          ],
+          temperature:
+            responseStyle === "creative" ? 0.9 : 0.7,
+          maxTokens:
+            responseStyle === "concise" ? 900 : 1800,
+        });
+
+        clearTimeout(timeout);
+
+        return createSSEResponse(generated.reply);
+      } catch (error) {
+        console.error(
+          `${selectedModel.provider} chat error:`,
+          getErrorMessage(error)
+        );
+
+        clearTimeout(timeout);
+
+        return NextResponse.json(
+          {
+            error:
+              "The selected AI provider could not process your request. Please try again.",
+          },
+          { status: 502 }
+        );
+      }
+    }
+
+    /*
+     * NORMAL CHAT — OPENROUTER
+     *
+     * Existing OpenRouter streaming and web search
+     * functionality are preserved.
      */
 
     const response = await fetch(
@@ -419,7 +535,7 @@ Return ONLY the finished document content in Markdown.
       {
         method: "POST",
         headers: {
-          Authorization: `Bearer ${apiKey}`,
+          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
           "Content-Type": "application/json",
           "HTTP-Referer": appUrl,
           "X-Title": "ZENTRIX AI",
@@ -557,4 +673,4 @@ Return ONLY the finished document content in Markdown.
       { status: 500 }
     );
   }
-}
+              }
