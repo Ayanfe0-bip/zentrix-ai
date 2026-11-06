@@ -26,7 +26,7 @@ function safeFilename(value: string): string {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-+|-+$/g, "")
-      .slice(0, 55) || "zentrix-document"
+      .slice(0, 55) || "document"
   );
 }
 
@@ -46,9 +46,9 @@ export function downloadMessageAsPdf(
 
   const margin = 18;
   const usableWidth = width - margin * 2;
-  const bottomLimit = height - 22;
+  const bottomLimit = height - 20;
 
-  let y = 42;
+  let y = 25;
 
   function checkPage(required: number) {
     if (y + required > bottomLimit) {
@@ -56,20 +56,6 @@ export function downloadMessageAsPdf(
       y = 22;
     }
   }
-
-  // Header
-  pdf.setFillColor(15, 18, 42);
-  pdf.rect(0, 0, width, 30, "F");
-
-  pdf.setTextColor(255, 255, 255);
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(16);
-  pdf.text("ZENTRIX AI", margin, 13);
-
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(8);
-  pdf.setTextColor(190, 195, 220);
-  pdf.text("Think Beyond. Build Without Limits.", margin, 20);
 
   // Document title
   pdf.setTextColor(35, 35, 55);
@@ -84,7 +70,7 @@ export function downloadMessageAsPdf(
   pdf.text(titleLines, margin, y);
   y += titleLines.length * 8 + 5;
 
-  // Date
+  // Generation date
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(8);
   pdf.setTextColor(120, 120, 135);
@@ -108,7 +94,6 @@ export function downloadMessageAsPdf(
       continue;
     }
 
-    // Skip Markdown table separators
     if (/^\|?[\s:|-]+\|?$/.test(line) && line.includes("-")) {
       continue;
     }
@@ -189,26 +174,15 @@ export function downloadMessageAsPdf(
     y += blockHeight;
   }
 
-  // Footer and page numbers
+  // Minimal page numbers only
   const pageCount = pdf.getNumberOfPages();
 
   for (let page = 1; page <= pageCount; page++) {
     pdf.setPage(page);
 
-    pdf.setDrawColor(225, 225, 235);
-
-    pdf.line(
-      margin,
-      height - 15,
-      width - margin,
-      height - 15
-    );
-
     pdf.setFont("helvetica", "normal");
     pdf.setFontSize(8);
     pdf.setTextColor(130, 130, 145);
-
-    pdf.text("Created with ZENTRIX AI", margin, height - 9);
 
     pdf.text(
       `Page ${page} of ${pageCount}`,
@@ -220,4 +194,4 @@ export function downloadMessageAsPdf(
 
   // Download PDF
   pdf.save(`${safeFilename(title)}.pdf`);
-    }
+}
