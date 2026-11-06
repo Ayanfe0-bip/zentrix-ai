@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, ReactNode } from "react";
 import ZentrixLogo from "@/components/zentrix-logo";
 
 export interface ChatMessageData {
@@ -12,6 +12,333 @@ export interface ChatMessageData {
 
 interface ChatMessageProps {
   message: ChatMessageData;
+}
+
+function renderInline(text: string): ReactNode[] {
+  const pattern =
+    /(\*\*.*?\*\*|__.*?__|\*.*?\*|_.*?_|~~.*?~~|`[^`]+`|\[.*?\]\(.*?\))/g;
+
+  return text.split(pattern).map((part, index) => {
+    if (
+      (part.startsWith("**") && part.endsWith("**")) ||
+      (part.startsWith("__") && part.endsWith("__"))
+    ) {
+      return (
+        <strong key={index} className="font-semibold text-white">
+          {part.slice(2, -2)}
+        </strong>
+      );
+    }
+
+    if (
+      (part.startsWith("*") && part.endsWith("*")) ||
+      (part.startsWith("_") && part.endsWith("_"))
+    ) {
+      return <em key={index}>{part.slice(1, -1)}</em>;
+    }
+
+    if (part.startsWith("~~") && part.endsWith("~~")) {
+      return <del key={index}>{part.slice(2, -2)}</del>;
+    }
+
+    if (part.startsWith("`") && part.endsWith("`")) {
+      return (
+        <code
+          key={index}
+          className="rounded-md bg-white/10 px-1.5 py-0.5 font-mono text-cyan-300"
+        >
+          {part.slice(1, -1)}
+        </code>
+      );
+    }
+
+    const link = part.match(/^\[(.*?)\]\((.*?)\)$/);
+
+    if (link) {
+      return (
+        <a
+          key={index}
+          href={link[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-cyan-400 underline underline-offset-4 hover:text-cyan-300"
+        >
+          {link[1]}
+        </a>
+      );
+    }
+
+    return <span key={index}>{part}</span>;
+  });
+}
+
+function MarkdownContent({ content }: { content: string }) {
+  const lines = content.replace(/\r\n/g, "\n").split("\n");
+  const elements: ReactNode[] = [];
+
+  let i = 0;
+
+  while (i < lines.length) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    if (!trimmed) {
+      i++;
+      continue;
+    }
+
+    // Code blocks
+    if (trimmed.startsWith("```")) {
+      const language = trimmed.slice(3).trim() || "Code";
+      const codeLines: string[] = [];
+      i++;
+
+      while (i < lines.length && !lines[i].trim().startsWith("```")) {
+        codeLines.push(lines[i]);
+        i++;
+      }
+
+      if (i < lines.length) i++;
+
+      const code = codeLines.join("\n");
+
+      elements.push(
+        <div
+          key={i}
+          className="my-5 overflow-hidden rounded-xl border border-white/10 bg-[#080b18]"
+        >
+          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+            <span className="text-xs text-slate-400">{language}</span>
+            <button
+              type="button"
+              onClick={() => navigator.clipboard.writeText(code)}
+              className="text-xs text-slate-400 hover:text-white"
+            >
+              Copy code
+            </button>
+          </div>
+
+          <pre className="overflow-x-auto p-4 text-xs leading-6 text-cyan-100 sm:text-sm">
+            <code>{code}</code>
+          </pre>
+        </div>
+      );
+
+      continue;
+    }
+
+    // Headings
+    const heading = trimmed.match(/^(#{1,6})\s+(.+)$/);
+
+    if (heading) {
+      const level = heading[1].length;
+      const classes = [
+        "my-5 text-2xl font-bold text-white",
+        "my-4 text-xl font-bold text-white",
+        "my-3 text-lg font-semibold text-white",
+        "my-3 text-base font-semibold text-white",
+        "my-2 text-sm font-semibold text-white",
+        "my-2 text-sm font-medium text-slate-200",
+      ];
+
+      const HeadingTag = `h${level}` as
+        | "h1"
+        | "h2"
+        | "h3"
+        | "h4"
+        | "h5"
+        | "h6";
+
+      elements.push(
+        <HeadingTag key={i} className={classes[level - 1]}>
+          {renderInline(heading[2])}
+        </HeadingTag>
+      );
+
+      i++;
+      continue;
+    }
+
+    // Horizontal rule
+    if (/^(-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
+      elements.push(
+        <hr key={i} className="my-6 border-white/10" />
+      );
+      i++;
+      continue;
+    }
+
+    // Tables
+    if (trimmed.startsWith("|") && i + 1 < lines.length) {
+      const separator = lines[i + 1].trim();
+
+      if (/^\|?[\s:|-]+\|?$/.test(separator) && separator.includes("-")) {
+        const parseRow = (row: string) =>
+          row
+            .trim()
+            .replace(/^\|/, "")
+            .replace(/\|$/, "")
+            .split("|")
+            .map((cell) => cell.trim());
+
+        const headers = parseRow(trimmed);
+        i += 2;
+
+        const rows: string[][] = [];
+
+        while (i < lines.length && lines[i].trim().startsWith("|")) {
+          rows.push(parseRow(lines[i]));
+          i++;
+        }
+
+        elements.push(
+          <div
+            key={i}
+            className="my-5 overflow-x-auto rounded-xl border border-white/10"
+          >
+            <table className="w-full border-collapse text-left text-sm">
+              <thead className="bg-violet-500/15">
+                <tr>
+                  {headers.map((header, index) => (
+                    <th
+                      key={index}
+                      className="border-b border-white/10 px-4 py-3 font-semibold text-white"
+                    >
+                      {renderInline(header)}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+
+              <tbody>
+                {rows.map((row, rowIndex) => (
+                  <tr
+                    key={rowIndex}
+                    className="border-b border-white/5 last:border-0 hover:bg-white/[0.03]"
+                  >
+                    {headers.map((_, cellIndex) => (
+                      <td
+                        key={cellIndex}
+                        className="px-4 py-3 text-slate-300"
+                      >
+                        {renderInline(row[cellIndex] || "")}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        );
+
+        continue;
+      }
+    }
+
+    // Blockquotes
+    if (trimmed.startsWith(">")) {
+      const quoteLines: string[] = [];
+
+      while (i < lines.length && lines[i].trim().startsWith(">")) {
+        quoteLines.push(lines[i].trim().replace(/^>\s?/, ""));
+        i++;
+      }
+
+      elements.push(
+        <blockquote
+          key={i}
+          className="my-4 border-l-2 border-violet-400 bg-violet-500/[0.06] py-3 pl-4 text-slate-300"
+        >
+          {quoteLines.map((item, index) => (
+            <p key={index}>{renderInline(item)}</p>
+          ))}
+        </blockquote>
+      );
+
+      continue;
+    }
+
+    // Bullet lists
+    if (/^[-*+]\s+/.test(trimmed)) {
+      const items: string[] = [];
+
+      while (i < lines.length && /^(\s*)[-*+]\s+/.test(lines[i])) {
+        items.push(lines[i].trim().replace(/^[-*+]\s+/, ""));
+        i++;
+      }
+
+      elements.push(
+        <ul
+          key={i}
+          className="my-3 list-disc space-y-2 pl-6 marker:text-violet-400"
+        >
+          {items.map((item, index) => (
+            <li key={index} className="pl-1 text-slate-300">
+              {renderInline(item)}
+            </li>
+          ))}
+        </ul>
+      );
+
+      continue;
+    }
+
+    // Numbered lists
+    if (/^\d+[.)]\s+/.test(trimmed)) {
+      const items: string[] = [];
+
+      while (i < lines.length && /^\d+[.)]\s+/.test(lines[i].trim())) {
+        items.push(lines[i].trim().replace(/^\d+[.)]\s+/, ""));
+        i++;
+      }
+
+      elements.push(
+        <ol
+          key={i}
+          className="my-3 list-decimal space-y-2 pl-6 marker:font-semibold marker:text-violet-400"
+        >
+          {items.map((item, index) => (
+            <li key={index} className="pl-1 text-slate-300">
+              {renderInline(item)}
+            </li>
+          ))}
+        </ol>
+      );
+
+      continue;
+    }
+
+    // Paragraphs
+    const paragraph: string[] = [];
+
+    while (
+      i < lines.length &&
+      lines[i].trim() &&
+      !/^(#{1,6}\s|```|>|[-*+]\s|\d+[.)]\s)/.test(lines[i].trim())
+    ) {
+      paragraph.push(lines[i].trim());
+      i++;
+    }
+
+    if (paragraph.length > 0) {
+      elements.push(
+        <p key={i} className="my-3 leading-7 text-slate-300">
+          {paragraph.map((part, index) => (
+            <span key={index}>
+              {index > 0 && " "}
+              {renderInline(part)}
+            </span>
+          ))}
+        </p>
+      );
+
+      continue;
+    }
+
+    i++;
+  }
+
+  return <div className="w-full">{elements}</div>;
 }
 
 export default function ChatMessage({ message }: ChatMessageProps) {
@@ -26,49 +353,6 @@ export default function ChatMessage({ message }: ChatMessageProps) {
     } catch {
       setCopied(false);
     }
-  }
-
-  function renderContent(content: string) {
-    const parts = content.split(/(```[\s\S]*?```)/g);
-
-    return parts.map((part, index) => {
-      if (part.startsWith("```") && part.endsWith("```")) {
-        const lines = part.split("\n");
-        const language = lines[0].replace("```", "").trim();
-        const code = lines.slice(1, -1).join("\n");
-
-        return (
-          <div
-            key={index}
-            className="my-5 overflow-hidden rounded-xl border border-white/10 bg-[#080b18]"
-          >
-            <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-              <span className="text-xs text-slate-400">
-                {language || "Code"}
-              </span>
-
-              <button
-                type="button"
-                onClick={() => navigator.clipboard.writeText(code)}
-                className="text-xs text-slate-400 transition hover:text-white"
-              >
-                Copy code
-              </button>
-            </div>
-
-            <pre className="overflow-x-auto p-4 text-xs leading-6 text-cyan-100 sm:text-sm">
-              <code>{code}</code>
-            </pre>
-          </div>
-        );
-      }
-
-      return (
-        <span key={index} className="whitespace-pre-wrap">
-          {part}
-        </span>
-      );
-    });
   }
 
   return (
@@ -103,13 +387,19 @@ export default function ChatMessage({ message }: ChatMessageProps) {
         </div>
 
         <div
-          className={`text-sm leading-7 sm:text-[15px] sm:leading-8 ${
+          className={`w-full text-sm leading-7 sm:text-[15px] ${
             isUser
               ? "rounded-2xl rounded-tr-sm border border-violet-400/20 bg-violet-500/15 px-4 py-3 text-white"
-              : "w-full text-slate-200"
+              : "text-slate-200"
           }`}
         >
-          {renderContent(message.content)}
+          {isUser ? (
+            <div className="whitespace-pre-wrap break-words">
+              {message.content}
+            </div>
+          ) : (
+            <MarkdownContent content={message.content} />
+          )}
         </div>
 
         {!isUser && (
@@ -132,4 +422,4 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       )}
     </article>
   );
-}
+            }
