@@ -1,14 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import {
-  Menu,
-  Sparkles,
-  MessageSquare,
-  Code2,
-  Lightbulb,
-  ArrowUpRight,
-} from "lucide-react";
+import { Sparkles } from "lucide-react";
 
 import AppSidebar from "@/components/layout/app-sidebar";
 import Topbar from "@/components/layout/topbar";
@@ -32,29 +25,6 @@ interface ChatInterfaceProps {
   isSaved?: boolean;
   onToggleSave?: () => void;
 }
-
-const suggestions = [
-  {
-    icon: MessageSquare,
-    title: "Write something",
-    prompt: "Help me write something professional and engaging.",
-  },
-  {
-    icon: Code2,
-    title: "Build with code",
-    prompt: "Help me build a modern application step by step.",
-  },
-  {
-    icon: Lightbulb,
-    title: "Learn something",
-    prompt: "Teach me something interesting in a simple way.",
-  },
-  {
-    icon: Sparkles,
-    title: "Explore ideas",
-    prompt: "Give me creative ideas for a new project.",
-  },
-];
 
 export default function ChatInterface({
   messages,
@@ -90,8 +60,6 @@ export default function ChatInterface({
   return (
     <main className="flex h-[100dvh] w-full overflow-hidden bg-[#080817] text-white">
 
-      {/* SIDEBAR */}
-
       <AppSidebar
         activeItem="AI Chat"
         chats={chats}
@@ -101,11 +69,7 @@ export default function ChatInterface({
         onSelectChat={onSelectChat}
       />
 
-      {/* MAIN WORKSPACE */}
-
       <section className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
-
-        {/* TOP NAVIGATION */}
 
         <Topbar
           title="ZENTRIX"
@@ -115,8 +79,6 @@ export default function ChatInterface({
           onMenuClick={() => setSidebarOpen(true)}
           onNewChat={handleNewChat}
         />
-
-        {/* CHAT AREA */}
 
         <div className="relative flex min-h-0 flex-1 flex-col">
 
@@ -128,11 +90,9 @@ export default function ChatInterface({
 
             {!hasMessages ? (
 
-              /* WELCOME SCREEN */
-
               <div className="flex min-h-full flex-col items-center justify-center px-5 py-12">
 
-                <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-2xl border border-violet-400/20 bg-gradient-to-br from-violet-500/20 to-cyan-400/10 shadow-[0_0_45px_rgba(139,92,246,0.12)]">
+                <div className="mb-7 flex h-14 w-14 items-center justify-center rounded-2xl border border-violet-400/20 bg-gradient-to-br from-violet-500/20 to-cyan-400/10 shadow-[0_0_45px_rgba(139,92,246,0.12)]">
 
                   <Sparkles className="h-7 w-7 text-violet-300" />
 
@@ -159,54 +119,16 @@ export default function ChatInterface({
                     or bring your next big project to life.
                   </p>
 
-                </div>
-
-                {/* QUICK PROMPTS */}
-
-                <div className="mt-10 grid w-full max-w-xl grid-cols-2 gap-3">
-
-                  {suggestions.map((item) => {
-                    const Icon = item.icon;
-
-                    return (
-                      <button
-                        key={item.title}
-                        type="button"
-                        onClick={() => onSend(item.prompt)}
-                        className="group flex min-h-[76px] items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 text-left transition duration-200 hover:border-violet-400/30 hover:bg-violet-500/[0.07] active:scale-[0.98]"
-                      >
-
-                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-violet-400/15 bg-violet-500/10 text-violet-300 transition group-hover:bg-violet-500/20">
-
-                          <Icon className="h-5 w-5" />
-
-                        </div>
-
-                        <div className="min-w-0 flex-1">
-
-                          <p className="text-sm font-medium text-slate-200">
-                            {item.title}
-                          </p>
-
-                        </div>
-
-                        <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-600 transition group-hover:text-violet-300" />
-
-                      </button>
-                    );
-                  })}
+                  <p className="mt-7 text-xs leading-6 text-slate-500">
+                    Try asking a question, writing something,
+                    learning a skill, or sharing an idea.
+                  </p>
 
                 </div>
-
-                <p className="mt-9 text-center text-[11px] tracking-wide text-slate-600">
-                  Powered by intelligent AI models
-                </p>
 
               </div>
 
             ) : (
-
-              /* ACTIVE CONVERSATION */
 
               <div className="mx-auto w-full max-w-4xl px-4 py-7 sm:px-8">
 
@@ -274,8 +196,6 @@ export default function ChatInterface({
 
           </div>
 
-          {/* MESSAGE COMPOSER */}
-
           <div className="relative z-10 shrink-0 border-t border-white/[0.06] bg-[#080817]/95 px-3 pb-[max(14px,env(safe-area-inset-bottom))] pt-4 backdrop-blur-xl sm:px-6">
 
             <div className="mx-auto w-full max-w-4xl">
@@ -287,10 +207,6 @@ export default function ChatInterface({
                 isGenerating={isGenerating}
               />
 
-              <p className="mt-3 text-center text-[10px] text-slate-600">
-                ZENTRIX AI can make mistakes.
-              </p>
-
             </div>
 
           </div>
@@ -301,4 +217,4 @@ export default function ChatInterface({
 
     </main>
   );
-          }
+}
