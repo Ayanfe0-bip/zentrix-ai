@@ -66,6 +66,7 @@ export default function ChatInterface({
 }: ChatInterfaceProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -101,18 +102,14 @@ export default function ChatInterface({
         />
 
         <div className="relative flex min-h-0 flex-1 flex-col">
-          <div className="pointer-events-none absolute inset-0 overflow-hidden">
-            <div className="absolute left-1/2 top-0 h-72 w-72 -translate-x-1/2 rounded-full bg-violet-600/[0.06] blur-[120px]" />
-            <div className="absolute bottom-0 right-0 h-64 w-64 rounded-full bg-cyan-500/[0.04] blur-[120px]" />
-          </div>
-
-          <div className="relative min-h-0 flex-1 overflow-y-auto">
+          <div
+            ref={scrollAreaRef}
+            className="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain"
+          >
             {messages.length === 0 ? (
-              <div className="flex min-h-full flex-col items-center justify-center px-5 py-12">
-                <div className="relative mb-7 flex h-20 w-20 items-center justify-center rounded-3xl border border-violet-400/20 bg-gradient-to-br from-violet-500/20 to-cyan-500/10 shadow-2xl shadow-violet-950/30">
-                  <div className="absolute inset-0 rounded-3xl bg-violet-500/10 blur-xl" />
-
-                  <span className="relative bg-gradient-to-br from-violet-300 to-cyan-300 bg-clip-text text-4xl font-bold text-transparent">
+              <div className="flex min-h-full flex-col items-center justify-center px-5 py-10">
+                <div className="mb-7 flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-400/20 bg-gradient-to-br from-violet-500/20 to-cyan-500/10 shadow-xl shadow-violet-950/20">
+                  <span className="bg-gradient-to-br from-violet-300 to-cyan-300 bg-clip-text text-4xl font-bold text-transparent">
                     Z
                   </span>
                 </div>
@@ -130,12 +127,12 @@ export default function ChatInterface({
                   </h2>
 
                   <p className="mx-auto mt-5 max-w-lg text-sm leading-7 text-slate-400">
-                    Explore ideas, write code, solve problems, and turn
-                    your imagination into something extraordinary.
+                    Explore ideas, write code, solve problems,
+                    and turn your imagination into something extraordinary.
                   </p>
                 </div>
 
-                <div className="mt-10 grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2">
+                <div className="mt-9 grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2">
                   {suggestions.map((suggestion) => (
                     <button
                       key={suggestion.title}
@@ -143,7 +140,7 @@ export default function ChatInterface({
                       onClick={() => onSend(suggestion.prompt)}
                       className="group rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 text-left transition duration-200 hover:-translate-y-1 hover:border-violet-400/30 hover:bg-violet-500/[0.06]"
                     >
-                      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl border border-violet-400/20 bg-violet-500/10 text-sm font-semibold text-violet-300 transition group-hover:border-cyan-400/30 group-hover:text-cyan-300">
+                      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl border border-violet-400/20 bg-violet-500/10 text-sm font-semibold text-violet-300">
                         {suggestion.icon}
                       </div>
 
@@ -160,33 +157,28 @@ export default function ChatInterface({
 
                 <Link
                   href="/plugins"
-                  className="group mt-7 flex w-full max-w-2xl flex-col gap-3 rounded-2xl border border-violet-400/20 bg-gradient-to-r from-violet-500/[0.10] to-cyan-500/[0.06] p-4 transition hover:border-violet-400/40 hover:from-violet-500/[0.16] hover:to-cyan-500/[0.10] sm:flex-row sm:items-center sm:justify-between sm:px-5"
+                  className="mt-7 flex w-full max-w-2xl items-center gap-3 rounded-2xl border border-violet-400/20 bg-gradient-to-r from-violet-500/[0.10] to-cyan-500/[0.06] p-4 transition hover:border-violet-400/40"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-xl">
-                      🧩
-                    </div>
-
-                    <div>
-                      <h3 className="text-sm font-bold text-white">
-                        Discover ZENTRIX Plugins
-                      </h3>
-
-                      <p className="mt-1 text-xs text-slate-400">
-                        Explore powerful tools and expand your AI workspace.
-                      </p>
-                    </div>
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-xl">
+                    🧩
                   </div>
 
-                  <span className="flex items-center gap-2 text-xs font-semibold text-violet-300 transition group-hover:text-cyan-300">
-                    Explore Marketplace
-                    <span aria-hidden="true">→</span>
-                  </span>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm font-bold text-white">
+                      Discover ZENTRIX Plugins
+                    </h3>
+
+                    <p className="mt-1 text-xs text-slate-400">
+                      Expand your AI workspace with powerful tools.
+                    </p>
+                  </div>
+
+                  <span className="text-lg text-violet-300">→</span>
                 </Link>
               </div>
             ) : (
               <div className="mx-auto w-full max-w-4xl px-4 py-5 sm:px-8">
-                <div className="mb-5 flex items-center justify-between">
+                <div className="mb-4 flex items-center justify-between">
                   <p className="text-xs text-slate-500">
                     Conversation
                   </p>
@@ -195,19 +187,13 @@ export default function ChatInterface({
                     type="button"
                     onClick={onToggleSave}
                     disabled={!onToggleSave || isGenerating}
-                    aria-label={
-                      isSaved
-                        ? "Remove bookmark"
-                        : "Save conversation"
-                    }
-                    className={`inline-flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                    className={`rounded-xl border px-3 py-2 text-xs font-medium transition disabled:opacity-50 ${
                       isSaved
                         ? "border-violet-400/30 bg-violet-500/15 text-violet-300"
-                        : "border-white/10 bg-white/[0.03] text-slate-300 hover:border-violet-400/30 hover:bg-violet-500/10 hover:text-white"
+                        : "border-white/10 text-slate-300 hover:bg-white/[0.05]"
                     }`}
                   >
-                    <span>{isSaved ? "★" : "☆"}</span>
-                    {isSaved ? "Saved" : "Save chat"}
+                    {isSaved ? "★ Saved" : "☆ Save chat"}
                   </button>
                 </div>
 
@@ -220,14 +206,15 @@ export default function ChatInterface({
 
                 {isGenerating && (
                   <div className="flex items-center gap-3 py-5">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-violet-400/20 bg-violet-500/10">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-violet-400/20 bg-violet-500/10">
                       <span className="h-2 w-2 animate-pulse rounded-full bg-violet-400" />
                     </div>
 
                     <div className="flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400 [animation-delay:-0.3s]" />
-                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400 [animation-delay:-0.15s]" />
                       <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400 [animation-delay:150ms]" />
+                      <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400 [animation-delay:300ms]" />
+
                       <span className="ml-2 text-xs text-slate-500">
                         ZENTRIX is thinking...
                       </span>
@@ -240,7 +227,7 @@ export default function ChatInterface({
             )}
           </div>
 
-          <div className="relative border-t border-white/[0.06] bg-[#070817]/90 px-4 pb-4 pt-4 backdrop-blur-xl sm:px-8">
+          <div className="relative z-10 shrink-0 border-t border-white/[0.06] bg-[#070817]/95 px-3 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl sm:px-6 sm:pt-4">
             <div className="mx-auto w-full max-w-4xl">
               <ChatInput
                 onSend={onSend}
@@ -254,4 +241,4 @@ export default function ChatInterface({
       </section>
     </main>
   );
-                }
+         }
