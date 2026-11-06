@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
 import ZentrixLogo from "@/components/zentrix-logo";
+import ModelSelector from "@/components/chat/model-selector";
+import { DEFAULT_MODEL } from "@/lib/ai/models";
 
 export interface ChatHistoryItem {
   id: string;
@@ -17,6 +19,8 @@ interface AppSidebarProps {
   onSelectChat?: (id: string) => void;
   onClose?: () => void;
   isOpen?: boolean;
+  selectedModel?: string;
+  onModelChange?: (model: string) => void;
 }
 
 const navigationItems = [
@@ -24,11 +28,7 @@ const navigationItems = [
   { label: "Chat History", href: "/history", icon: "history" },
   { label: "Code Assistant", href: "/code", icon: "code" },
   { label: "Plugin Marketplace", href: "/plugins", icon: "plugin" },
-  {
-    label: "Saved Conversations",
-    href: "/saved",
-    icon: "bookmark",
-  },
+  { label: "Saved Conversations", href: "/saved", icon: "bookmark" },
 ];
 
 function SidebarIcon({
@@ -76,6 +76,12 @@ function SidebarIcon({
         <path d="M12 7v5l3 2" />
       </>
     ),
+    cpu: (
+      <>
+        <rect x="5" y="5" width="14" height="14" rx="2" />
+        <path d="M9 9h6v6H9zM9 1v4m6-4v4M9 19v4m6-4v4M1 9h4m-4 6h4m14-6h4m-4 6h4" />
+      </>
+    ),
   };
 
   return (
@@ -101,6 +107,8 @@ export default function AppSidebar({
   onSelectChat,
   onClose,
   isOpen = true,
+  selectedModel = DEFAULT_MODEL,
+  onModelChange,
 }: AppSidebarProps) {
   const [profileName, setProfileName] = useState("ZENTRIX User");
   const [profileInitials, setProfileInitials] = useState("Z");
@@ -114,10 +122,7 @@ export default function AppSidebar({
           profile = event.detail;
         } else {
           const stored = localStorage.getItem("zentrix-ai-profile");
-
-          if (stored) {
-            profile = JSON.parse(stored);
-          }
+          if (stored) profile = JSON.parse(stored);
         }
 
         if (
@@ -126,7 +131,6 @@ export default function AppSidebar({
           profile.displayName.trim()
         ) {
           const name = profile.displayName.trim();
-
           setProfileName(name);
 
           const initials = name
@@ -147,7 +151,6 @@ export default function AppSidebar({
     }
 
     loadProfile();
-
     window.addEventListener("storage", loadProfile);
     window.addEventListener("zentrix-profile-updated", loadProfile);
 
@@ -159,16 +162,11 @@ export default function AppSidebar({
 
   useEffect(() => {
     function handleEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        onClose?.();
-      }
+      if (event.key === "Escape") onClose?.();
     }
 
     window.addEventListener("keydown", handleEscape);
-
-    return () => {
-      window.removeEventListener("keydown", handleEscape);
-    };
+    return () => window.removeEventListener("keydown", handleEscape);
   }, [onClose]);
 
   return (
@@ -239,7 +237,6 @@ export default function AppSidebar({
               >
                 <SidebarIcon name={item.icon} />
                 <span>{item.label}</span>
-
                 {active && (
                   <span className="ml-auto h-1.5 w-1.5 rounded-full bg-violet-500" />
                 )}
@@ -248,18 +245,42 @@ export default function AppSidebar({
           })}
         </nav>
 
-        <div className="mx-4 mt-7 border-t border-[var(--border)]" />
+        <div className="mx-4 mt-6 border-t border-[var(--border)]" />
 
-        <div className="flex min-h-0 flex-1 flex-col px-4 pt-6">
+        <section className="shrink-0 px-4 pt-5">
+          <div className="mb-3 flex items-center gap-2 px-3">
+            <SidebarIcon name="cpu" className="h-4 w-4 text-violet-400" />
+            <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
+              AI Models
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-violet-500/20 bg-violet-500/[0.06] p-3">
+            <p className="mb-2 text-xs font-medium text-slate-400">
+              Choose your model
+            </p>
+
+            {onModelChange ? (
+              <ModelSelector
+                selectedModel={selectedModel}
+                onModelChange={onModelChange}
+              />
+            ) : (
+              <p className="text-xs text-slate-400">
+                {selectedModel}
+              </p>
+            )}
+          </div>
+        </section>
+
+        <div className="mx-4 mt-5 border-t border-[var(--border)]" />
+
+        <div className="flex min-h-0 flex-1 flex-col px-4 pt-5">
           <div className="mb-4 flex items-center justify-between px-3">
             <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">
               Recent Conversations
             </p>
-
-            <SidebarIcon
-              name="history"
-              className="h-4 w-4 text-slate-500"
-            />
+            <SidebarIcon name="history" className="h-4 w-4 text-slate-500" />
           </div>
 
           <div className="flex-1 space-y-1 overflow-y-auto">
@@ -274,11 +295,7 @@ export default function AppSidebar({
                   }}
                   className="flex w-full items-center gap-3 rounded-lg px-3 py-3 text-left text-sm text-slate-500 transition hover:bg-black/[0.04] hover:text-violet-500"
                 >
-                  <SidebarIcon
-                    name="chat"
-                    className="h-4 w-4 shrink-0"
-                  />
-
+                  <SidebarIcon name="chat" className="h-4 w-4 shrink-0" />
                   <span className="truncate">{chat.title}</span>
                 </button>
               ))
@@ -332,14 +349,11 @@ export default function AppSidebar({
               <p className="truncate text-sm font-semibold text-[var(--foreground)]">
                 {profileName}
               </p>
-
-              <p className="text-xs text-slate-500">
-                Free Workspace
-              </p>
+              <p className="text-xs text-slate-500">Free Workspace</p>
             </div>
           </Link>
         </div>
       </aside>
     </>
   );
-            }
+}
