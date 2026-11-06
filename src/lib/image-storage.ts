@@ -43,12 +43,6 @@ function imageToBlob(
   image: string,
   mediaType: string
 ): Blob {
-  if (image.startsWith("data:")) {
-    const response = fetch(image);
-
-    return new Blob([], { type: mediaType });
-  }
-
   const binary = atob(image);
   const bytes = new Uint8Array(binary.length);
 
@@ -59,9 +53,6 @@ function imageToBlob(
   return new Blob([bytes], { type: mediaType });
 }
 
-/**
- * Save a generated image and return its storage ID.
- */
 export async function saveGeneratedImage(
   image: string,
   mediaType = "image/png"
@@ -71,7 +62,6 @@ export async function saveGeneratedImage(
     : imageToBlob(image, mediaType);
 
   const database = await openImageDatabase();
-
   const id = crypto.randomUUID();
 
   const record: StoredImage = {
@@ -106,9 +96,6 @@ export async function saveGeneratedImage(
   });
 }
 
-/**
- * Retrieve a previously saved image.
- */
 export async function getGeneratedImage(
   imageId: string
 ): Promise<Blob | null> {
@@ -138,9 +125,6 @@ export async function getGeneratedImage(
   });
 }
 
-/**
- * Delete one generated image.
- */
 export async function deleteGeneratedImage(
   imageId: string
 ): Promise<void> {
@@ -166,10 +150,6 @@ export async function deleteGeneratedImage(
   });
 }
 
-/**
- * Create a temporary display URL for a stored image.
- * Remember to call URL.revokeObjectURL(url) when no longer needed.
- */
 export async function getGeneratedImageUrl(
   imageId: string
 ): Promise<string | null> {
@@ -178,4 +158,4 @@ export async function getGeneratedImageUrl(
   if (!blob) return null;
 
   return URL.createObjectURL(blob);
-    }
+}
