@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import Link from "next/link";
 
 interface ErrorPageProps {
   error: Error & { digest?: string };
@@ -47,18 +48,18 @@ export default function ErrorPage({
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <button
             type="button"
-            onClick={() => reset()}
+            onClick={reset}
             className="rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-violet-950/30 transition hover:brightness-110 active:scale-95"
           >
             Try Again
           </button>
 
-          <a
+          <Link
             href="/"
             className="rounded-xl border border-white/10 bg-white/[0.04] px-6 py-3 text-sm font-semibold text-slate-300 transition hover:border-violet-400/30 hover:bg-violet-500/10 hover:text-white"
           >
             Back to Home
-          </a>
+          </Link>
         </div>
 
         <p className="mt-12 text-xs text-slate-600">
@@ -67,4 +68,4 @@ export default function ErrorPage({
       </div>
     </main>
   );
-            }
+}
