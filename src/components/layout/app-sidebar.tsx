@@ -21,6 +21,7 @@ interface AppSidebarProps {
 
 const navigationItems = [
   { label: "AI Chat", href: "/chat", icon: "chat" },
+  { label: "Chat History", href: "/history", icon: "history" },
   { label: "Code Assistant", href: "/code", icon: "code" },
   { label: "Plugin Marketplace", href: "/plugins", icon: "plugin" },
   {
