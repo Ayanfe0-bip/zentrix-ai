@@ -1,11 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import Link from "next/link";
+import {
+  Menu,
+  Sparkles,
+  MessageSquare,
+  Code2,
+  Lightbulb,
+  ArrowUpRight,
+} from "lucide-react";
+
 import AppSidebar from "@/components/layout/app-sidebar";
 import Topbar from "@/components/layout/topbar";
 import ChatMessage from "@/components/chat/chat-message";
 import ChatInput from "@/components/chat/chat-input";
+
 import type { ChatMessageData } from "@/components/chat/chat-message";
 import type { ChatHistoryItem } from "@/components/layout/app-sidebar";
 import { DEFAULT_MODEL } from "@/lib/ai/models";
@@ -26,28 +35,24 @@ interface ChatInterfaceProps {
 
 const suggestions = [
   {
-    icon: "✦",
-    title: "Creative writing",
-    description: "Write, improve, and explore new ideas.",
-    prompt: "Help me write something creative and engaging.",
+    icon: MessageSquare,
+    title: "Write something",
+    prompt: "Help me write something professional and engaging.",
   },
   {
-    icon: "</>",
-    title: "Write code",
-    description: "Build applications and solve coding problems.",
-    prompt: "Help me write and understand some code.",
+    icon: Code2,
+    title: "Build with code",
+    prompt: "Help me build a modern application step by step.",
   },
   {
-    icon: "◈",
+    icon: Lightbulb,
     title: "Learn something",
-    description: "Understand complex topics more easily.",
-    prompt: "Teach me something interesting step by step.",
+    prompt: "Teach me something interesting in a simple way.",
   },
   {
-    icon: "⌘",
-    title: "Solve a problem",
-    description: "Think through challenges and find solutions.",
-    prompt: "Help me solve a problem step by step.",
+    icon: Sparkles,
+    title: "Explore ideas",
+    prompt: "Give me creative ideas for a new project.",
   },
 ];
 
@@ -65,8 +70,10 @@ export default function ChatInterface({
   onToggleSave,
 }: ChatInterfaceProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+  const hasMessages = messages.length > 0;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({
@@ -81,7 +88,10 @@ export default function ChatInterface({
   }
 
   return (
-    <main className="flex h-[100dvh] w-full overflow-hidden bg-[#070817] text-white">
+    <main className="flex h-[100dvh] w-full overflow-hidden bg-[#080817] text-white">
+
+      {/* SIDEBAR */}
+
       <AppSidebar
         activeItem="AI Chat"
         chats={chats}
@@ -91,9 +101,14 @@ export default function ChatInterface({
         onSelectChat={onSelectChat}
       />
 
-      <section className="flex min-w-0 flex-1 flex-col">
+      {/* MAIN WORKSPACE */}
+
+      <section className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
+
+        {/* TOP NAVIGATION */}
+
         <Topbar
-          title="AI Chat"
+          title="ZENTRIX"
           subtitle="Your intelligent workspace"
           modelName={selectedModel}
           onModelChange={onModelChange}
@@ -101,100 +116,121 @@ export default function ChatInterface({
           onNewChat={handleNewChat}
         />
 
+        {/* CHAT AREA */}
+
         <div className="relative flex min-h-0 flex-1 flex-col">
-          <div
-            ref={scrollAreaRef}
-            className="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto overscroll-contain"
-          >
-            {messages.length === 0 ? (
-              <div className="flex min-h-full flex-col items-center justify-center px-5 py-10">
-                <div className="mb-7 flex h-16 w-16 items-center justify-center rounded-2xl border border-violet-400/20 bg-gradient-to-br from-violet-500/20 to-cyan-500/10 shadow-xl shadow-violet-950/20">
-                  <span className="bg-gradient-to-br from-violet-300 to-cyan-300 bg-clip-text text-4xl font-bold text-transparent">
-                    Z
-                  </span>
+
+          <div className="pointer-events-none absolute -left-40 top-10 h-80 w-80 rounded-full bg-violet-600/[0.07] blur-[120px]" />
+
+          <div className="pointer-events-none absolute -bottom-40 right-0 h-96 w-96 rounded-full bg-cyan-500/[0.05] blur-[130px]" />
+
+          <div className="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+
+            {!hasMessages ? (
+
+              /* WELCOME SCREEN */
+
+              <div className="flex min-h-full flex-col items-center justify-center px-5 py-12">
+
+                <div className="mb-8 flex h-14 w-14 items-center justify-center rounded-2xl border border-violet-400/20 bg-gradient-to-br from-violet-500/20 to-cyan-400/10 shadow-[0_0_45px_rgba(139,92,246,0.12)]">
+
+                  <Sparkles className="h-7 w-7 text-violet-300" />
+
                 </div>
 
                 <div className="max-w-2xl text-center">
-                  <p className="mb-3 text-xs font-semibold uppercase tracking-[0.3em] text-violet-400">
-                    Think Beyond. Build Without Limits.
+
+                  <p className="mb-4 text-xs font-semibold uppercase tracking-[0.25em] text-violet-400">
+                    Welcome to ZENTRIX
                   </p>
 
-                  <h2 className="text-3xl font-bold tracking-tight text-white sm:text-5xl">
-                    What can I help you
-                    <span className="block bg-gradient-to-r from-violet-400 to-cyan-400 bg-clip-text text-transparent">
-                      accomplish today?
+                  <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-5xl">
+
+                    Welcome!
+
+                    <span className="mt-2 block bg-gradient-to-r from-violet-300 via-purple-300 to-cyan-300 bg-clip-text text-transparent">
+                      How can I help you today?
                     </span>
-                  </h2>
 
-                  <p className="mx-auto mt-5 max-w-lg text-sm leading-7 text-slate-400">
-                    Explore ideas, write code, solve problems,
-                    and turn your imagination into something extraordinary.
+                  </h1>
+
+                  <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-slate-400 sm:text-base">
+                    Ask anything, explore ideas, solve problems,
+                    or bring your next big project to life.
                   </p>
+
                 </div>
 
-                <div className="mt-9 grid w-full max-w-2xl grid-cols-1 gap-3 sm:grid-cols-2">
-                  {suggestions.map((suggestion) => (
-                    <button
-                      key={suggestion.title}
-                      type="button"
-                      onClick={() => onSend(suggestion.prompt)}
-                      className="group rounded-2xl border border-white/[0.08] bg-white/[0.025] p-4 text-left transition duration-200 hover:-translate-y-1 hover:border-violet-400/30 hover:bg-violet-500/[0.06]"
-                    >
-                      <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl border border-violet-400/20 bg-violet-500/10 text-sm font-semibold text-violet-300">
-                        {suggestion.icon}
-                      </div>
+                {/* QUICK PROMPTS */}
 
-                      <h3 className="text-sm font-semibold text-white">
-                        {suggestion.title}
-                      </h3>
+                <div className="mt-10 grid w-full max-w-xl grid-cols-2 gap-3">
 
-                      <p className="mt-1 text-xs leading-5 text-slate-500">
-                        {suggestion.description}
-                      </p>
-                    </button>
-                  ))}
+                  {suggestions.map((item) => {
+                    const Icon = item.icon;
+
+                    return (
+                      <button
+                        key={item.title}
+                        type="button"
+                        onClick={() => onSend(item.prompt)}
+                        className="group flex min-h-[76px] items-center gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 text-left transition duration-200 hover:border-violet-400/30 hover:bg-violet-500/[0.07] active:scale-[0.98]"
+                      >
+
+                        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-violet-400/15 bg-violet-500/10 text-violet-300 transition group-hover:bg-violet-500/20">
+
+                          <Icon className="h-5 w-5" />
+
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+
+                          <p className="text-sm font-medium text-slate-200">
+                            {item.title}
+                          </p>
+
+                        </div>
+
+                        <ArrowUpRight className="h-4 w-4 shrink-0 text-slate-600 transition group-hover:text-violet-300" />
+
+                      </button>
+                    );
+                  })}
+
                 </div>
 
-                <Link
-                  href="/plugins"
-                  className="mt-7 flex w-full max-w-2xl items-center gap-3 rounded-2xl border border-violet-400/20 bg-gradient-to-r from-violet-500/[0.10] to-cyan-500/[0.06] p-4 transition hover:border-violet-400/40"
-                >
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-violet-500/15 text-xl">
-                    🧩
-                  </div>
+                <p className="mt-9 text-center text-[11px] tracking-wide text-slate-600">
+                  Powered by intelligent AI models
+                </p>
 
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-sm font-bold text-white">
-                      Discover ZENTRIX Plugins
-                    </h3>
+              </div>
 
-                    <p className="mt-1 text-xs text-slate-400">
-                      Expand your AI workspace with powerful tools.
+            ) : (
+
+              /* ACTIVE CONVERSATION */
+
+              <div className="mx-auto w-full max-w-4xl px-4 py-7 sm:px-8">
+
+                <div className="mb-7 flex items-center justify-between">
+
+                  <div>
+                    <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+                      Conversation
                     </p>
                   </div>
-
-                  <span className="text-lg text-violet-300">→</span>
-                </Link>
-              </div>
-            ) : (
-              <div className="mx-auto w-full max-w-4xl px-4 py-5 sm:px-8">
-                <div className="mb-4 flex items-center justify-between">
-                  <p className="text-xs text-slate-500">
-                    Conversation
-                  </p>
 
                   <button
                     type="button"
                     onClick={onToggleSave}
                     disabled={!onToggleSave || isGenerating}
-                    className={`rounded-xl border px-3 py-2 text-xs font-medium transition disabled:opacity-50 ${
+                    className={`rounded-xl border px-4 py-2 text-xs font-medium transition disabled:opacity-50 ${
                       isSaved
                         ? "border-violet-400/30 bg-violet-500/15 text-violet-300"
-                        : "border-white/10 text-slate-300 hover:bg-white/[0.05]"
+                        : "border-white/10 text-slate-300 hover:border-violet-400/30 hover:bg-violet-500/10"
                     }`}
                   >
                     {isSaved ? "★ Saved" : "☆ Save chat"}
                   </button>
+
                 </div>
 
                 {messages.map((message) => (
@@ -205,40 +241,64 @@ export default function ChatInterface({
                 ))}
 
                 {isGenerating && (
-                  <div className="flex items-center gap-3 py-5">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-xl border border-violet-400/20 bg-violet-500/10">
-                      <span className="h-2 w-2 animate-pulse rounded-full bg-violet-400" />
+
+                  <div className="flex items-center gap-3 py-6">
+
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-violet-400/20 bg-violet-500/10">
+                      <Sparkles className="h-4 w-4 animate-pulse text-violet-300" />
                     </div>
 
                     <div className="flex items-center gap-1.5">
+
                       <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400" />
+
                       <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400 [animation-delay:150ms]" />
+
                       <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400 [animation-delay:300ms]" />
 
                       <span className="ml-2 text-xs text-slate-500">
                         ZENTRIX is thinking...
                       </span>
+
                     </div>
+
                   </div>
+
                 )}
 
                 <div ref={messagesEndRef} />
+
               </div>
+
             )}
+
           </div>
 
-          <div className="relative z-10 shrink-0 border-t border-white/[0.06] bg-[#070817]/95 px-3 pb-[max(12px,env(safe-area-inset-bottom))] pt-3 backdrop-blur-xl sm:px-6 sm:pt-4">
+          {/* MESSAGE COMPOSER */}
+
+          <div className="relative z-10 shrink-0 border-t border-white/[0.06] bg-[#080817]/95 px-3 pb-[max(14px,env(safe-area-inset-bottom))] pt-4 backdrop-blur-xl sm:px-6">
+
             <div className="mx-auto w-full max-w-4xl">
+
               <ChatInput
                 onSend={onSend}
                 onStop={onStop}
                 disabled={isGenerating}
                 isGenerating={isGenerating}
               />
+
+              <p className="mt-3 text-center text-[10px] text-slate-600">
+                ZENTRIX AI can make mistakes.
+              </p>
+
             </div>
+
           </div>
+
         </div>
+
       </section>
+
     </main>
   );
-         }
+          }
