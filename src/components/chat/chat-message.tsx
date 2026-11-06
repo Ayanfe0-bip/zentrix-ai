@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, ReactNode } from "react";
+import { InlineMath, BlockMath } from "react-katex";
 import ZentrixLogo from "@/components/zentrix-logo";
 import MessageSources from "@/components/chat/message-sources";
 
@@ -32,9 +33,33 @@ function extractSources(content: string) {
 
 function renderInline(text: string): ReactNode[] {
   const pattern =
-    /(\*\*.*?\*\*|__.*?__|\*.*?\*|_.*?_|~~.*?~~|`[^`]+`|\[.*?\]\(.*?\))/g;
+    /(\\\([\s\S]+?\\\)|(?<!\\)\$(?!\$)(?=[^$\n]*[\\_^{}=])[^\n$]+?\$(?!\$)|\*\*.*?\*\*|__.*?__|~~.*?~~|\*.*?\*|_.*?_|`[^`]+`|\[.*?\]\(.*?\))/g;
 
-  return text.split(pattern).map((part, index) => {
+  return text.split(pattern).filter(Boolean).map((part, index) => {
+    if (part.startsWith("\\(") && part.endsWith("\\)")) {
+      return (
+        <InlineMath
+          key={index}
+          math={part.slice(2, -2).trim()}
+          renderError={() => <span>{part}</span>}
+        />
+      );
+    }
+
+    if (
+      part.startsWith("$") &&
+      part.endsWith("$") &&
+      !part.startsWith("$$")
+    ) {
+      return (
+        <InlineMath
+          key={index}
+          math={part.slice(1, -1).trim()}
+          renderError={() => <span>{part}</span>}
+        />
+      );
+    }
+
     if (
       (part.startsWith("**") && part.endsWith("**")) ||
       (part.startsWith("__") && part.endsWith("__"))
@@ -46,15 +71,15 @@ function renderInline(text: string): ReactNode[] {
       );
     }
 
+    if (part.startsWith("~~") && part.endsWith("~~")) {
+      return <del key={index}>{part.slice(2, -2)}</del>;
+    }
+
     if (
       (part.startsWith("*") && part.endsWith("*")) ||
       (part.startsWith("_") && part.endsWith("_"))
     ) {
       return <em key={index}>{part.slice(1, -1)}</em>;
-    }
-
-    if (part.startsWith("~~") && part.endsWith("~~")) {
-      return <del key={index}>{part.slice(2, -2)}</del>;
     }
 
     if (part.startsWith("`") && part.endsWith("`")) {
@@ -88,6 +113,21 @@ function renderInline(text: string): ReactNode[] {
   });
 }
 
+function MathDisplay({ math }: { math: string }) {
+  return (
+    <div className="my-5 w-full overflow-x-auto rounded-xl border border-violet-400/15 bg-violet-500/[0.06] px-4 py-5 text-center text-white">
+      <BlockMath
+        math={math.trim()}
+        renderError={() => (
+          <code className="whitespace-pre-wrap break-words text-sm text-cyan-200">
+            {math}
+          </code>
+        )}
+      />
+    </div>
+  );
+}
+
 function MarkdownContent({ content }: { content: string }) {
   const lines = content.replace(/\r\n/g, "\n").split("\n");
   const elements: ReactNode[] = [];
@@ -100,6 +140,50 @@ function MarkdownContent({ content }: { content: string }) {
 
     if (!trimmed) {
       i++;
+      continue;
+    }
+
+    // Display math: \[ ... \]
+    if (trimmed.startsWith("\\[")) {
+      let math = trimmed.slice(2);
+      i++;
+
+      while (i < lines.length && !lines[i].trim().includes("\\]")) {
+        math += "\n" + lines[i];
+        i++;
+      }
+
+      if (i < lines.length) {
+        math += "\n" + lines[i].trim().replace("\\]", "");
+        i++;
+      }
+
+      elements.push(<MathDisplay key={i} math={math} />);
+      continue;
+    }
+
+    // Display math: $$ ... $$
+    if (trimmed.startsWith("$$")) {
+      let math = trimmed.slice(2);
+
+      if (math.endsWith("$$") && math.length > 2) {
+        math = math.slice(0, -2);
+        i++;
+      } else {
+        i++;
+
+        while (i < lines.length && !lines[i].trim().includes("$$")) {
+          math += "\n" + lines[i];
+          i++;
+        }
+
+        if (i < lines.length) {
+          math += "\n" + lines[i].trim().replace("$$", "");
+          i++;
+        }
+      }
+
+      elements.push(<MathDisplay key={i} math={math} />);
       continue;
     }
 
@@ -344,7 +428,7 @@ function MarkdownContent({ content }: { content: string }) {
     while (
       i < lines.length &&
       lines[i].trim() &&
-      !/^(#{1,6}\s|```|>|[-*+]\s|\d+[.)]\s)/.test(
+      !/^(#{1,6}\s|```|\\\[|\$\$|>|[-*+]\s|\d+[.)]\s)/.test(
         lines[i].trim()
       )
     ) {
@@ -465,4 +549,4 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       )}
     </article>
   );
-                                }
+                }
