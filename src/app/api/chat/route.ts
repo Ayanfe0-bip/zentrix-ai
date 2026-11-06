@@ -4,39 +4,27 @@ import { AI_MODELS, DEFAULT_MODEL } from "@/lib/ai/models";
 export const runtime = "nodejs";
 
 const SYSTEM_PROMPT = `
-You are ZENTRIX AI, an intelligent assistant created by
-Ayanfe Innovation Labs Limited.
+You are ZENTRIX AI, created by Ayanfe Innovation Labs Limited.
 
-Your tagline is:
-"Think Beyond. Build Without Limits."
+Your tagline is: "Think Beyond. Build Without Limits."
 
-PERSONALITY:
-- Be intelligent, helpful, friendly, and professional.
-- Explain difficult topics in simple language.
-- Be patient with beginners.
-- Give accurate, practical answers.
-- Help users with programming, creativity, education,
-  research, business, and everyday problem-solving.
-- When writing code, provide complete and understandable solutions.
-- Never pretend to have performed actions you did not perform.
-- Admit uncertainty when you are unsure.
-- Keep responses organized and easy to understand.
+You are intelligent, friendly, professional, patient, and helpful.
+Explain difficult topics simply.
+Help with programming, creativity, education, research, business,
+and everyday problem-solving.
+Provide complete and understandable code solutions.
+Never pretend to perform actions you did not perform.
+Admit uncertainty when necessary.
 
-IDENTITY:
 Your name is ZENTRIX AI.
 You are not ChatGPT.
-You were developed by Ayanfe Innovation Labs Limited.
 `;
 
 const RESPONSE_STYLES = {
-  balanced:
-    "Give clear, well-balanced answers with enough explanation and useful examples.",
-  concise:
-    "Be brief and direct. Focus on the most important information without unnecessary explanations.",
-  detailed:
-    "Give thorough explanations with helpful context, steps, examples, and important details.",
-  creative:
-    "Use an imaginative, engaging, and expressive approach while remaining accurate and useful.",
+  balanced: "Give clear, balanced answers with useful examples.",
+  concise: "Be brief and direct. Avoid unnecessary explanations.",
+  detailed: "Give thorough explanations, steps, context, and examples.",
+  creative: "Be imaginative and engaging while remaining accurate.",
 };
 
 const MAX_MESSAGES = 30;
@@ -55,10 +43,7 @@ export async function POST(request: NextRequest) {
 
     if (!apiKey) {
       return NextResponse.json(
-        {
-          error:
-            "ZENTRIX AI is not configured yet. Please add the OpenRouter API key.",
-        },
+        { error: "OpenRouter API key is not configured." },
         { status: 503 }
       );
     }
@@ -74,7 +59,7 @@ export async function POST(request: NextRequest) {
 
     if (body.messages.length > MAX_MESSAGES) {
       return NextResponse.json(
-        { error: "This conversation is too long. Start a new chat." },
+        { error: "This conversation is too long." },
         { status: 400 }
       );
     }
@@ -86,7 +71,7 @@ export async function POST(request: NextRequest) {
         !message ||
         !["user", "assistant"].includes(message.role) ||
         typeof message.content !== "string" ||
-        message.content.trim().length === 0 ||
+        !message.content.trim() ||
         message.content.length > MAX_MESSAGE_LENGTH
       ) {
         return NextResponse.json(
@@ -109,7 +94,9 @@ export async function POST(request: NextRequest) {
     }
 
     const requestedModel =
-      typeof body.model === "string" ? body.model : DEFAULT_MODEL;
+      typeof body.model === "string"
+        ? body.model
+        : DEFAULT_MODEL;
 
     const selectedModel = AI_MODELS.find(
       (model) => model.id === requestedModel
@@ -117,7 +104,7 @@ export async function POST(request: NextRequest) {
 
     if (!selectedModel) {
       return NextResponse.json(
-        { error: "The selected AI model is not available." },
+        { error: "The selected AI model is unavailable." },
         { status: 400 }
       );
     }
@@ -125,7 +112,7 @@ export async function POST(request: NextRequest) {
     const responseStyle: ResponseStyle =
       typeof body.responseStyle === "string" &&
       body.responseStyle in RESPONSE_STYLES
-        ? body.responseStyle
+        ? body.responseStyle as ResponseStyle
         : "balanced";
 
     const appUrl =
@@ -137,7 +124,7 @@ export async function POST(request: NextRequest) {
       {
         method: "POST",
         headers: {
-          Authorization: \`Bearer \${apiKey}\`,
+          Authorization: `Bearer ${apiKey}`,
           "Content-Type": "application/json",
           "HTTP-Referer": appUrl,
           "X-Title": "ZENTRIX AI",
@@ -172,19 +159,13 @@ export async function POST(request: NextRequest) {
 
       if (response.status === 429) {
         return NextResponse.json(
-          {
-            error:
-              "ZENTRIX has reached its current AI usage limit. Please try again later.",
-          },
+          { error: "AI usage limit reached. Please try again later." },
           { status: 429 }
         );
       }
 
       return NextResponse.json(
-        {
-          error:
-            "The AI provider could not process your request. Please try again.",
-        },
+        { error: "The AI provider could not process your request." },
         { status: 502 }
       );
     }
@@ -194,9 +175,7 @@ export async function POST(request: NextRequest) {
 
     if (typeof reply !== "string" || !reply.trim()) {
       return NextResponse.json(
-        {
-          error: "The AI provider returned an empty response.",
-        },
+        { error: "The AI provider returned an empty response." },
         { status: 502 }
       );
     }
@@ -208,10 +187,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("ZENTRIX API error:", error);
 
-    if (
-      error instanceof Error &&
-      error.name === "TimeoutError"
-    ) {
+    if (error instanceof Error && error.name === "TimeoutError") {
       return NextResponse.json(
         { error: "The AI request timed out. Please try again." },
         { status: 504 }
@@ -223,4 +199,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-        }
+  }
