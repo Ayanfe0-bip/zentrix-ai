@@ -9,6 +9,7 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "docx": "^9.5.1",
     "katex": "^0.16.22",
     "jspdf": "^4.2.1",
     "lucide-react": "^0.468.0",
