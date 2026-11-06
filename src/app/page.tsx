@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import Link from "next/link";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -17,23 +18,23 @@ export default function Home() {
       <div className="ambient-glow cyan" />
 
       <nav className="navbar">
-        <a href="/" className="brand">
+        <Link href="/" className="brand">
           <div className="brand-icon">
             <BrainCircuit size={25} />
           </div>
           <span>
             ZENTRIX<span className="brand-ai"> AI</span>
           </span>
-        </a>
+        </Link>
 
         <div className="nav-links">
           <a href="#features">Features</a>
           <a href="#about">About</a>
         </div>
 
-        <a href="/chat" className="nav-button">
+        <Link href="/chat" className="nav-button">
           Get Started <ArrowUpRight size={16} />
-        </a>
+        </Link>
       </nav>
 
       <section className="hero" id="start">
@@ -59,10 +60,10 @@ export default function Home() {
           </p>
 
           <div className="hero-actions">
-            <a href="/chat" className="primary-button">
+            <Link href="/chat" className="primary-button">
               Explore ZENTRIX
               <ArrowRight size={19} />
-            </a>
+            </Link>
 
             <a href="#about" className="secondary-button">
               Discover More
@@ -161,7 +162,7 @@ export default function Home() {
           <Command size={30} />
         </div>
 
-        <span>BUILT FOR WHAT'S NEXT</span>
+        <span>BUILT FOR WHAT&apos;S NEXT</span>
 
         <h2>
           Your ideas deserve
@@ -177,10 +178,10 @@ export default function Home() {
           accessible, useful and inspiring.
         </p>
 
-        <a href="/chat" className="primary-button about-button">
+        <Link href="/chat" className="primary-button about-button">
           Start Exploring
           <ArrowRight size={18} />
-        </a>
+        </Link>
 
         <div className="coming-soon">
           <span className="status-dot" />
@@ -189,7 +190,7 @@ export default function Home() {
       </section>
 
       <footer className="footer">
-        <a href="/" className="brand">
+        <Link href="/" className="brand">
           <div className="brand-icon small">
             <BrainCircuit size={19} />
           </div>
@@ -197,7 +198,7 @@ export default function Home() {
           <span>
             ZENTRIX<span className="brand-ai"> AI</span>
           </span>
-        </a>
+        </Link>
 
         <p>Think Beyond. Build Without Limits.</p>
 
