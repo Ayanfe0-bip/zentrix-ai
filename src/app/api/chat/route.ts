@@ -9,6 +9,7 @@ You are ZENTRIX AI, created by Ayanfe Innovation Labs Limited.
 Your tagline is: "Think Beyond. Build Without Limits."
 
 You are intelligent, friendly, professional, patient, and helpful.
+
 Explain difficult topics simply.
 Help with programming, creativity, education, research, business,
 and everyday problem-solving.
@@ -119,6 +120,18 @@ export async function POST(request: NextRequest) {
       process.env.NEXT_PUBLIC_APP_URL ||
       "https://zentrix-ai.vercel.app";
 
+    const controller = new AbortController();
+
+    const timeout = setTimeout(() => {
+      controller.abort();
+    }, 60000);
+
+    request.signal.addEventListener(
+      "abort",
+      () => controller.abort(),
+      { once: true }
+    );
+
     const response = await fetch(
       "https://openrouter.ai/api/v1/chat/completions",
       {
@@ -143,12 +156,15 @@ export async function POST(request: NextRequest) {
           ],
           temperature: responseStyle === "creative" ? 0.9 : 0.7,
           max_tokens: responseStyle === "concise" ? 900 : 1800,
+          stream: true,
         }),
-        signal: AbortSignal.timeout(60000),
+        signal: controller.signal,
       }
     );
 
     if (!response.ok) {
+      clearTimeout(timeout);
+
       const errorData = await response.json().catch(() => ({}));
 
       console.error(
@@ -170,19 +186,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const data = await response.json();
-    const reply = data?.choices?.[0]?.message?.content;
+    if (!response.body) {
+      clearTimeout(timeout);
 
-    if (typeof reply !== "string" || !reply.trim()) {
       return NextResponse.json(
-        { error: "The AI provider returned an empty response." },
+        { error: "The AI provider returned an empty stream." },
         { status: 502 }
       );
     }
 
-    return NextResponse.json({
-      reply: reply.trim(),
-      model: data.model || selectedModel.id,
+    const stream = new ReadableStream({
+      async start(streamController) {
+        const reader = response.body!.getReader();
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+
+            if (done) break;
+
+            streamController.enqueue(value);
+          }
+        } catch (error) {
+          console.error("AI stream error:", error);
+          streamController.error(error);
+        } finally {
+          clearTimeout(timeout);
+          reader.releaseLock();
+
+          try {
+            streamController.close();
+          } catch {
+            // Stream may already be closed.
+          }
+        }
+      },
+
+      cancel() {
+        clearTimeout(timeout);
+        controller.abort();
+      },
+    });
+
+    return new Response(stream, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/event-stream; charset=utf-8",
+        "Cache-Control": "no-cache, no-transform",
+        Connection: "keep-alive",
+        "X-Accel-Buffering": "no",
+      },
     });
   } catch (error) {
     console.error("ZENTRIX API error:", error);
@@ -199,4 +252,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-  }
+              }
