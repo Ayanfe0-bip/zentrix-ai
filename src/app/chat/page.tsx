@@ -15,9 +15,7 @@ import { DEFAULT_MODEL } from "@/lib/ai/models";
 type ResponseStyle = "balanced" | "concise" | "detailed" | "creative";
 
 export default function ChatPage() {
-  const [conversations, setConversations] = useState<
-    StoredConversation[]
-  >([]);
+  const [conversations, setConversations] = useState<StoredConversation[]>([]);
   const [storageReady, setStorageReady] = useState(false);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -30,12 +28,9 @@ export default function ChatPage() {
 
   useEffect(() => {
     const stored = getConversations();
-
     setConversations(stored);
 
-    const savedPreferences = localStorage.getItem(
-      "zentrix-ai-preferences"
-    );
+    const savedPreferences = localStorage.getItem("zentrix-ai-preferences");
 
     if (savedPreferences) {
       try {
@@ -49,17 +44,14 @@ export default function ChatPage() {
           setResponseStyle(preferences.responseStyle);
         }
       } catch {
-        // Keep the default response style.
+        // Keep default preferences.
       }
     }
 
     const params = new URLSearchParams(window.location.search);
     const requestedConversation = params.get("conversation");
 
-    if (
-      requestedConversation &&
-      stored.some((item) => item.id === requestedConversation)
-    ) {
+    if (requestedConversation && stored.some((item) => item.id === requestedConversation)) {
       setActiveChatId(requestedConversation);
     }
 
@@ -67,8 +59,7 @@ export default function ChatPage() {
   }, []);
 
   useEffect(() => {
-    if (!storageReady) return;
-    saveConversations(conversations);
+    if (storageReady) saveConversations(conversations);
   }, [conversations, storageReady]);
 
   const activeConversation = conversations.find(
@@ -78,30 +69,23 @@ export default function ChatPage() {
   const messages = activeConversation?.messages ?? [];
   const isSaved = activeConversation?.saved ?? false;
 
-  const chatHistory: ChatHistoryItem[] = conversations.map(
-    (conversation) => ({
-      id: conversation.id,
-      title: conversation.title,
-    })
-  );
+  const chatHistory: ChatHistoryItem[] = conversations.map((conversation) => ({
+    id: conversation.id,
+    title: conversation.title,
+  }));
 
   const handleNewChat = useCallback(() => {
-    if (abortController) {
-      abortController.abort();
-      setAbortController(null);
-    }
-
+    abortController?.abort();
+    setAbortController(null);
     setIsGenerating(false);
     setError("");
     setActiveChatId(null);
-
     window.history.replaceState({}, "", "/chat");
   }, [abortController]);
 
   const handleSelectChat = useCallback((id: string) => {
     setActiveChatId(id);
     setError("");
-
     window.history.replaceState(
       {},
       "",
@@ -111,9 +95,7 @@ export default function ChatPage() {
 
   function handleToggleSave() {
     if (!activeChatId || isGenerating) return;
-
-    const updated = toggleConversationSaved(activeChatId);
-    setConversations(updated);
+    setConversations(toggleConversationSaved(activeChatId));
   }
 
   async function handleSend(message: string) {
@@ -126,20 +108,13 @@ export default function ChatPage() {
 
       const newConversation: StoredConversation = {
         id: conversationId,
-        title:
-          message.length > 35
-            ? `${message.slice(0, 35)}...`
-            : message,
+        title: message.length > 35 ? `${message.slice(0, 35)}...` : message,
         messages: [],
         updatedAt: new Date().toISOString(),
         saved: false,
       };
 
-      setConversations((previous) => [
-        newConversation,
-        ...previous,
-      ]);
-
+      setConversations((previous) => [newConversation, ...previous]);
       setActiveChatId(conversationId);
 
       window.history.replaceState(
@@ -182,6 +157,75 @@ export default function ChatPage() {
     const controller = new AbortController();
     setAbortController(controller);
 
+    const assistantId = crypto.randomUUID();
+    let reply = "";
+    let assistantAdded = false;
+
+    function updateAssistant(content: string) {
+      setConversations((previous) =>
+        previous.map((conversation) => {
+          if (conversation.id !== conversationId) return conversation;
+
+          const existing = conversation.messages.filter(
+            (item) => item.id !== assistantId
+          );
+
+          return {
+            ...conversation,
+            messages: [
+              ...existing,
+              {
+                id: assistantId,
+                role: "assistant",
+                content,
+                timestamp: new Date().toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
+              },
+            ],
+            updatedAt: new Date().toISOString(),
+          };
+        })
+      );
+
+      assistantAdded = true;
+    }
+
+    function processEvent(event: string) {
+      const data = event
+        .split("\n")
+        .filter((line) => line.startsWith("data:"))
+        .map((line) => line.slice(5).trim())
+        .join("\n");
+
+      if (!data || data === "[DONE]") return;
+
+      let parsed: {
+        choices?: Array<{
+          delta?: { content?: string };
+        }>;
+        error?: { message?: string };
+      };
+
+      try {
+        parsed = JSON.parse(data);
+      } catch {
+        return;
+      }
+
+      if (parsed.error?.message) {
+        throw new Error(parsed.error.message);
+      }
+
+      const token = parsed.choices?.[0]?.delta?.content;
+
+      if (typeof token === "string" && token.length > 0) {
+        reply += token;
+        updateAssistant(reply);
+      }
+    }
+
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
@@ -201,43 +245,44 @@ export default function ChatPage() {
 
       if (!response.ok) {
         const result = await response.json().catch(() => ({}));
-
         throw new Error(
-          result.error ||
-            "Unable to generate a response. Please try again."
+          result.error || "Unable to generate a response. Please try again."
         );
       }
 
-      const result = await response.json();
-
-      if (!result.reply || typeof result.reply !== "string") {
-        throw new Error("The AI returned an invalid response.");
+      if (!response.body) {
+        throw new Error("Streaming is not supported by this connection.");
       }
 
-      const assistantMessage: ChatMessageData = {
-        id: crypto.randomUUID(),
-        role: "assistant",
-        content: result.reply,
-        timestamp: new Date().toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
 
-      setConversations((previous) =>
-        previous.map((conversation) =>
-          conversation.id === conversationId
-            ? {
-                ...conversation,
-                messages: [
-                  ...conversation.messages,
-                  assistantMessage,
-                ],
-                updatedAt: new Date().toISOString(),
-              }
-            : conversation
-        )
-      );
+      while (true) {
+        const { done, value } = await reader.read();
+
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        buffer = buffer.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+
+        const events = buffer.split("\n\n");
+        buffer = events.pop() ?? "";
+
+        for (const event of events) {
+          processEvent(event);
+        }
+      }
+
+      buffer += decoder.decode();
+
+      if (buffer.trim()) {
+        processEvent(buffer);
+      }
+
+      if (!reply && !controller.signal.aborted) {
+        throw new Error("The AI returned an empty response. Please try again.");
+      }
     } catch (err) {
       if (err instanceof Error && err.name === "AbortError") {
         return;
@@ -248,6 +293,21 @@ export default function ChatPage() {
           ? err.message
           : "Something went wrong. Please try again."
       );
+
+      if (!reply && assistantAdded) {
+        setConversations((previous) =>
+          previous.map((conversation) =>
+            conversation.id === conversationId
+              ? {
+                  ...conversation,
+                  messages: conversation.messages.filter(
+                    (item) => item.id !== assistantId
+                  ),
+                }
+              : conversation
+          )
+        );
+      }
     } finally {
       setIsGenerating(false);
       setAbortController(null);
