@@ -74,7 +74,9 @@ interface IncomingMessage {
 
 type ResponseStyle = keyof typeof RESPONSE_STYLES;
 
-function detectDocumentRequest(message: string) {
+function detectDocumentRequest(
+  message: string
+): { type: "docx" | "pdf" } | null {
   const text = message.toLowerCase();
 
   const documentIntent =
