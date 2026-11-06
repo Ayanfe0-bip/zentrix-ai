@@ -11,8 +11,7 @@ export const AI_MODELS: AIModel[] = [
   {
     id: "openrouter/free",
     name: "Auto Select",
-    description:
-      "Automatically selects an available free AI model.",
+    description: "Automatically selects an available AI model.",
     provider: "OpenRouter",
     free: true,
     recommended: true,
@@ -20,32 +19,28 @@ export const AI_MODELS: AIModel[] = [
   {
     id: "nvidia/nemotron-3-ultra-550b-a55b:free",
     name: "ZENTRIX Reasoner",
-    description:
-      "Deep reasoning, research and complex problem-solving.",
+    description: "Deep reasoning and complex problem-solving.",
     provider: "NVIDIA",
     free: true,
   },
   {
     id: "cohere/north-mini-code:free",
     name: "ZENTRIX Coder",
-    description:
-      "Programming, debugging and software development.",
+    description: "Programming and software development.",
     provider: "Cohere",
     free: true,
   },
   {
     id: "google/gemma-4-26b-a4b-it:free",
     name: "ZENTRIX General",
-    description:
-      "Everyday questions, explanations and writing.",
+    description: "Everyday questions and writing.",
     provider: "Google",
     free: true,
   },
   {
     id: "nvidia/nemotron-3.5-super-vl:free",
     name: "ZENTRIX Vision",
-    description:
-      "Advanced reasoning, research and visual understanding.",
+    description: "Visual understanding and reasoning.",
     provider: "NVIDIA",
     free: true,
     recommended: true,
@@ -53,18 +48,44 @@ export const AI_MODELS: AIModel[] = [
   {
     id: "google/gemma-4-31b-it:free",
     name: "ZENTRIX Intelligence",
-    description:
-      "Advanced general assistance, coding and writing.",
+    description: "Advanced assistance and problem-solving.",
     provider: "Google",
     free: true,
   },
   {
     id: "nvidia/nemotron-3.5-lightning:free",
     name: "ZENTRIX Speed",
-    description:
-      "Fast responses, coding assistance and agent workflows.",
+    description: "Fast responses and coding assistance.",
     provider: "NVIDIA",
     free: true,
+  },
+  {
+    id: "gemini-2.5-flash",
+    name: "ZENTRIX Gemini",
+    description: "Google Gemini direct integration.",
+    provider: "Gemini",
+    free: false,
+  },
+  {
+    id: "llama-3.3-70b-versatile",
+    name: "ZENTRIX Groq",
+    description: "Fast AI inference through Groq.",
+    provider: "Groq",
+    free: false,
+  },
+  {
+    id: "mistral-small-latest",
+    name: "ZENTRIX Mistral",
+    description: "General-purpose AI through Mistral.",
+    provider: "Mistral",
+    free: false,
+  },
+  {
+    id: "@cf/meta/llama-3.1-8b-instruct",
+    name: "ZENTRIX Cloud",
+    description: "Cloudflare Workers AI integration.",
+    provider: "Cloudflare",
+    free: false,
   },
 ];
 
@@ -79,7 +100,5 @@ export function getAIModel(
 }
 
 export function getAvailableModels(): AIModel[] {
-  return AI_MODELS.filter(
-    (model) => model.free
-  );
+  return AI_MODELS;
 }
