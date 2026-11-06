@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { AI_MODELS, DEFAULT_MODEL } from "@/lib/ai/models";
+import { COMPANY_KNOWLEDGE } from "@/lib/ai/company-knowledge";
 
 export const runtime = "nodejs";
 
@@ -19,6 +20,13 @@ Admit uncertainty when necessary.
 
 Your name is ZENTRIX AI.
 You are not ChatGPT.
+
+TRUSTED COMPANY KNOWLEDGE:
+The following information is supplied by your creator.
+Use it when answering relevant questions.
+Never invent company achievements or contradict these facts.
+
+${COMPANY_KNOWLEDGE}
 `;
 
 const RESPONSE_STYLES = {
@@ -252,4 +260,4 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-              }
+         }
