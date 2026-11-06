@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, ReactNode } from "react";
-import { InlineMath, BlockMath } from "react-katex";
+import katex from "katex";
 import ZentrixLogo from "@/components/zentrix-logo";
 import MessageSources from "@/components/chat/message-sources";
 
@@ -31,35 +31,85 @@ function extractSources(content: string) {
   );
 }
 
+/* MATHEMATICAL RENDERING */
+
+function renderKatex(math: string, displayMode = false) {
+  try {
+    return katex.renderToString(math.trim(), {
+      displayMode,
+      throwOnError: false,
+      strict: "ignore",
+      trust: false,
+      output: "html",
+    });
+  } catch {
+    return null;
+  }
+}
+
+function MathDisplay({ math }: { math: string }) {
+  const html = renderKatex(math, true);
+
+  return (
+    <div className="my-6 w-full overflow-x-auto rounded-2xl border border-violet-400/20 bg-gradient-to-br from-violet-500/10 to-cyan-500/[0.04] px-4 py-6">
+      {html ? (
+        <div
+          className="min-w-max text-center text-white"
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      ) : (
+        <div className="whitespace-pre-wrap break-words text-sm text-red-300">
+          Equation could not be rendered.
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* INLINE MARKDOWN AND MATHEMATICS */
+
 function renderInline(text: string): ReactNode[] {
   const pattern =
-    /(\\\([\s\S]+?\\\)|(?<!\\)\$(?!\$)(?=[^$\n]*[\\_^{}=])[^\n$]+?\$(?!\$)|\*\*.*?\*\*|__.*?__|~~.*?~~|\*.*?\*|_.*?_|`[^`]+`|\[.*?\]\(.*?\))/g;
+    /(\\\([\s\S]+?\\\)|(?<!\\)\$(?!\$)[^$\n]+?\$(?!\$)|\*\*.*?\*\*|__.*?__|~~.*?~~|\*.*?\*|_.*?_|`[^`]+`|\[.*?\]\(.*?\))/g;
 
   return text.split(pattern).filter(Boolean).map((part, index) => {
+    // LaTeX inline: \( ... \)
     if (part.startsWith("\\(") && part.endsWith("\\)")) {
-      return (
-        <InlineMath
+      const math = part.slice(2, -2);
+      const html = renderKatex(math);
+
+      return html ? (
+        <span
           key={index}
-          math={part.slice(2, -2).trim()}
-          renderError={() => <span>{part}</span>}
+          className="inline-block align-middle"
+          dangerouslySetInnerHTML={{ __html: html }}
         />
+      ) : (
+        <span key={index}>{math}</span>
       );
     }
 
+    // LaTeX inline: $ ... $
     if (
       part.startsWith("$") &&
       part.endsWith("$") &&
       !part.startsWith("$$")
     ) {
-      return (
-        <InlineMath
+      const math = part.slice(1, -1);
+      const html = renderKatex(math);
+
+      return html ? (
+        <span
           key={index}
-          math={part.slice(1, -1).trim()}
-          renderError={() => <span>{part}</span>}
+          className="inline-block align-middle"
+          dangerouslySetInnerHTML={{ __html: html }}
         />
+      ) : (
+        <span key={index}>{math}</span>
       );
     }
 
+    // Bold
     if (
       (part.startsWith("**") && part.endsWith("**")) ||
       (part.startsWith("__") && part.endsWith("__"))
@@ -71,10 +121,12 @@ function renderInline(text: string): ReactNode[] {
       );
     }
 
+    // Strikethrough
     if (part.startsWith("~~") && part.endsWith("~~")) {
       return <del key={index}>{part.slice(2, -2)}</del>;
     }
 
+    // Italics
     if (
       (part.startsWith("*") && part.endsWith("*")) ||
       (part.startsWith("_") && part.endsWith("_"))
@@ -82,6 +134,7 @@ function renderInline(text: string): ReactNode[] {
       return <em key={index}>{part.slice(1, -1)}</em>;
     }
 
+    // Inline code
     if (part.startsWith("`") && part.endsWith("`")) {
       return (
         <code
@@ -93,6 +146,7 @@ function renderInline(text: string): ReactNode[] {
       );
     }
 
+    // Links
     const link = part.match(/^\[(.*?)\]\((.*?)\)$/);
 
     if (link) {
@@ -113,20 +167,7 @@ function renderInline(text: string): ReactNode[] {
   });
 }
 
-function MathDisplay({ math }: { math: string }) {
-  return (
-    <div className="my-5 w-full overflow-x-auto rounded-xl border border-violet-400/15 bg-violet-500/[0.06] px-4 py-5 text-center text-white">
-      <BlockMath
-        math={math.trim()}
-        renderError={() => (
-          <code className="whitespace-pre-wrap break-words text-sm text-cyan-200">
-            {math}
-          </code>
-        )}
-      />
-    </div>
-  );
-}
+/* MARKDOWN CONTENT */
 
 function MarkdownContent({ content }: { content: string }) {
   const lines = content.replace(/\r\n/g, "\n").split("\n");
@@ -135,55 +176,66 @@ function MarkdownContent({ content }: { content: string }) {
   let i = 0;
 
   while (i < lines.length) {
-    const line = lines[i];
-    const trimmed = line.trim();
+    const trimmed = lines[i].trim();
 
     if (!trimmed) {
       i++;
       continue;
     }
 
-    // Display math: \[ ... \]
+    // Display equation: \[ ... \]
     if (trimmed.startsWith("\\[")) {
       let math = trimmed.slice(2);
-      i++;
 
-      while (i < lines.length && !lines[i].trim().includes("\\]")) {
-        math += "\n" + lines[i];
-        i++;
-      }
-
-      if (i < lines.length) {
-        math += "\n" + lines[i].trim().replace("\\]", "");
-        i++;
-      }
-
-      elements.push(<MathDisplay key={i} math={math} />);
-      continue;
-    }
-
-    // Display math: $$ ... $$
-    if (trimmed.startsWith("$$")) {
-      let math = trimmed.slice(2);
-
-      if (math.endsWith("$$") && math.length > 2) {
-        math = math.slice(0, -2);
+      if (math.includes("\\]")) {
+        math = math.split("\\]")[0];
         i++;
       } else {
         i++;
 
-        while (i < lines.length && !lines[i].trim().includes("$$")) {
+        while (i < lines.length && !lines[i].includes("\\]")) {
           math += "\n" + lines[i];
           i++;
         }
 
         if (i < lines.length) {
-          math += "\n" + lines[i].trim().replace("$$", "");
+          math += "\n" + lines[i].split("\\]")[0];
           i++;
         }
       }
 
-      elements.push(<MathDisplay key={i} math={math} />);
+      elements.push(
+        <MathDisplay key={`math-${i}`} math={math} />
+      );
+
+      continue;
+    }
+
+    // Display equation: $$ ... $$
+    if (trimmed.startsWith("$$")) {
+      let math = trimmed.slice(2);
+
+      if (math.includes("$$")) {
+        math = math.split("$$")[0];
+        i++;
+      } else {
+        i++;
+
+        while (i < lines.length && !lines[i].includes("$$")) {
+          math += "\n" + lines[i];
+          i++;
+        }
+
+        if (i < lines.length) {
+          math += "\n" + lines[i].split("$$")[0];
+          i++;
+        }
+      }
+
+      elements.push(
+        <MathDisplay key={`math-${i}`} math={math} />
+      );
+
       continue;
     }
 
@@ -205,11 +257,13 @@ function MarkdownContent({ content }: { content: string }) {
 
       elements.push(
         <div
-          key={i}
+          key={`code-${i}`}
           className="my-5 overflow-hidden rounded-xl border border-white/10 bg-[#080b18]"
         >
           <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-            <span className="text-xs text-slate-400">{language}</span>
+            <span className="text-xs text-slate-400">
+              {language}
+            </span>
 
             <button
               type="button"
@@ -253,7 +307,10 @@ function MarkdownContent({ content }: { content: string }) {
         | "h6";
 
       elements.push(
-        <HeadingTag key={i} className={classes[level - 1]}>
+        <HeadingTag
+          key={`heading-${i}`}
+          className={classes[level - 1]}
+        >
           {renderInline(heading[2])}
         </HeadingTag>
       );
@@ -265,7 +322,7 @@ function MarkdownContent({ content }: { content: string }) {
     // Horizontal rule
     if (/^(-{3,}|\*{3,}|_{3,})$/.test(trimmed)) {
       elements.push(
-        <hr key={i} className="my-6 border-white/10" />
+        <hr key={`hr-${i}`} className="my-6 border-white/10" />
       );
 
       i++;
@@ -298,7 +355,7 @@ function MarkdownContent({ content }: { content: string }) {
 
         elements.push(
           <div
-            key={i}
+            key={`table-${i}`}
             className="my-5 overflow-x-auto rounded-xl border border-white/10"
           >
             <table className="w-full border-collapse text-left text-sm">
@@ -354,7 +411,7 @@ function MarkdownContent({ content }: { content: string }) {
 
       elements.push(
         <blockquote
-          key={i}
+          key={`quote-${i}`}
           className="my-4 border-l-2 border-violet-400 bg-violet-500/[0.06] py-3 pl-4 text-slate-300"
         >
           {quoteLines.map((item, index) => (
@@ -370,7 +427,7 @@ function MarkdownContent({ content }: { content: string }) {
     if (/^[-*+]\s+/.test(trimmed)) {
       const items: string[] = [];
 
-      while (i < lines.length && /^(\s*)[-*+]\s+/.test(lines[i])) {
+      while (i < lines.length && /^\s*[-*+]\s+/.test(lines[i])) {
         items.push(
           lines[i].trim().replace(/^[-*+]\s+/, "")
         );
@@ -380,7 +437,7 @@ function MarkdownContent({ content }: { content: string }) {
 
       elements.push(
         <ul
-          key={i}
+          key={`list-${i}`}
           className="my-3 list-disc space-y-2 pl-6 marker:text-violet-400"
         >
           {items.map((item, index) => (
@@ -408,7 +465,7 @@ function MarkdownContent({ content }: { content: string }) {
 
       elements.push(
         <ol
-          key={i}
+          key={`numbered-${i}`}
           className="my-3 list-decimal space-y-2 pl-6 marker:font-semibold marker:text-violet-400"
         >
           {items.map((item, index) => (
@@ -438,7 +495,10 @@ function MarkdownContent({ content }: { content: string }) {
 
     if (paragraph.length > 0) {
       elements.push(
-        <p key={i} className="my-3 leading-7 text-slate-300">
+        <p
+          key={`paragraph-${i}`}
+          className="my-3 leading-7 text-slate-300"
+        >
           {paragraph.map((part, index) => (
             <span key={index}>
               {index > 0 && " "}
@@ -457,7 +517,11 @@ function MarkdownContent({ content }: { content: string }) {
   return <div className="w-full">{elements}</div>;
 }
 
-export default function ChatMessage({ message }: ChatMessageProps) {
+/* CHAT MESSAGE */
+
+export default function ChatMessage({
+  message,
+}: ChatMessageProps) {
   const [copied, setCopied] = useState(false);
 
   const isUser = message.role === "user";
@@ -523,7 +587,6 @@ export default function ChatMessage({ message }: ChatMessageProps) {
           ) : (
             <>
               <MarkdownContent content={message.content} />
-
               <MessageSources sources={sources} />
             </>
           )}
@@ -549,4 +612,4 @@ export default function ChatMessage({ message }: ChatMessageProps) {
       )}
     </article>
   );
-                }
+}
