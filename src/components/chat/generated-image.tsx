@@ -73,7 +73,7 @@ const [downloaded, setDownloaded] = useState(false);
 
 const imageUrl = image.startsWith("data:")
 ? image
-: "data:${mediaType};base64,${image}";
+: `data:${mediaType};base64,${image}`;
 
 function downloadImage() {
 const link = document.createElement("a");
