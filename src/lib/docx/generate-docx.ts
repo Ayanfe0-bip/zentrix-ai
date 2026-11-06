@@ -450,7 +450,9 @@ export async function downloadMessageAsDocx(
             color: "64748B",
           }),
 
-          PageNumber.CURRENT,
+          new TextRun({
+  children: [PageNumber.CURRENT],
+}),
         ],
       }),
     ],
