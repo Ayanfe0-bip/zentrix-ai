@@ -666,9 +666,7 @@ Return ONLY the finished document content in Markdown.
             {
               role: "system",
               content:
-                SYSTEM_PROMPT +
-                "\n\nRESPONSE STYLE:\n" +
-                RESPONSE_STYLES[responseStyle],
+               personalizedSystemPrompt
             },
             ...messages,
           ],
@@ -722,9 +720,7 @@ Return ONLY the finished document content in Markdown.
             {
               role: "system",
               content:
-                SYSTEM_PROMPT +
-                "\n\nRESPONSE STYLE:\n" +
-                RESPONSE_STYLES[responseStyle],
+            personalizedSystemPrompt
             },
             ...messages,
           ],
