@@ -1,4 +1,4 @@
-"use client";
+w"use client";
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -27,6 +27,7 @@ const navigationItems = [
   { label: "AI Chat", href: "/chat", icon: "chat" },
   { label: "Chat History", href: "/history", icon: "history" },
   { label: "Code Assistant", href: "/code", icon: "code" },
+    { label: "AI App Builder", href: "/app-builder", icon: "cpu" },
   { label: "Plugin Marketplace", href: "/plugins", icon: "plugin" },
   { label: "Saved Conversations", href: "/saved", icon: "bookmark" },
 ];
