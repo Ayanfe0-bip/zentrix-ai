@@ -76,7 +76,94 @@ export async function createAICompletion({
   const provider = selected.provider;
 
   let data: ProviderPayload;
+  // ZENTRIX AUTO: automatic provider failover
+  if (provider === "Auto") {
+    const groqKey = process.env.GROQ_API_KEY;
+    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+    const apiToken = process.env.CLOUDFLARE_API_TOKEN;
 
+    const attempts: Array<{
+      name: string;
+      run: () => Promise<ProviderPayload>;
+    }> = [];
+
+    if (groqKey) {
+      for (const groqModel of [
+        "qwen/qwen3.8-27b",
+        "openai/gpt-oss-120b",
+      ]) {
+        attempts.push({
+          name: groqModel,
+          run: () =>
+            requestJSON(
+              "https://api.groq.com/openai/v1/chat/completions",
+              {
+                Authorization: `Bearer ${groqKey}`,
+                "Content-Type": "application/json",
+              },
+              {
+                model: groqModel,
+                messages,
+                temperature,
+                max_tokens: maxTokens,
+              }
+            ),
+        });
+      }
+    }
+
+    if (accountId && apiToken) {
+      attempts.push({
+        name: "@cf/google/gemma-4-26b-a4b-it",
+        run: () =>
+          requestJSON(
+            `https://api.cloudflare.com/client/v4/accounts/${accountId}/ai/v1/chat/completions`,
+            {
+              Authorization: `Bearer ${apiToken}`,
+              "Content-Type": "application/json",
+            },
+            {
+              model: "@cf/google/gemma-4-26b-a4b-it",
+              messages,
+              temperature,
+              max_tokens: maxTokens,
+            }
+          ),
+      });
+    }
+
+    if (attempts.length === 0) {
+      throw new Error("No automatic AI provider credentials are configured.");
+    }
+
+    const failures: string[] = [];
+
+    for (const attempt of attempts) {
+      try {
+        const result = await attempt.run();
+        const reply = result.choices?.[0]?.message?.content;
+
+        if (typeof reply === "string" && reply.trim()) {
+          return {
+            reply,
+            model: attempt.name,
+            usage: result.usage || null,
+          };
+        }
+
+        failures.push(`${attempt.name}: empty response`);
+      } catch (error) {
+        failures.push(
+          `${attempt.name}: ${
+            error instanceof Error ? error.message : "request failed"
+          }`
+        );
+      }
+    }
+
+    console.error("ZENTRIX Auto provider failures:", failures);
+    throw new Error("All connected AI providers are temporarily unavailable.");
+  }
   // GOOGLE GEMINI
   if (provider === "Gemini") {
     const apiKey = process.env.GEMINI_API_KEY;
