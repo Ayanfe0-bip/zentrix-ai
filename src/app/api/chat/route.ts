@@ -930,7 +930,11 @@ Return ONLY the finished document content in Markdown.
           temperature:
             responseStyle === "creative" ? 0.9 : 0.7,
           max_tokens:
-            responseStyle === "concise" ? 900 : 1800,
+  body.mode === "app-builder"
+    ? 6000
+    : responseStyle === "concise"
+      ? 900
+      : 1800,
           stream: true,
         }),
         signal: controller.signal,
