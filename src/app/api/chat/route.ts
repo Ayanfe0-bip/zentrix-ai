@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { AI_MODELS, DEFAULT_MODEL } from "@/lib/ai/models";
 import { COMPANY_KNOWLEDGE } from "@/lib/ai/company-knowledge";
 import { createAICompletion } from "@/lib/ai/provider";
-
+import { createClient } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 
 const SYSTEM_PROMPT = `
@@ -346,6 +346,12 @@ export async function POST(request: NextRequest) {
   let timeout: ReturnType<typeof setTimeout> | undefined;
 
   try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
     const body = await request.json();
 
     if (!Array.isArray(body.messages) || body.messages.length === 0) {
