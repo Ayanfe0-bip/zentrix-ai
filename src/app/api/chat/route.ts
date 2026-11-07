@@ -95,6 +95,7 @@ interface IncomingMessage {
 type ResponseStyle = keyof typeof RESPONSE_STYLES;
 
 const DIRECT_PROVIDERS = [
+  "Auto",
   "Gemini",
   "Groq",
   "Mistral",
