@@ -242,9 +242,9 @@ export async function POST(request: NextRequest) {
         ? body.model
         : DEFAULT_MODEL;
 
-    const selectedModel = AI_MODELS.find(
-      (model) => model.id === requestedModel
-    );
+    const selectedModel =
+  AI_MODELS.find((model) => model.id === requestedModel) ||
+  AI_MODELS.find((model) => model.id === DEFAULT_MODEL);
 
     if (!selectedModel) {
       return NextResponse.json(
