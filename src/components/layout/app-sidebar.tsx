@@ -6,7 +6,7 @@ import type { ReactNode } from "react";
 import ZentrixLogo from "@/components/zentrix-logo";
 import ModelSelector from "@/components/chat/model-selector";
 import { DEFAULT_MODEL } from "@/lib/ai/models";
-
+import SidebarAuthAction from "@/components/layout/sidebar-auth-action";
 export interface ChatHistoryItem {
   id: string;
   title: string;
@@ -25,7 +25,6 @@ interface AppSidebarProps {
 
 const navigationItems = [
   { label: "AI Chat", href: "/chat", icon: "chat" },
-    { label: "Sign In / Create Account", href: "/auth", icon: "profile" },
   { label: "Chat History", href: "/history", icon: "history" },
   { label: "Code Assistant", href: "/code", icon: "code" },
   { label: "Plugin Marketplace", href: "/plugins", icon: "plugin" },
@@ -353,6 +352,7 @@ export default function AppSidebar({
               <p className="text-xs text-slate-500">Free Workspace</p>
             </div>
           </Link>
+          <SidebarAuthAction />
         </div>
       </aside>
     </>
