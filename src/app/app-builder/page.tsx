@@ -150,8 +150,36 @@ async function readAIResponse(
 
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
+
   let buffer = "";
   let result = "";
+
+  const processLine = (line: string) => {
+    const trimmed = line.trim();
+
+    if (!trimmed.startsWith("data:")) return;
+
+    const data = trimmed.slice(5).trim();
+
+    if (!data || data === "[DONE]") return;
+
+    try {
+      const parsed = JSON.parse(data);
+
+      const content =
+        parsed.choices?.[0]?.delta?.content ??
+        parsed.choices?.[0]?.message?.content ??
+        parsed.content ??
+        "";
+
+      if (typeof content === "string" && content) {
+        result += content;
+        onUpdate(result);
+      }
+    } catch {
+      // Ignore incomplete or non-JSON streaming events.
+    }
+  };
 
   while (true) {
     const { done, value } = await reader.read();
@@ -160,43 +188,172 @@ async function readAIResponse(
 
     buffer += decoder.decode(value, { stream: true });
 
+    buffer = buffer.replace(/\r\n/g, "\n");
+
     const lines = buffer.split("\n");
     buffer = lines.pop() || "";
 
     for (const line of lines) {
-      const trimmed = line.trim();
-
-      if (!trimmed.startsWith("data:")) continue;
-
-      const data = trimmed.slice(5).trim();
-
-      if (!data || data === "[DONE]") continue;
-
-      try {
-        const parsed = JSON.parse(data);
-
-        const content =
-          parsed.choices?.[0]?.delta?.content ??
-          parsed.choices?.[0]?.message?.content ??
-          parsed.content ??
-          "";
-
-        if (typeof content === "string" && content) {
-          result += content;
-          onUpdate(result);
-        }
-      } catch {
-        // Ignore incomplete streaming events.
-      }
+      processLine(line);
     }
+  }
+
+  buffer += decoder.decode();
+
+  if (buffer.trim()) {
+    processLine(buffer);
   }
 
   if (!result.trim()) {
-    throw new Error("The AI returned an empty response. Please try again.");
+    throw new Error(
+      "The AI returned an empty response. Please try again."
+    );
   }
 
   return result;
-    }
+}
+
+function buildStagePrompt(
+  projectDescription: string,
+  projectType: string,
+  technology: string,
+  stageIndex: number
+) {
+  const stage = STAGES[stageIndex];
+
+  return `
+You are ZENTRIX AI, an expert senior software architect, database designer, security engineer and application development consultant.
+
+Your task is to create PART ${stageIndex + 1} OF A COMPLETE PROFESSIONAL SOFTWARE PROJECT BLUEPRINT.
+
+PROJECT DESCRIPTION:
+${projectDescription}
+
+PROJECT TYPE:
+${projectType}
+
+PREFERRED TECHNOLOGY:
+${technology}
+
+CURRENT BLUEPRINT PART:
+${stage.title}
+
+SECTIONS YOU MUST COMPLETE:
+${stage.sections.join("\n")}
+
+CORE REQUIREMENTS:
+
+1. Study the project description carefully before designing anything.
+2. Preserve the user's original requirements and intended features.
+3. Do not silently remove important features.
+4. Explain technical concepts in clear, beginner-friendly English.
+5. Give practical implementation details, not vague descriptions.
+6. Use professional software engineering standards.
+7. Make reasonable assumptions where information is missing and clearly identify them.
+8. Do not invent third-party integrations or claim that an integration has been approved.
+9. Do not generate fake API keys, passwords, credentials or secrets.
+10. Do not claim that code has been written, tested or deployed.
+11. Use clear headings and organised bullet points.
+12. Avoid decorative symbols, excessive emojis and unnecessary Markdown.
+13. Do not use complicated tables when clear descriptions would work better.
+14. Keep the architecture realistic, secure and affordable to maintain.
+15. Complete every assigned section before ending your response.
+
+DATABASE DESIGN REQUIREMENTS:
+
+When database design is relevant:
+
+- Identify every important database table.
+- Explain the purpose of each table.
+- List important fields and their data types.
+- Identify primary keys and foreign keys.
+- Explain relationships between tables.
+- Identify unique constraints and useful indexes.
+- Explain how related records are connected.
+- Include created_at and updated_at where appropriate.
+- Consider pagination and database performance.
+- Avoid unnecessary duplication of information.
+
+For applications using Supabase Auth:
+
+- Use Supabase Auth for authentication.
+- Do not create an unnecessary custom password_hash table.
+- Explain how user profiles connect to authentication user IDs.
+- Include appropriate Row Level Security policies.
+- Ensure users cannot access another user's private records.
+
+For marketplace and multi-vendor applications:
+
+- Distinguish customers, vendors and administrators.
+- Design vendor-specific order fulfilment.
+- Explain how one customer order can contain items from multiple vendors.
+- Include appropriate order items, vendor orders, payments and transaction records.
+- Explain how vendor earnings, platform commissions and payouts are calculated.
+- Never trust payment status supplied directly by the browser.
+
+PAYMENT AND FINANCIAL SECURITY:
+
+When payments or financial transactions are relevant:
+
+- Explain server-side payment verification.
+- Include payment reference and transaction status.
+- Include idempotency to prevent duplicate transactions.
+- Explain how payment webhooks are validated.
+- Keep secret API keys on the server.
+- Store money using integer minor units, such as kobo, where appropriate.
+- Explain refunds and failed transaction handling.
+- Never assume a payment succeeded merely because the frontend displays success.
+
+SECURITY REQUIREMENTS:
+
+- Explain authentication and authorization separately.
+- Apply role-based permissions where necessary.
+- Validate user input on the server.
+- Protect private routes and sensitive operations.
+- Use secure environment variables.
+- Apply database access restrictions.
+- Explain protection against common security vulnerabilities.
+- Avoid exposing private user information.
+- Include rate limiting where appropriate.
+- Explain backup and recovery considerations.
+
+API DESIGN REQUIREMENTS:
+
+Where APIs are relevant:
+
+- Identify the endpoint.
+- Specify the HTTP method.
+- Explain what the endpoint does.
+- Identify the required authentication.
+- Explain important request fields.
+- Explain the expected response.
+- Include validation and error handling.
+- Identify which operations must run on the server.
+
+TECHNOLOGY REQUIREMENTS:
+
+- Recommend technologies that genuinely fit this project.
+- Explain why each technology is needed.
+- Consider the user's preferred technology.
+- Avoid unnecessary paid services.
+- Identify free or low-cost alternatives where practical.
+- Do not recommend incompatible technologies.
+
+OUTPUT RULES:
+
+- Write ONLY the five sections assigned to this part.
+- Do not repeat the entire previous part.
+- Do not generate the next part.
+- Do not skip any section.
+- Give enough detail for a developer to use the blueprint.
+- Use the exact section numbers and headings provided.
+- Do not end halfway through a section.
+- End with a short completion note identifying this as Part ${stageIndex + 1} of 3.
+
+The result must be a practical, professional software development blueprint, not a shallow project description.
+`;
+}
+
 export default function AppBuilderPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [prompt, setPrompt] = useState("");
@@ -204,7 +361,9 @@ export default function AppBuilderPage() {
     String(DEFAULT_MODEL)
   );
   const [projectType, setProjectType] = useState("Web Application");
-  const [technology, setTechnology] = useState("Recommend the best stack");
+  const [technology, setTechnology] = useState(
+    "Recommend the best stack"
+  );
   const [blueprint, setBlueprint] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentStage, setCurrentStage] = useState(0);
@@ -229,42 +388,12 @@ export default function AppBuilderPage() {
       for (let i = 0; i < STAGES.length; i++) {
         setCurrentStage(i + 1);
 
-        const stage = STAGES[i];
-
-        const stagePrompt = `
-You are ZENTRIX AI, an expert software architect and application development assistant.
-
-Create PART ${i + 1} OF A COMPLETE APPLICATION BLUEPRINT.
-
-PROJECT DESCRIPTION:
-${prompt}
-
-PROJECT TYPE:
-${projectType}
-
-PREFERRED TECHNOLOGY:
-${technology}
-
-YOUR TASK:
-Write only these five sections:
-${stage.sections.join("\n")}
-
-IMPORTANT INSTRUCTIONS:
-
-1. Explain everything in simple, beginner-friendly English.
-2. Give detailed and practical explanations.
-3. Do not skip any requested section.
-4. Do not stop halfway through a section.
-5. Use clear headings and readable bullet points.
-6. Avoid decorative symbols, emojis, and unnecessary Markdown.
-7. Avoid complicated tables. Describe database tables using their names, purposes, and fields.
-8. Explain technical terms when they first appear.
-9. Include realistic features suitable for the project.
-10. Do not write the other parts of the blueprint.
-11. Finish all five sections before ending your response.
-
-Make this section detailed enough for a developer to use as a practical project guide.
-`;
+        const stagePrompt = buildStagePrompt(
+          prompt,
+          projectType,
+          technology,
+          i
+        );
 
         const response = await fetch("/api/chat", {
           method: "POST",
@@ -286,11 +415,15 @@ Make this section detailed enough for a developer to use as a practical project 
         const stageContent = await readAIResponse(
           response,
           (partial) => {
-            setBlueprint(completedContent + "\n\n" + partial);
+            setBlueprint(
+              completedContent + "\n\n" + partial
+            );
           }
         );
 
-        completedContent += "\n\n" + stageContent;
+        completedContent +=
+          (completedContent ? "\n\n" : "") + stageContent;
+
         setBlueprint(completedContent);
       }
     } catch (err) {
@@ -316,8 +449,18 @@ Make this section detailed enough for a developer to use as a practical project 
       await navigator.clipboard.writeText(blueprint);
       alert("Blueprint copied successfully!");
     } catch {
-      setError("Unable to copy. Please select and copy the text manually.");
+      setError(
+        "Unable to copy. Please select and copy the text manually."
+      );
     }
+  };
+
+  const clearWorkspace = () => {
+    if (loading) return;
+
+    setBlueprint("");
+    setError("");
+    setPrompt("");
   };
 
   return (
@@ -351,7 +494,7 @@ Make this section detailed enough for a developer to use as a practical project 
               </h1>
 
               <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-                Turn your application idea into a complete,
+                Transform your application idea into a complete,
                 professionally structured development blueprint.
               </p>
             </div>
@@ -431,7 +574,8 @@ Make this section detailed enough for a developer to use as a practical project 
                   className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] p-3 text-sm"
                 />
               </div>
-                            {error && (
+
+              {error && (
                 <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">
                   {error}
                 </div>
@@ -461,101 +605,31 @@ Make this section detailed enough for a developer to use as a practical project 
                   <p className="text-center text-xs text-[var(--muted-foreground)]">
                     {STAGES[currentStage - 1]?.title}
                     {" — "}
-                    Please wait while ZENTRIX AI generates your blueprint.
+                    ZENTRIX AI is working on your blueprint.
                   </p>
                 </div>
               )}
             </section>
 
-            {/* Permanent AI response workspace */}
             <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 sm:p-6">
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-4">
                 <div>
                   <h2 className="text-xl font-bold">
                     AI Response Workspace
                   </h2>
+
                   <p className="mt-1 text-xs text-[var(--muted-foreground)]">
                     Your generated application blueprint will appear here.
                   </p>
                 </div>
 
-                <button
-                  onClick={copyBlueprint}
-                  disabled={!blueprint}
-                  className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium transition hover:bg-[var(--background)] disabled:cursor-not-allowed disabled:opacity-40"
-                >
-                  Copy Response
-                </button>
-              </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={copyBlueprint}
+                    disabled={!blueprint}
+                    className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium transition hover:bg-[var(--background)] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Copy Response
+                  </button>
 
-              {loading && (
-                <p className="mt-4 rounded-lg bg-violet-500/10 p-3 text-sm text-violet-500">
-                  ZENTRIX AI is generating Part {currentStage} of 3.
-                  Your response will appear below as it is created.
-                </p>
-              )}
-
-              <div className="mt-5 min-h-[300px] overflow-hidden rounded-xl border border-dashed border-[var(--border)] p-4 sm:p-6">
-                {blueprint ? (
-                  <BlueprintContent content={blueprint} />
-                ) : (
-                  <div className="flex min-h-[250px] flex-col items-center justify-center text-center">
-                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/10 text-2xl text-violet-500">
-                      ✦
-                    </div>
-
-                    <h3 className="font-semibold">
-                      Your AI response will appear here
-                    </h3>
-
-                    <p className="mt-2 max-w-md text-sm leading-6 text-[var(--muted-foreground)]">
-                      Describe your application above and select Generate
-                      Complete Blueprint. ZENTRIX AI will build your project
-                      plan and display the response in this workspace.
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {!loading && blueprint && !error && (
-                <div className="mt-6 rounded-xl bg-green-500/10 p-4 text-sm text-green-600">
-                  Blueprint generation completed successfully.
-                </div>
-              )}
-            </section>
-
-            <section className="grid gap-4 sm:grid-cols-3">
-              {[
-                {
-                  title: "Project Planning",
-                  description:
-                    "Organize your idea into a structured project plan.",
-                },
-                {
-                  title: "Technical Architecture",
-                  description:
-                    "Understand the database, technologies and system design.",
-                },
-                {
-                  title: "Development Roadmap",
-                  description:
-                    "Follow practical steps from development to launch.",
-                },
-              ].map((item) => (
-                <div
-                  key={item.title}
-                  className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4"
-                >
-                  <h3 className="font-semibold">{item.title}</h3>
-                  <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-                    {item.description}
-                  </p>
-                </div>
-              ))}
-            </section>
-          </div>
-        </div>
-      </section>
-    </main>
-  );
-      }
+  
