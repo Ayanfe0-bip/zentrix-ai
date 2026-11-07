@@ -861,7 +861,11 @@ Return ONLY the finished document content in Markdown.
           temperature:
             responseStyle === "creative" ? 0.9 : 0.7,
           maxTokens:
-            responseStyle === "concise" ? 900 : 1800,
+  body.mode === "app-builder"
+    ? 6000
+    : responseStyle === "concise"
+      ? 900
+      : 1800,
         });
 
         clearTimeout(timeout);
