@@ -67,7 +67,7 @@ export const AI_MODELS: AIModel[] = [
     free: false,
   },
   {
-    id: "llama-3.3-70b-versatile",
+    id: "openai/gpt-oss-120b",
     name: "ZENTRIX Groq",
     description: "Fast AI inference through Groq.",
     provider: "Groq",
