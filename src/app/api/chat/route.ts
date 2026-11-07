@@ -352,9 +352,9 @@ async function searchLiveWeb(query: string): Promise<string> {
     body: JSON.stringify({
       api_key: apiKey,
       query,
-      search_depth: "basic",
+      search_depth: "advanced",
       topic: "general",
-      max_results: 5,
+      max_results: 7,
       include_answer: false,
       include_raw_content: false,
       country: "nigeria",
@@ -377,10 +377,34 @@ async function searchLiveWeb(query: string): Promise<string> {
       url?: string;
       content?: string;
       score?: number;
+      published_date?: string | null;
     }, index: number) => {
+      let domain = "Unknown domain";
+      let sourceType = "Other source";
+
+      try {
+        domain = new URL(item.url || "").hostname;
+
+        if (
+          domain.endsWith(".gov.ng") ||
+          domain === "gov.ng" ||
+          domain.endsWith(".gov")
+        ) {
+          sourceType = "Potential official government source";
+        } else if (domain.endsWith(".edu.ng")) {
+          sourceType = "Educational institution";
+        }
+      } catch {
+        domain = "Invalid or missing URL";
+      }
+
       return [
         `[Source ${index + 1}]`,
         `Title: ${item.title || "Untitled"}`,
+        `Domain: ${domain}`,
+        `Source classification: ${sourceType}`,
+        `Publication date: ${item.published_date || "Not provided by search provider"}`,
+        `Relevance score: ${item.score ?? "Not provided"}`,
         `URL: ${item.url || ""}`,
         `Information: ${item.content || ""}`,
       ].join("\n");
@@ -388,9 +412,6 @@ async function searchLiveWeb(query: string): Promise<string> {
     .join("\n\n");
 }
 
-function needsLiveSearch(message: string): boolean {
-  return /\b(latest|today|yesterday|current|currently|recent|breaking|news|2026|2027|price|prices|exchange rate|weather|scholarship|scholarships|grant|grants|jobs|vacancies|election|president|governor|official|announcement|website|research|search the web|search online|look up|verify|fact check)\b/i.test(message);
-      }
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
