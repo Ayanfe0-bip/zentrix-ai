@@ -357,7 +357,7 @@ async function searchLiveWeb(query: string): Promise<string> {
       max_results: 7,
       include_answer: false,
       include_raw_content: false,
-      country: "nigeria",
+      
     }),
   });
 
