@@ -60,7 +60,7 @@ export const AI_MODELS: AIModel[] = [
     free: true,
   },
   {
-    id: "gemini-2.5-flash",
+    id: "gemini-3.8-flash",
     name: "ZENTRIX Gemini",
     description: "Google Gemini direct integration.",
     provider: "Gemini",
