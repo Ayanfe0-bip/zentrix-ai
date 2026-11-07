@@ -632,4 +632,86 @@ export default function AppBuilderPage() {
                     Copy Response
                   </button>
 
-  
+                    <button
+                    onClick={clearWorkspace}
+                    disabled={loading || (!blueprint && !prompt && !error)}
+                    className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium transition hover:bg-[var(--background)] disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Clear
+                  </button>
+                </div>
+              </div>
+
+              {loading && (
+                <p className="mt-4 rounded-lg bg-violet-500/10 p-3 text-sm text-violet-500">
+                  ZENTRIX AI is generating Part {currentStage} of 3.
+                  Your response will appear below as it is created.
+                </p>
+              )}
+
+              <div className="mt-5 min-h-[300px] overflow-hidden rounded-xl border border-dashed border-[var(--border)] p-4 sm:p-6">
+                {blueprint ? (
+                  <BlueprintContent content={blueprint} />
+                ) : (
+                  <div className="flex min-h-[250px] flex-col items-center justify-center text-center">
+                    <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-500/10 text-2xl text-violet-500">
+                      ✦
+                    </div>
+
+                    <h3 className="font-semibold">
+                      Your AI response will appear here
+                    </h3>
+
+                    <p className="mt-2 max-w-md text-sm leading-6 text-[var(--muted-foreground)]">
+                      Describe your application above and select
+                      Generate Complete Blueprint. ZENTRIX AI will
+                      create your project plan and display the
+                      response in this workspace.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {!loading && blueprint && !error && (
+                <div className="mt-6 rounded-xl bg-green-500/10 p-4 text-sm text-green-600">
+                  Blueprint generation completed successfully.
+                </div>
+              )}
+            </section>
+
+            <section className="grid gap-4 sm:grid-cols-3">
+              {[
+                {
+                  title: "Project Planning",
+                  description:
+                    "Organise your idea into a structured project plan.",
+                },
+                {
+                  title: "Technical Architecture",
+                  description:
+                    "Understand the database, technologies and system design.",
+                },
+                {
+                  title: "Development Roadmap",
+                  description:
+                    "Follow practical steps from development to launch.",
+                },
+              ].map((item) => (
+                <div
+                  key={item.title}
+                  className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4"
+                >
+                  <h3 className="font-semibold">{item.title}</h3>
+
+                  <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+                    {item.description}
+                  </p>
+                </div>
+              ))}
+            </section>
+          </div>
+        </div>
+      </section>
+    </main>
+  );
+}
