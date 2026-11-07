@@ -5,30 +5,251 @@ import AppSidebar from "@/components/layout/app-sidebar";
 import Topbar from "@/components/layout/topbar";
 import { DEFAULT_MODEL } from "@/lib/ai/models";
 
+const STAGES = [
+  {
+    title: "Project Foundation",
+    sections: [
+      "1. PROJECT NAME AND SUMMARY",
+      "2. PROBLEM THE APPLICATION SOLVES",
+      "3. CORE FEATURES",
+      "4. ADVANCED FEATURES",
+      "5. USER TYPES AND PERMISSIONS",
+    ],
+  },
+  {
+    title: "Technical Design",
+    sections: [
+      "6. RECOMMENDED TECHNOLOGY STACK",
+      "7. DATABASE DESIGN AND TABLES",
+      "8. APPLICATION ARCHITECTURE",
+      "9. API ENDPOINTS",
+      "10. SECURITY AND PRIVACY",
+    ],
+  },
+  {
+    title: "Building and Launch",
+    sections: [
+      "11. USER INTERFACE AND DESIGN DIRECTION",
+      "12. DEVELOPMENT ROADMAP",
+      "13. TESTING STRATEGY",
+      "14. DEPLOYMENT PLAN",
+      "15. POSSIBLE FUTURE IMPROVEMENTS",
+    ],
+  },
+];
+
+function formatText(text: string) {
+  return text.split(/(\*\*.*?\*\*)/g).map((part, index) =>
+    part.startsWith("**") && part.endsWith("**") ? (
+      <strong key={index}>
+        {part.slice(2, -2)}
+      </strong>
+    ) : (
+      <span key={index}>
+        {part.replace(/`/g, "")}
+      </span>
+    )
+  );
+}
+
+function BlueprintContent({
+  content,
+}: {
+  content: string;
+}) {
+  return (
+    <div className="space-y-3 text-sm leading-7">
+      {content.split("\n").map((raw, index) => {
+        const line = raw.trim();
+
+        if (!line) {
+          return <div key={index} className="h-1" />;
+        }
+
+        if (line.startsWith("# ")) {
+          return (
+            <h2
+              key={index}
+              className="border-b border-[var(--border)] pb-2 pt-5 text-xl font-bold"
+            >
+              {formatText(line.slice(2))}
+            </h2>
+          );
+        }
+
+        if (line.startsWith("## ")) {
+          return (
+            <h3
+              key={index}
+              className="pt-3 text-lg font-semibold text-violet-500"
+            >
+              {formatText(line.slice(3))}
+            </h3>
+          );
+        }
+
+        if (line.startsWith("### ")) {
+          return (
+            <h4
+              key={index}
+              className="pt-2 text-base font-semibold"
+            >
+              {formatText(line.slice(4))}
+            </h4>
+          );
+        }
+
+        if (/^[-*]\s+/.test(line)) {
+          return (
+            <div key={index} className="flex gap-3 pl-2">
+              <span className="mt-3 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-500" />
+              <p className="min-w-0 flex-1">
+                {formatText(line.replace(/^[-*]\s+/, ""))}
+              </p>
+            </div>
+          );
+        }
+
+        if (/^\d+[.)]\s+/.test(line)) {
+          return (
+            <div key={index} className="flex gap-3 pl-2">
+              <span className="font-semibold text-violet-500">
+                {line.match(/^\d+/)?.[0]}.
+              </span>
+              <p className="min-w-0 flex-1">
+                {formatText(line.replace(/^\d+[.)]\s+/, ""))}
+              </p>
+            </div>
+          );
+        }
+
+        if (/^\|?\s*:?-{3,}/.test(line)) {
+          return null;
+        }
+
+        if (line.includes("|")) {
+          return (
+            <p
+              key={index}
+              className="rounded-lg bg-[var(--background)] px-3 py-2 text-xs"
+            >
+              {formatText(
+                line.replace(/^\||\|$/g, "").replace(/\s*\|\s*/g, " • ")
+              )}
+            </p>
+          );
+        }
+
+        return (
+          <p key={index}>
+            {formatText(line.replace(/^>\s*/, ""))}
+          </p>
+        );
+      })}
+    </div>
+  );
+          }
+async function readAIResponse(
+  response: Response,
+  onUpdate: (text: string) => void
+) {
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error || "The AI request failed.");
+  }
+
+  if (!response.body) {
+    throw new Error("No response stream was received.");
+  }
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  let result = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || "";
+
+    for (const line of lines) {
+      const trimmed = line.trim();
+
+      if (!trimmed.startsWith("data:")) continue;
+
+      const data = trimmed.slice(5).trim();
+
+      if (!data || data === "[DONE]") continue;
+
+      try {
+        const parsed = JSON.parse(data);
+
+        const content =
+          parsed.choices?.[0]?.delta?.content ??
+          parsed.choices?.[0]?.message?.content ??
+          parsed.content ??
+          "";
+
+        if (typeof content === "string" && content) {
+          result += content;
+          onUpdate(result);
+        }
+      } catch {
+        // Ignore incomplete streaming events.
+      }
+    }
+  }
+
+  if (!result.trim()) {
+    throw new Error("The AI returned an empty response. Please try again.");
+  }
+
+  return result;
+}
+
 export default function AppBuilderPage() {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
-  const [idea, setIdea] = useState("");
+  const [prompt, setPrompt] = useState("");
+  const [selectedModel, setSelectedModel] = useState(
+    String(DEFAULT_MODEL)
+  );
   const [projectType, setProjectType] = useState("Web Application");
   const [technology, setTechnology] = useState("Recommend the best stack");
-  const [loading, setLoading] = useState(false);
   const [blueprint, setBlueprint] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [currentStage, setCurrentStage] = useState(0);
   const [error, setError] = useState("");
 
-  async function generateBlueprint() {
-  if (!idea.trim() || loading) return;
+  const generateBlueprint = async () => {
+    if (!prompt.trim()) {
+      setError("Please describe the application you want to build.");
+      return;
+    }
 
-  setLoading(true);
-  setError("");
-  setBlueprint("");
+    setLoading(true);
+    setError("");
+    setBlueprint("");
+    setCurrentStage(0);
 
-  const prompt = `
-You are ZENTRIX AI, an expert software architect and autonomous app-building assistant.
+    let completedContent = "";
 
-Create a professional, technically realistic project blueprint using the information below.
+    try {
+      for (let i = 0; i < STAGES.length; i++) {
+        setCurrentStage(i + 1);
 
-PROJECT IDEA:
-${idea}
+        const stage = STAGES[i];
+
+        const stagePrompt = `
+You are ZENTRIX AI, an expert software architect and application development assistant.
+
+Create PART ${i + 1} OF A COMPLETE APPLICATION BLUEPRINT.
+
+PROJECT DESCRIPTION:
+${prompt}
 
 PROJECT TYPE:
 ${projectType}
@@ -36,382 +257,292 @@ ${projectType}
 PREFERRED TECHNOLOGY:
 ${technology}
 
-Produce a detailed but practical blueprint with these sections:
+YOUR TASK:
+Write only these five sections:
+${stage.sections.map((section) => section).join("\n")}
 
-1. PROJECT NAME AND SUMMARY
-2. PROBLEM THE APPLICATION SOLVES
-3. CORE FEATURES
-4. ADVANCED FEATURES
-5. USER TYPES AND PERMISSIONS
-6. RECOMMENDED TECHNOLOGY STACK
-7. DATABASE DESIGN AND TABLES
-8. APPLICATION ARCHITECTURE
-9. API ENDPOINTS
-10. SECURITY AND PRIVACY
-11. USER INTERFACE AND DESIGN DIRECTION
-12. DEVELOPMENT ROADMAP
-13. TESTING STRATEGY
-14. DEPLOYMENT PLAN
-15. POSSIBLE FUTURE IMPROVEMENTS
+IMPORTANT INSTRUCTIONS:
 
-Important instructions:
-- Make the architecture realistic and implementable.
-- Explain important technical decisions.
-- Avoid imaginary integrations or unsupported capabilities.
-- Prioritise affordable and free technologies where practical.
-- Organise the response using clear headings and bullet points.
-- Do not generate the actual source code yet.
+1. Explain everything in simple, beginner-friendly English.
+2. Give detailed and practical explanations.
+3. Do not skip any requested section.
+4. Do not stop halfway through a section.
+5. Use clear headings and readable bullet points.
+6. Avoid decorative symbols, emojis, and unnecessary Markdown.
+7. Avoid complicated tables. Describe database tables using their names, purposes, and fields.
+8. Explain technical terms when they first appear.
+9. Include realistic features suitable for the project.
+10. Do not write the other parts of the blueprint.
+11. Finish all five sections before ending your response.
+
+Make this section detailed enough for a developer to use as a practical project guide.
 `;
 
-  try {
-    const response = await fetch("/api/chat", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-  messages: [{ role: "user", content: prompt }],
-  model: selectedModel,
-  mode: "app-builder",
-}),
-    });
+        const response = await fetch("/api/chat", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            messages: [
+              {
+                role: "user",
+                content: stagePrompt,
+              },
+            ],
+            model: selectedModel,
+            mode: "app-builder",
+          }),
+        });
 
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(
-        errorData.error || "Unable to generate the project blueprint."
-      );
-    }
-
-    if (!response.body) {
-      throw new Error("The AI returned an empty response.");
-    }
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-
-    let buffer = "";
-    let generatedText = "";
-
-    function processEvent(event: string) {
-      const lines = event.split(/\r?\n/);
-
-      for (const line of lines) {
-        if (!line.startsWith("data:")) continue;
-
-        const data = line.slice(5).trim();
-
-        if (!data || data === "[DONE]") continue;
-
-        try {
-          const parsed = JSON.parse(data);
-          const content = parsed?.choices?.[0]?.delta?.content;
-
-          if (typeof content === "string") {
-            generatedText += content;
+        const stageContent = await readAIResponse(
+          response,
+          (partial) => {
+            setBlueprint(
+              completedContent +
+                `\n\n${partial}`
+            );
           }
-        } catch {
-          // Ignore incomplete or invalid stream events.
-        }
+        );
+
+        completedContent +=
+          `\n\n${stageContent}`;
+
+        setBlueprint(completedContent);
       }
-    }
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong while generating the blueprint."
+      );
 
-    while (true) {
-      const { done, value } = await reader.read();
-
-      buffer += decoder.decode(value, { stream: !done });
-
-      const events = buffer.split(/\r?\n\r?\n/);
-      buffer = events.pop() || "";
-
-      for (const event of events) {
-        processEvent(event);
+      if (completedContent.trim()) {
+        setBlueprint(completedContent);
       }
-
-      if (done) break;
+    } finally {
+      setLoading(false);
+      setCurrentStage(0);
     }
+  };
 
-    if (buffer.trim()) {
-      processEvent(buffer);
-    }
-
-    if (!generatedText.trim()) {
-      throw new Error("ZENTRIX returned an empty blueprint. Please try again.");
-    }
-
-    setBlueprint(generatedText);
-  } catch (err) {
-    setError(
-      err instanceof Error
-        ? err.message
-        : "Something went wrong. Please try again."
-    );
-  } finally {
-    setLoading(false);
-  }
-  }
-
-  async function copyBlueprint() {
+  const copyBlueprint = async () => {
     if (!blueprint) return;
 
     try {
       await navigator.clipboard.writeText(blueprint);
+      alert("Blueprint copied successfully!");
     } catch {
-      setError("Unable to copy the blueprint. Please copy it manually.");
+      setError("Unable to copy. Please select and copy the text manually.");
     }
-  }
+  };
+    return (
+    <div className="flex min-h-screen bg-[var(--background)]">
+      <AppSidebar />
 
-  return (
-    <main className="flex h-[100dvh] w-full overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
-      <AppSidebar
-        activeItem="AI App Builder"
-        isOpen={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+      <div className="min-w-0 flex-1">
+        <Topbar />
 
-      <section className="flex min-w-0 flex-1 flex-col">
-        <Topbar
-          title="AI App Builder"
-          subtitle="Turn your ideas into real software projects"
-          modelName={selectedModel}
-          onModelChange={setSelectedModel}
-          onMenuClick={() => setSidebarOpen(true)}
-        />
-
-        <div className="flex-1 overflow-y-auto">
-          <div className="mx-auto max-w-6xl px-4 py-7 sm:px-7 lg:px-10">
-
-            <div className="mb-8">
-              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-violet-500">
-                ZENTRIX Autonomous Development Studio
-              </span>
-
-              <h1 className="mt-3 text-3xl font-bold tracking-tight sm:text-4xl">
-                Your idea.
-                <span className="gradient-text"> Our starting point.</span>
-              </h1>
-
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-[var(--muted)]">
-                Describe the software you want to build. ZENTRIX will analyse
-                your idea and develop a professional technical blueprint
-                before we begin generating the actual application.
-              </p>
+        <main className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
+          <div>
+            <div className="text-sm font-medium text-violet-500">
+              ZENTRIX AI
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+            <h1 className="mt-2 text-2xl font-bold sm:text-3xl">
+              AI App Builder
+            </h1>
 
-              <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6">
+            <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+              Turn your application idea into a complete,
+              professionally structured development blueprint.
+            </p>
+          </div>
 
-                <div className="mb-5 flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-violet-500/10 text-xl text-violet-500">
-                    ✦
-                  </div>
+          <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 sm:p-6">
+            <h2 className="text-lg font-semibold">
+              Describe your application
+            </h2>
 
-                  <div>
-                    <h2 className="text-base font-semibold">
-                      Describe your application
-                    </h2>
-                    <p className="text-xs text-[var(--muted)]">
-                      Tell ZENTRIX what you want to create.
-                    </p>
-                  </div>
-                </div>
+            <p className="mt-1 text-sm text-[var(--muted-foreground)]">
+              Explain what you want to build and the features
+              you expect it to have.
+            </p>
 
-                <label className="mb-2 block text-xs font-medium text-[var(--muted)]">
-                  What application do you want to build?
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Example: Build a multi-vendor marketplace where sellers can register, upload products, manage orders, and receive payments..."
+              rows={7}
+              disabled={loading}
+              className="mt-4 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] p-4 text-sm outline-none focus:border-violet-500"
+            />
+
+            <div className="mt-5 grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-2 block text-sm font-medium">
+                  Project type
                 </label>
 
-                <textarea
-                  value={idea}
-                  onChange={(event) => setIdea(event.target.value)}
-                  placeholder="Example: I want to build a global online marketplace where customers can purchase products, vendors can manage their shops, and administrators can monitor the entire platform..."
-                  className="min-h-[190px] w-full resize-y rounded-xl border border-[var(--border)] bg-[var(--background)] p-4 text-sm leading-7 outline-none transition placeholder:text-[var(--muted)] focus:border-violet-500/50"
-                />
-
-                <div className="mt-5 grid gap-4 sm:grid-cols-2">
-
-                  <div>
-                    <label className="mb-2 block text-xs font-medium text-[var(--muted)]">
-                      Project type
-                    </label>
-
-                    <select
-                      value={projectType}
-                      onChange={(event) => setProjectType(event.target.value)}
-                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-3 text-sm outline-none focus:border-violet-500"
-                    >
-                      <option>Web Application</option>
-                      <option>Mobile Application</option>
-                      <option>AI Application</option>
-                      <option>E-commerce Platform</option>
-                      <option>SaaS Platform</option>
-                      <option>Website</option>
-                      <option>Desktop Application</option>
-                      <option>Game</option>
-                      <option>Other</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="mb-2 block text-xs font-medium text-[var(--muted)]">
-                      Preferred technology
-                    </label>
-
-                    <select
-                      value={technology}
-                      onChange={(event) => setTechnology(event.target.value)}
-                      className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-3 py-3 text-sm outline-none focus:border-violet-500"
-                    >
-                      <option>Recommend the best stack</option>
-                      <option>Next.js and TypeScript</option>
-                      <option>React and Node.js</option>
-                      <option>React Native</option>
-                      <option>Flutter</option>
-                      <option>Python</option>
-                      <option>HTML, CSS and JavaScript</option>
-                      <option>Other</option>
-                    </select>
-                  </div>
-
-                </div>
-
-                <button
-                  type="button"
-                  onClick={generateBlueprint}
-                  disabled={!idea.trim() || loading}
-                  className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-violet-600 to-purple-600 px-5 py-4 text-sm font-semibold text-white shadow-lg shadow-violet-950/20 transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                <select
+                  value={projectType}
+                  onChange={(e) => setProjectType(e.target.value)}
+                  disabled={loading}
+                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] p-3 text-sm"
                 >
-                  {loading ? (
-                    <>
-                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                      Analysing your idea...
-                    </>
-                  ) : (
-                    <>✦ Generate Project Blueprint</>
-                  )}
-                </button>
+                  <option>Web Application</option>
+                  <option>Mobile Application</option>
+                  <option>E-commerce Platform</option>
+                  <option>AI Application</option>
+                  <option>Social Media Platform</option>
+                  <option>SaaS Platform</option>
+                  <option>Desktop Application</option>
+                  <option>Game Application</option>
+                </select>
+              </div>
 
-                <p className="mt-3 text-center text-[11px] text-[var(--muted)]">
-                  Uses your currently selected ZENTRIX AI model.
-                </p>
+              <div>
+                <label className="mb-2 block text-sm font-medium">
+                  Technology preference
+                </label>
 
-              </section>
+                <select
+                  value={technology}
+                  onChange={(e) => setTechnology(e.target.value)}
+                  disabled={loading}
+                  className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] p-3 text-sm"
+                >
+                  <option>Recommend the best stack</option>
+                  <option>Next.js, React and TypeScript</option>
+                  <option>React and Supabase</option>
+                  <option>Node.js and PostgreSQL</option>
+                  <option>Flutter and Firebase</option>
+                  <option>React Native and Supabase</option>
+                </select>
+              </div>
+            </div>
 
-              <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-5 sm:p-6">
+            <div className="mt-4">
+              <label className="mb-2 block text-sm font-medium">
+                AI Model
+              </label>
 
-                <div className="mb-5 flex items-center justify-between gap-3">
-                  <div>
-                    <h2 className="text-base font-semibold">
-                      Development capabilities
-                    </h2>
-                    <p className="mt-1 text-xs text-[var(--muted)]">
-                      Our planned development workspace.
-                    </p>
-                  </div>
-
-                  <span className="rounded-full bg-emerald-500/10 px-3 py-1 text-[10px] font-semibold text-emerald-500">
-                    BUILDING
-                  </span>
-                </div>
-
-                {[
-                  ["01", "Project planning", "Analyse ideas and design software architecture."],
-                  ["02", "AI code generation", "Generate application code and project files."],
-                  ["03", "Debugging assistant", "Identify errors and propose corrections."],
-                  ["04", "Project workspace", "Organise and manage generated files."],
-                  ["05", "GitHub integration", "Connect repositories and manage changes."],
-                  ["06", "Vercel deployment", "Prepare and deploy supported projects."],
-                ].map(([number, title, description]) => (
-                  <div
-                    key={number}
-                    className="flex gap-3 border-b border-[var(--border)] py-4 last:border-0"
-                  >
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 text-xs font-bold text-violet-500">
-                      {number}
-                    </span>
-
-                    <div>
-                      <h3 className="text-sm font-semibold">{title}</h3>
-                      <p className="mt-1 text-xs leading-6 text-[var(--muted)]">
-                        {description}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-
-              </section>
+              <input
+                value={selectedModel}
+                onChange={(e) => setSelectedModel(e.target.value)}
+                disabled={loading}
+                className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] p-3 text-sm"
+              />
             </div>
 
             {error && (
-              <div className="mt-6 rounded-xl border border-red-500/20 bg-red-500/5 p-4 text-sm text-red-500">
+              <div className="mt-4 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-500">
                 {error}
               </div>
             )}
 
-            <section className="mt-6 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
+            <button
+              onClick={generateBlueprint}
+              disabled={loading || !prompt.trim()}
+              className="mt-6 w-full rounded-xl bg-violet-600 px-5 py-4 font-semibold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {loading
+                ? `Generating Part ${currentStage} of 3...`
+                : "Generate Complete Blueprint"}
+            </button>
 
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] px-5 py-4">
+            {loading && (
+              <div className="mt-4 space-y-2">
+                <div className="h-2 overflow-hidden rounded-full bg-[var(--border)]">
+                  <div
+                    className="h-full rounded-full bg-violet-600 transition-all duration-500"
+                    style={{
+                      width: `${(currentStage / 3) * 100}%`,
+                    }}
+                  />
+                </div>
+
+                <p className="text-center text-xs text-[var(--muted-foreground)]">
+                  {STAGES[currentStage - 1]?.title}
+                  {" — "}
+                  Please wait while ZENTRIX AI generates your blueprint.
+                </p>
+              </div>
+            )}
+          </section>
+
+          {blueprint && (
+            <section className="rounded-2xl border border-[var(--border)] bg-[var(--card)] p-4 sm:p-6">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] pb-4">
                 <div>
-                  <h2 className="text-sm font-semibold">
-                    Project Blueprint
+                  <h2 className="text-xl font-bold">
+                    Your Application Blueprint
                   </h2>
-                  <p className="mt-1 text-xs text-[var(--muted)]">
-                    Your application&apos;s technical plan
+
+                  <p className="mt-1 text-xs text-[var(--muted-foreground)]">
+                    Generated by ZENTRIX AI
                   </p>
                 </div>
 
-                {blueprint && (
-                  <button
-                    type="button"
-                    onClick={copyBlueprint}
-                    className="rounded-lg border border-[var(--border)] px-3 py-2 text-xs transition hover:border-violet-500 hover:text-violet-500"
-                  >
-                    Copy blueprint
-                  </button>
-                )}
+                <button
+                  onClick={copyBlueprint}
+                  className="rounded-lg border border-[var(--border)] px-4 py-2 text-sm font-medium transition hover:bg-[var(--background)]"
+                >
+                  Copy Blueprint
+                </button>
               </div>
 
-              <div className="min-h-[250px] p-5">
+              {loading && (
+                <p className="mt-4 rounded-lg bg-violet-500/10 p-3 text-sm text-violet-500">
+                  Generating Part {currentStage} of 3.
+                  Your completed sections are displayed below.
+                </p>
+              )}
 
-                {loading ? (
-                  <div className="flex items-center gap-3 py-10 text-sm text-violet-500">
-                    <span className="h-5 w-5 animate-spin rounded-full border-2 border-violet-400/30 border-t-violet-500" />
-                    ZENTRIX is designing your project architecture...
-                  </div>
-                ) : blueprint ? (
-                  <pre className="whitespace-pre-wrap break-words font-sans text-sm leading-7">
-                    {blueprint}
-                  </pre>
-                ) : (
-                  <div className="flex min-h-[210px] flex-col items-center justify-center text-center">
-                    <span className="mb-4 text-4xl text-violet-500">✦</span>
-                    <p className="text-sm font-medium">
-                      Ready to build something?
-                    </p>
-                    <p className="mt-2 max-w-sm text-xs leading-6 text-[var(--muted)]">
-                      Describe your application and generate its technical
-                      blueprint to begin.
-                    </p>
-                  </div>
-                )}
-
+              <div className="mt-5 overflow-hidden">
+                <BlueprintContent content={blueprint} />
               </div>
+
+              {!loading && !error && (
+                <div className="mt-6 rounded-xl bg-green-500/10 p-4 text-sm text-green-600">
+                  Blueprint generation completed.
+                  You can now copy and review your project plan.
+                </div>
+              )}
             </section>
+          )}
 
-            <div className="mt-6 rounded-2xl border border-violet-500/20 bg-violet-500/[0.05] p-5">
-              <p className="text-sm font-semibold text-violet-500">
-                Development note
-              </p>
-              <p className="mt-2 text-xs leading-6 text-[var(--muted)]">
-                This is the first stage. We will progressively add code
-                generation, project files, testing, GitHub connectivity,
-                and deployment. These integrations are not active yet.
-              </p>
-            </div>
-
-          </div>
-        </div>
-      </section>
-    </main>
+          <section className="grid gap-4 sm:grid-cols-3">
+            {[
+              {
+                title: "Project Planning",
+                description:
+                  "Organize your idea into a structured project plan.",
+              },
+              {
+                title: "Technical Architecture",
+                description:
+                  "Understand the database, technologies and system design.",
+              },
+              {
+                title: "Development Roadmap",
+                description:
+                  "Follow practical steps from development to launch.",
+              },
+            ].map((item) => (
+              <div
+                key={item.title}
+                className="rounded-xl border border-[var(--border)] bg-[var(--card)] p-4"
+              >
+                <h3 className="font-semibold">{item.title}</h3>
+                <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+                  {item.description}
+                </p>
+              </div>
+            ))}
+          </section>
+        </main>
+      </div>
+    </div>
   );
-  }
+                                                 }
