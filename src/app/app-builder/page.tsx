@@ -70,9 +70,10 @@ Important instructions:
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        messages: [{ role: "user", content: prompt }],
-        model: selectedModel,
-      }),
+  messages: [{ role: "user", content: prompt }],
+  model: selectedModel,
+  mode: "app-builder",
+}),
     });
 
     if (!response.ok) {
