@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import type { ReactNode } from "react";
 import ThemeProvider from "@/components/theme-provider";
+import PWARegister from "@/components/pwa-register";
 import "katex/dist/katex.min.css";
 import "./globals.css";
 
@@ -56,6 +57,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
+        <PWARegister />
         <ThemeProvider>{children}</ThemeProvider>
       </body>
     </html>
