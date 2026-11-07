@@ -74,6 +74,14 @@ export const AI_MODELS: AIModel[] = [
     free: false,
   },
   {
+    id: "qwen/qwen3.8-27b",
+    name: "ZENTRIX Qwen",
+    description: "Advanced reasoning, coding, and multimodal assistance through Groq.",
+    provider: "Groq",
+    free: true,
+    recommended: true,
+  },
+  {
     id: "mistral-small-latest",
     name: "ZENTRIX Mistral",
     description: "General-purpose AI through Mistral.",
