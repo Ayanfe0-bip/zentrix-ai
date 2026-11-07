@@ -337,7 +337,60 @@ function createFileStream(
 
   return createSSEResponse(fileMarker);
 }
+async function searchLiveWeb(query: string): Promise<string> {
+  const apiKey = process.env.TAVILY_API_KEY;
 
+  if (!apiKey) {
+    throw new Error("Live web search is not configured.");
+  }
+
+  const response = await fetch("https://api.tavily.com/search", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      api_key: apiKey,
+      query,
+      search_depth: "basic",
+      topic: "general",
+      max_results: 5,
+      include_answer: false,
+      include_raw_content: false,
+      country: "nigeria",
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error("Live web search failed.");
+  }
+
+  const data = await response.json();
+
+  const results = Array.isArray(data.results)
+    ? data.results
+    : [];
+
+  return results
+    .map((item: {
+      title?: string;
+      url?: string;
+      content?: string;
+      score?: number;
+    }, index: number) => {
+      return [
+        `[Source ${index + 1}]`,
+        `Title: ${item.title || "Untitled"}`,
+        `URL: ${item.url || ""}`,
+        `Information: ${item.content || ""}`,
+      ].join("\n");
+    })
+    .join("\n\n");
+}
+
+function needsLiveSearch(message: string): boolean {
+  return /\b(latest|today|yesterday|current|currently|recent|breaking|news|2026|2027|price|prices|exchange rate|weather|scholarship|scholarships|grant|grants|jobs|vacancies|election|president|governor|official|announcement|website|research|search the web|search online|look up|verify|fact check)\b/i.test(message);
+      }
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
