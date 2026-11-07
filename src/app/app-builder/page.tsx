@@ -16,13 +16,13 @@ export default function AppBuilderPage() {
   const [error, setError] = useState("");
 
   async function generateBlueprint() {
-    if (!idea.trim() || loading) return;
+  if (!idea.trim() || loading) return;
 
-    setLoading(true);
-    setError("");
-    setBlueprint("");
+  setLoading(true);
+  setError("");
+  setBlueprint("");
 
-    const prompt = `
+  const prompt = `
 You are ZENTRIX AI, an expert software architect and autonomous app-building assistant.
 
 Create a professional, technically realistic project blueprint using the information below.
@@ -63,34 +63,91 @@ Important instructions:
 - Do not generate the actual source code yet.
 `;
 
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          messages: [{ role: "user", content: prompt }],
-          model: selectedModel,
-        }),
-      });
+  try {
+    const response = await fetch("/api/chat", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        messages: [{ role: "user", content: prompt }],
+        model: selectedModel,
+      }),
+    });
 
-      const data = await response.json();
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(
+        errorData.error || "Unable to generate the project blueprint."
+      );
+    }
 
-      if (!response.ok) {
-        throw new Error(data.error || "Unable to generate the project blueprint.");
+    if (!response.body) {
+      throw new Error("The AI returned an empty response.");
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    let buffer = "";
+    let generatedText = "";
+
+    function processEvent(event: string) {
+      const lines = event.split(/\r?\n/);
+
+      for (const line of lines) {
+        if (!line.startsWith("data:")) continue;
+
+        const data = line.slice(5).trim();
+
+        if (!data || data === "[DONE]") continue;
+
+        try {
+          const parsed = JSON.parse(data);
+          const content = parsed?.choices?.[0]?.delta?.content;
+
+          if (typeof content === "string") {
+            generatedText += content;
+          }
+        } catch {
+          // Ignore incomplete or invalid stream events.
+        }
+      }
+    }
+
+    while (true) {
+      const { done, value } = await reader.read();
+
+      buffer += decoder.decode(value, { stream: !done });
+
+      const events = buffer.split(/\r?\n\r?\n/);
+      buffer = events.pop() || "";
+
+      for (const event of events) {
+        processEvent(event);
       }
 
-      setBlueprint(data.reply || "No blueprint was returned.");
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Something went wrong. Please try again."
-      );
-    } finally {
-      setLoading(false);
+      if (done) break;
     }
+
+    if (buffer.trim()) {
+      processEvent(buffer);
+    }
+
+    if (!generatedText.trim()) {
+      throw new Error("ZENTRIX returned an empty blueprint. Please try again.");
+    }
+
+    setBlueprint(generatedText);
+  } catch (err) {
+    setError(
+      err instanceof Error
+        ? err.message
+        : "Something went wrong. Please try again."
+    );
+  } finally {
+    setLoading(false);
+  }
   }
 
   async function copyBlueprint() {
