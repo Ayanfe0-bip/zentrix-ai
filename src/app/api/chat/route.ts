@@ -462,9 +462,7 @@ if (user) {
 }
 
 const personalizedSystemPrompt =
-  SYSTEM_PROMPT +
-  "\n\nRESPONSE STYLE:\n" +
-  RESPONSE_STYLES[responseStyle] +
+  personalizedSystemPrompt
   memoryContext;
     const documentRequest = detectDocumentRequest(
       latestUserMessage.content
