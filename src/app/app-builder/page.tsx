@@ -298,7 +298,7 @@ Important instructions:
                     Project Blueprint
                   </h2>
                   <p className="mt-1 text-xs text-[var(--muted)]">
-                    Your application's technical plan will appear here.
+                    Your application&apos;s technical plan
                   </p>
                 </div>
 
