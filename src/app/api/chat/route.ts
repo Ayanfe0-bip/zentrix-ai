@@ -411,7 +411,67 @@ async function searchLiveWeb(query: string): Promise<string> {
     })
     .join("\n\n");
 }
+async function searchOfficialSources(
+  query: string
+): Promise<string> {
+  const apiKey = process.env.TAVILY_API_KEY;
 
+  if (!apiKey) {
+    return "";
+  }
+
+  const response = await fetch(
+    "https://api.tavily.com/search",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        api_key: apiKey,
+        query: `${query} official government announcement`,
+        search_depth: "basic",
+        topic: "general",
+        max_results: 5,
+        include_answer: false,
+        include_raw_content: false,
+        include_domains: [
+          "gov.ng",
+          "*.gov.ng"
+        ],
+      }),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(
+      "Official-source search failed."
+    );
+  }
+
+  const data = await response.json();
+
+  const results = Array.isArray(data.results)
+    ? data.results
+    : [];
+
+  return results
+    .map((item: {
+      title?: string;
+      url?: string;
+      content?: string;
+      published_date?: string | null;
+    }, index: number) => {
+      return [
+        `[Official Search Result ${index + 1}]`,
+        `Title: ${item.title || "Untitled"}`,
+        `Publication date: ${item.published_date || "Not provided"}`,
+        `URL: ${item.url || ""}`,
+        `Information: ${item.content || ""}`,
+      ].join("\n");
+    })
+    .join("\n\n");
+}
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
