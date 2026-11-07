@@ -144,6 +144,7 @@ export async function createAICompletion({
         const reply = result.choices?.[0]?.message?.content;
 
         if (typeof reply === "string" && reply.trim()) {
+         console.info("ZENTRIX AUTO SUCCESS:", attempt.name);
           return {
             reply,
             model: attempt.name,
