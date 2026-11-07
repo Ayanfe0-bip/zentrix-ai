@@ -81,7 +81,7 @@ export const AI_MODELS: AIModel[] = [
     free: false,
   },
   {
-    id: "@cf/meta/llama-3.1-8b-instruct",
+    id: "@cf/google/gemma-4-26b-a4b-it",
     name: "ZENTRIX Cloud",
     description: "Cloudflare Workers AI integration.",
     provider: "Cloudflare",
