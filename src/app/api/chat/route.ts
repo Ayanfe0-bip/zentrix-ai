@@ -472,6 +472,9 @@ async function searchOfficialSources(
     })
     .join("\n\n");
 }
+function needsLiveSearch(message: string): boolean {
+  return /\b(latest|today|yesterday|current|currently|recent|breaking|news|2026|2027|price|prices|exchange rate|weather|scholarship|scholarships|grant|grants|jobs|vacancies|election|president|governor|official|announcement|website|research|search the web|search online|look up|verify|fact check)\b/i.test(message);
+}
 function getErrorMessage(error: unknown): string {
   if (error instanceof Error) {
     return error.message;
