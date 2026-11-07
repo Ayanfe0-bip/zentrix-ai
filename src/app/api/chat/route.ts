@@ -3,6 +3,10 @@ import { AI_MODELS, DEFAULT_MODEL } from "@/lib/ai/models";
 import { COMPANY_KNOWLEDGE } from "@/lib/ai/company-knowledge";
 import { createAICompletion } from "@/lib/ai/provider";
 import { createClient } from "@/lib/supabase/server";
+import {
+  getUserMemories,
+  saveUserMemory,
+} from "@/lib/ai/memory";
 export const runtime = "nodejs";
 
 const SYSTEM_PROMPT = `
@@ -450,7 +454,18 @@ export async function POST(request: NextRequest) {
     );
 
     const latestUserMessage = messages[messages.length - 1];
+let memoryContext = "";
 
+if (user) {
+  await saveUserMemory(user.id, latestUserMessage.content);
+  memoryContext = await getUserMemories(user.id);
+}
+
+const personalizedSystemPrompt =
+  SYSTEM_PROMPT +
+  "\n\nRESPONSE STYLE:\n" +
+  RESPONSE_STYLES[responseStyle] +
+  memoryContext;
     const documentRequest = detectDocumentRequest(
       latestUserMessage.content
     );
