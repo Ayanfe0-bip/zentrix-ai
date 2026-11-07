@@ -89,7 +89,7 @@ export async function createAICompletion({
 
     if (groqKey) {
       for (const groqModel of [
-        "qwen/qwen3.8-27b",
+        "qwen/zentrix-fallback-test-invalid",
         "openai/gpt-oss-120b",
       ]) {
         attempts.push({
