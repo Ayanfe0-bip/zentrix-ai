@@ -7,21 +7,24 @@ import { createClient } from "@/lib/supabase/client";
 
 export default function SidebarAuthAction() {
   const router = useRouter();
-  const supabase = createClient();
 
+  const [supabase, setSupabase] = useState<ReturnType<typeof createClient> | null>(null);
   const [user, setUser] = useState<import("@supabase/supabase-js").User | null>(null);
   const [loading, setLoading] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
+    const client = createClient();
+    setSupabase(client);
+
+    client.auth.getUser().then(({ data }) => {
       setUser(data.user);
       setLoading(false);
     });
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = client.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       setLoading(false);
     });
@@ -30,6 +33,8 @@ export default function SidebarAuthAction() {
   }, []);
 
   async function handleSignOut() {
+    if (!supabase) return;
+
     setSigningOut(true);
 
     const { error } = await supabase.auth.signOut();
@@ -66,4 +71,4 @@ export default function SidebarAuthAction() {
       {signingOut ? "Signing Out..." : "Sign Out"}
     </button>
   );
-  }
+}
