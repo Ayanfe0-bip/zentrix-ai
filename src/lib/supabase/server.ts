@@ -16,7 +16,7 @@ export async function createClient() {
   cookiesToSet: {
     name: string;
     value: string;
-    options?: any;
+    options?: Parameters<typeof cookieStore.set>[2];
   }[]
 ) {
           try {
