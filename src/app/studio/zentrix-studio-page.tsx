@@ -149,20 +149,16 @@ export default function CodeGenerationStudioPage() {
     setTab("preview");
 
     const prompt = [
-      "You are ZENTRIX AI Code Generation Studio, a senior software engineer and product designer.",
-      "Build a polished, working first version of the user's project.",
-      "Project type: " + projectType,
-      "User idea:\n" + idea.trim(),
-      "",
-      "Return ONLY valid JSON. Do not use Markdown fences or explanations outside JSON.",
-      'Use this exact structure: {"projectName":"Name","summary":"Short description","files":[{"path":"index.html","language":"html","content":"complete source"},{"path":"styles.css","language":"css","content":"complete source"},{"path":"script.js","language":"javascript","content":"complete source"}],"previewHtml":"Complete self-contained HTML document for the live preview."}',
-      "Generate complete connected source files, not snippets or TODO placeholders.",
-      "For this first version, build a browser-ready HTML, CSS and vanilla JavaScript app. Use separate index.html, styles.css and script.js files where useful.",
-      "previewHtml must include all CSS and JavaScript inline so it runs independently in a sandboxed iframe. Do not require npm, build tools, external scripts, API keys or backend services.",
-      "Use local demo data for backend-dependent features. Clearly label demo-only payments, authentication and database actions; never pretend they are real.",
-      "Create a premium, responsive, accessible, mobile-first interface with working interactions, validation and useful empty states.",
-      "Include every file needed for this runnable first version. Do not include secrets or credentials. Escape JSON strings correctly."
-    ].join("\n");
+  "Return ONLY one valid JSON object. Do not use Markdown fences or explanations outside JSON.",
+  'Use this exact structure: {"projectName":"Name","summary":"Short description","files":[{"path":"index.html","language":"html","content":"complete source"},{"path":"styles.css","language":"css","content":"complete source"},{"path":"script.js","language":"javascript","content":"complete source"}]}.',
+  "IMPORTANT: Do not include previewHtml or duplicate any source code. The Studio creates the preview from the files automatically.",
+  "Generate complete connected source files, not snippets or TODO placeholders.",
+  "For this first version, build a browser-ready HTML, CSS and vanilla JavaScript app. Use separate index.html, styles.css and script.js files where useful.",
+  "Do not require npm, build tools, external scripts, API keys or backend services.",
+  "Use local demo data for backend-dependent features. Clearly label demo-only payments, authentication and database actions; never pretend they are real.",
+  "Create a polished, responsive, accessible, mobile-first interface with working interactions, validation and useful empty states.",
+  "Keep the project compact but complete. Include every file needed for this runnable first version. Do not include secrets or credentials. Escape all JSON string values correctly."
+];
 
     try {
       const response = await fetch("/api/chat", {
