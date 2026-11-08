@@ -733,19 +733,86 @@ setAudioPlaying(false);
             )}
           </div>
 
-          <textarea
-            ref={textareaRef}
-            value={message}
-            onChange={(event) => {
-              setMessage(event.target.value);
-              resizeTextarea();
+          <>
+  {audioUrl && (
+    <audio
+      ref={audioRef}
+      src={audioUrl}
+      onEnded={() => setAudioPlaying(false)}
+      className="hidden"
+    />
+  )}
+
+  {listening ? (
+    <div className="flex min-h-[44px] flex-1 items-center gap-3 px-2">
+      <span className="h-2 w-2 animate-pulse rounded-full bg-red-500" />
+
+      <div className="flex h-9 flex-1 items-center justify-center gap-[3px]">
+        {Array.from({ length: 28 }).map((_, index) => (
+          <span
+            key={index}
+            className="w-[3px] rounded-full bg-red-400 animate-pulse"
+            style={{
+              height: `${8 + ((index * 13) % 24)}px`,
+              animationDelay: `${index * 35}ms`,
             }}
-            onKeyDown={handleKeyDown}
-            placeholder={placeholder}
-            rows={1}
-            disabled={disabled || isGenerating}
-            className="chat-composer-textarea max-h-[180px] min-h-[44px] flex-1 resize-none bg-transparent px-2 py-3 text-sm leading-6 text-white outline-none placeholder:text-gray-500 disabled:opacity-50"
           />
+        ))}
+      </div>
+
+      <span className="text-xs font-mono text-red-400">
+        {formatRecordingTime(recordingSeconds)}
+      </span>
+    </div>
+  ) : (
+    <textarea
+      ref={textareaRef}
+      value={voicePreview ? voiceText : message}
+      onChange={(event) => {
+        if (voicePreview) {
+          setVoiceText(event.target.value);
+        } else {
+          setMessage(event.target.value);
+        }
+        resizeTextarea();
+      }}
+      onKeyDown={handleKeyDown}
+      placeholder={
+        voiceTranscribing
+          ? "Transcribing your voice..."
+          : voicePreview
+            ? "Edit your transcription..."
+            : placeholder
+      }
+      rows={1}
+      disabled={disabled || isGenerating || voiceTranscribing}
+      className="chat-composer-textarea max-h-[180px] min-h-[44px] flex-1 resize-none bg-transparent px-2 py-3 text-sm leading-6 text-white outline-none placeholder:text-gray-500 disabled:opacity-50"
+    />
+  )}
+
+  {voicePreview && (
+    <>
+      <button
+        type="button"
+        onClick={toggleAudioPlayback}
+        disabled={!audioUrl}
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white/10 text-white"
+        aria-label={audioPlaying ? "Pause recording" : "Play recording"}
+      >
+        {audioPlaying ? <Pause size={17} /> : <Play size={17} />}
+      </button>
+
+      <button
+        type="button"
+        onClick={discardVoice}
+        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-gray-400 hover:text-red-400"
+        aria-label="Discard voice message"
+      >
+        <Trash2 size={17} />
+      </button>
+    </>
+  )}
+</>
 
           <button
             type="button"
