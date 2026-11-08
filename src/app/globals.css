@@ -329,3 +329,10 @@ select,
     transition-duration: 0.01ms !important;
   }
 }
+/* Remove the cyan focus box from the ZENTRIX message composer */
+.chat-composer-textarea:focus,
+.chat-composer-textarea:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+}
