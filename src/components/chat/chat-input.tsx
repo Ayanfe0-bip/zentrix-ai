@@ -224,12 +224,42 @@ export default function ChatInput({
     }
 
     if (file.type.startsWith("image/")) {
-      accepted.push({
-        name: file.name,
-        text: "[Image selected. Visual understanding is not connected yet.]",
-      });
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
 
-      continue;
+    const response = await fetch("/api/vision", {
+      method: "POST",
+      body: formData,
+    });
+
+    const result = (await response.json()) as {
+      success?: boolean;
+      text?: string;
+      error?: string;
+    };
+
+    if (!response.ok || !result.success || !result.text) {
+      throw new Error(
+        result.error || "Could not understand this image."
+      );
+    }
+
+    accepted.push({
+      name: file.name,
+      text:
+        `[IMAGE ANALYSIS - ${file.name}]\n\n` +
+        result.text,
+    });
+  } catch (error) {
+    alert(
+      error instanceof Error
+        ? error.message
+        : `Could not analyze ${file.name}.`
+    );
+  }
+
+  continue;
     }
 
     alert(`${file.name} is not a supported file type.`);
