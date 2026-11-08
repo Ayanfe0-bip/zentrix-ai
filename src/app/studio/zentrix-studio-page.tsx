@@ -11,6 +11,7 @@ import { DEFAULT_MODEL } from "@/lib/ai/models";
 
 type ProjectFile = { path: string; language: string; content: string };
 type Project = {
+  id?: string;
   projectName: string;
   summary: string;
   files: ProjectFile[];
