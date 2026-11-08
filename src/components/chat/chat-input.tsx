@@ -244,7 +244,193 @@ const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   setAttachments((previous) => [...previous, ...accepted]);
   }
-  
+    function formatRecordingTime(seconds: number) {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+
+    return `${String(minutes).padStart(2, "0")}:${String(
+      remainingSeconds
+    ).padStart(2, "0")}`;
+  }
+
+  async function startVoiceRecording() {
+    try {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        alert("Your browser does not support voice recording.");
+        return;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        audio: true,
+      });
+
+      let recorder: MediaRecorder;
+
+      if (MediaRecorder.isTypeSupported("audio/webm;codecs=opus")) {
+        recorder = new MediaRecorder(stream, {
+          mimeType: "audio/webm;codecs=opus",
+        });
+      } else {
+        recorder = new MediaRecorder(stream);
+      }
+
+      audioChunksRef.current = [];
+      audioBlobRef.current = null;
+
+      setRecordingSeconds(0);
+      setVoiceText("");
+      setVoicePreview(false);
+      setListening(true);
+
+      mediaRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, {
+          type: recorder.mimeType || "audio/webm",
+        });
+
+        audioBlobRef.current = blob;
+
+        const url = URL.createObjectURL(blob);
+        setAudioUrl(url);
+        setListening(false);
+        setVoicePreview(true);
+
+        stream.getTracks().forEach((track) => track.stop());
+
+        if (recordingTimerRef.current) {
+          clearInterval(recordingTimerRef.current);
+          recordingTimerRef.current = null;
+        }
+
+        if (blob.size > 0) {
+          void transcribeVoiceRecording(blob);
+        }
+      };
+
+      recorder.start();
+
+      recordingTimerRef.current = setInterval(() => {
+        setRecordingSeconds((previous) => previous + 1);
+      }, 1000);
+    } catch (error) {
+      console.error("Voice recording error:", error);
+      setListening(false);
+
+      alert(
+        "Microphone access failed. Please allow microphone permission and try again."
+      );
+    }
+  }
+
+  function stopVoiceRecording() {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state !== "inactive"
+    ) {
+      mediaRecorderRef.current.stop();
+    }
+  }
+
+  async function transcribeVoiceRecording(blob: Blob) {
+    setVoiceTranscribing(true);
+
+    try {
+      const formData = new FormData();
+
+      formData.append("audio", blob, "voice.webm");
+
+      const response = await fetch("/api/transcribe", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = (await response.json()) as {
+        success?: boolean;
+        text?: string;
+        error?: string;
+      };
+
+      if (!response.ok || !result.success || !result.text) {
+        throw new Error(
+          result.error || "Could not transcribe your recording."
+        );
+      }
+
+      setVoiceText(result.text);
+    } catch (error) {
+      console.error("Voice transcription error:", error);
+
+      alert(
+        error instanceof Error
+          ? error.message
+          : "Voice transcription failed."
+      );
+    } finally {
+      setVoiceTranscribing(false);
+    }
+  }
+
+  function discardVoice() {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state !== "inactive"
+    ) {
+      mediaRecorderRef.current.stop();
+    }
+
+    if (recordingTimerRef.current) {
+      clearInterval(recordingTimerRef.current);
+      recordingTimerRef.current = null;
+    }
+
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+    }
+
+    mediaRecorderRef.current = null;
+    audioChunksRef.current = [];
+    audioBlobRef.current = null;
+
+    setListening(false);
+    setVoicePreview(false);
+    setVoiceTranscribing(false);
+    setVoiceText("");
+    setRecordingSeconds(0);
+    setAudioUrl("");
+  }
+
+  function sendVoiceText() {
+    const trimmedText = voiceText.trim();
+
+    if (!trimmedText || voiceTranscribing || disabled) return;
+
+    let finalMessage = trimmedText;
+
+    if (thinkHarder) {
+      finalMessage =
+        "[Think harder: Take more time to reason carefully, check your work, and provide an accurate answer.]\n\n" +
+        finalMessage;
+    }
+
+    if (imageMode) {
+      finalMessage =
+        "Generate an image based on this request:\n\n" +
+        finalMessage;
+    }
+
+    onSend(finalMessage);
+
+    setThinkHarder(false);
+    setImageMode(false);
+    discardVoice();
+            }
   function handleSend(event?: FormEvent) {
     event?.preventDefault();
 
