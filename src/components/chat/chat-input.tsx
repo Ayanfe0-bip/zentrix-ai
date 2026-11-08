@@ -866,7 +866,7 @@ setAudioPlaying(false);
             }`}
             aria-label={listening ? "Stop voice input" : "Start voice input"}
           >
-            {listening ? <MicOff size={20} /> : <Mic size={20} />}
+            {listening ? <Square size={20} /> : <Mic size={20} />}
           </button>
 
           <button
