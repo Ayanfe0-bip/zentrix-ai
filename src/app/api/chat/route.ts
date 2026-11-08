@@ -862,7 +862,7 @@ Return ONLY the finished document content in Markdown.
             responseStyle === "creative" ? 0.9 : 0.7,
           maxTokens:
   body.mode === "app-builder"
-    ? 6000
+    ? 8000
     : responseStyle === "concise"
       ? 900
       : 1800,
@@ -931,7 +931,7 @@ Return ONLY the finished document content in Markdown.
             responseStyle === "creative" ? 0.9 : 0.7,
           max_tokens:
   body.mode === "app-builder"
-    ? 6000
+    ? 8000
     : responseStyle === "concise"
       ? 900
       : 1800,
