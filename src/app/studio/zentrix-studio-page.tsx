@@ -19,7 +19,8 @@ type Project = {
 };
 type PreviewSize = "desktop" | "tablet" | "mobile";
 
-const STORAGE_KEY = "zentrix-code-studio-project-v1";
+const STORAGE_KEY = "zentrix-code-studio-projects-v2";
+const LEGACY_STORAGE_KEY = "zentrix-code-studio-project-v1";
 
 function parseProjectJson(raw: string) {
   const start = raw.indexOf("{");
@@ -113,6 +114,7 @@ export default function CodeGenerationStudioPage() {
   const [projectType, setProjectType] = useState("Responsive website");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [savedProjects, setSavedProjects] = useState<Project[]>([]);
   const [project, setProject] = useState<Project | null>(null);
   const [selectedFile, setSelectedFile] = useState("");
   const [tab, setTab] = useState<"preview" | "code">("preview");
@@ -121,20 +123,39 @@ export default function CodeGenerationStudioPage() {
   const [copied, setCopied] = useState(false);
   const [saved, setSaved] = useState(false);
 
-  useEffect(() => {
+    useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (!stored) return;
-      const parsed = JSON.parse(stored) as Project;
-      if (parsed && Array.isArray(parsed.files) && parsed.files.length) {
-        setProject(parsed);
-        setSelectedFile(parsed.files[0].path);
+      const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+      let projects: Project[] = [];
+
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        projects = Array.isArray(parsed)
+          ? parsed.filter((item) => item && Array.isArray(item.files) && item.files.length)
+          : [];
+      }
+
+      if (!projects.length && legacy) {
+        const oldProject = JSON.parse(legacy) as Project;
+        if (oldProject && Array.isArray(oldProject.files) && oldProject.files.length) {
+          projects = [oldProject];
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+          localStorage.removeItem(LEGACY_STORAGE_KEY);
+        }
+      }
+
+      setSavedProjects(projects);
+
+      if (projects.length) {
+        const latest = projects[0];
+        setProject(latest);
+        setSelectedFile(latest.files[0].path);
       }
     } catch {
-      localStorage.removeItem(STORAGE_KEY);
+      setError("Saved projects could not be loaded. Your existing project backup may still be available.");
     }
   }, []);
-
   const currentFile = useMemo(
     () => project?.files.find((file) => file.path === selectedFile) || project?.files[0] || null,
     [project, selectedFile]
@@ -210,17 +231,31 @@ export default function CodeGenerationStudioPage() {
     content: file.content
   }));
 
-      if (!files.length) throw new Error("No usable source files were returned.");
+        function saveProject() {
+    if (!project) return;
 
-      const nextProject: Project = {
-        projectName: typeof result.projectName === "string" ? result.projectName : "My ZENTRIX Project",
-        summary: typeof result.summary === "string" ? result.summary : "Generated project",
-        files,
-        previewHtml: typeof result.previewHtml === "string" && result.previewHtml.trim()
-          ? result.previewHtml
-          : buildPreviewFromFiles(files),
-        createdAt: new Date().toISOString()
-      };
+    try {
+      const projectId = project.createdAt + "-" + cleanFileName(project.projectName);
+      const projectToSave = { ...project, id: projectId };
+
+      const updatedProjects = [
+        projectToSave,
+        ...savedProjects.filter((item) =>
+          (item as Project & { id?: string }).id !== projectId &&
+          !(item.createdAt === project.createdAt && item.projectName === project.projectName)
+        )
+      ];
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProjects));
+      setSavedProjects(updatedProjects);
+      setProject(projectToSave);
+      setSaved(true);
+
+      window.setTimeout(() => setSaved(false), 2000);
+    } catch {
+      setError("Your browser storage is full. Download a project backup before saving more projects.");
+    }
+        }
 
       setProject(nextProject);
       setSelectedFile(files[0].path);
