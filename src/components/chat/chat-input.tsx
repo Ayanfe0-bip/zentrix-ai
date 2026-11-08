@@ -260,7 +260,12 @@ const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
         alert("Your browser does not support voice recording.");
         return;
       }
+if (audioUrl) {
+  URL.revokeObjectURL(audioUrl);
+}
 
+setAudioUrl("");
+setAudioPlaying(false);
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: true,
       });
