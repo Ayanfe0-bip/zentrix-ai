@@ -7,6 +7,7 @@ import {
   type KeyboardEvent,
   type FormEvent,
 } from "react";
+
 import {
   Paperclip,
   Camera,
@@ -25,6 +26,36 @@ interface ChatInputProps {
   placeholder?: string;
 }
 
+interface SpeechAlternativeLike {
+  transcript: string;
+}
+
+interface SpeechResultLike {
+  readonly length: number;
+  readonly [index: number]: SpeechAlternativeLike;
+}
+
+interface SpeechEventLike {
+  resultIndex: number;
+  results: ArrayLike<SpeechResultLike>;
+}
+
+interface SpeechRecognitionLike {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  onresult: ((event: SpeechEventLike) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+}
+
+interface SpeechWindow extends Window {
+  SpeechRecognition?: new () => SpeechRecognitionLike;
+  webkitSpeechRecognition?: new () => SpeechRecognitionLike;
+}
+
 const PREFERENCES_KEY = "zentrix-ai-preferences";
 
 export default function ChatInput({
@@ -38,15 +69,19 @@ export default function ChatInput({
   const [enterToSend, setEnterToSend] = useState(true);
   const [thinkHarder, setThinkHarder] = useState(false);
   const [imageMode, setImageMode] = useState(false);
+
   const [attachments, setAttachments] = useState<
     Array<{ name: string; text: string }>
   >([]);
+
   const [listening, setListening] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
-  const recognitionRef = useRef<any>(null);
+
+  const recognitionRef =
+    useRef<SpeechRecognitionLike | null>(null);
 
   useEffect(() => {
     try {
@@ -63,11 +98,14 @@ export default function ChatInput({
       setEnterToSend(true);
     }
 
-    return () => recognitionRef.current?.stop();
+    return () => {
+      recognitionRef.current?.stop();
+    };
   }, []);
 
   function resizeTextarea() {
     const textarea = textareaRef.current;
+
     if (!textarea) return;
 
     textarea.style.height = "auto";
@@ -106,7 +144,7 @@ export default function ChatInput({
       } else if (file.type.startsWith("image/")) {
         accepted.push({
           name: file.name,
-          text: "[Image attachment. Visual understanding will be connected separately.]",
+          text: "[Image attachment. Visual understanding is not connected yet.]",
         });
       } else {
         accepted.push({
@@ -129,9 +167,11 @@ export default function ChatInput({
       return;
     }
 
+    const speechWindow = window as SpeechWindow;
+
     const SpeechRecognition =
-      (window as any).SpeechRecognition ||
-      (window as any).webkitSpeechRecognition;
+      speechWindow.SpeechRecognition ||
+      speechWindow.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       alert("Voice input is not supported. Try Chrome.");
@@ -144,7 +184,7 @@ export default function ChatInput({
     recognition.continuous = true;
     recognition.interimResults = true;
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechEventLike) => {
       let transcript = "";
 
       for (
@@ -167,8 +207,8 @@ export default function ChatInput({
 
     recognitionRef.current = recognition;
     recognition.start();
-    setListening(true);
 
+    setListening(true);
     textareaRef.current?.focus();
   }
 
@@ -183,7 +223,9 @@ export default function ChatInput({
       (!trimmedMessage && attachments.length === 0) ||
       disabled ||
       isGenerating
-    ) return;
+    ) {
+      return;
+    }
 
     const attachmentContext = attachments
       .map(
@@ -194,7 +236,7 @@ export default function ChatInput({
 
     const modeInstruction = [
       thinkHarder
-        ? "Think carefully and reason through the problem before answering. Check your work and provide an accurate response.\n\n"
+        ? "Think carefully through this task. Check your reasoning and provide an accurate, well-structured answer.\n\n"
         : "",
       imageMode
         ? "Generate an image based on this request: "
@@ -251,7 +293,8 @@ export default function ChatInput({
 
   const activeClass =
     "border-violet-400/40 bg-violet-500/20 text-violet-200";
-    return (
+
+  return (
     <div className="w-full">
       <form
         onSubmit={handleSend}
@@ -280,9 +323,11 @@ export default function ChatInput({
                 className="flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-500/10 px-3 py-2 text-xs text-violet-200"
               >
                 <FileText className="h-4 w-4" />
+
                 <span className="max-w-[120px] truncate">
                   {file.name}
                 </span>
+
                 <button
                   type="button"
                   onClick={() =>
@@ -432,8 +477,8 @@ export default function ChatInput({
       </form>
 
       <p className="mt-2 text-center text-[10px] leading-5 text-slate-500">
-        ZENTRIX AI can make mistakes.
+        ZENTRIX AI can make mistakes. Verify important information.
       </p>
     </div>
   );
-}
+  }
