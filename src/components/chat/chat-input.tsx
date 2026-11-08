@@ -716,7 +716,7 @@ const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
           <button
             type="button"
-            onClick={toggleVoice}
+            onClick={listening ? stopVoiceRecording : startVoiceRecording}
             disabled={disabled || isGenerating}
             className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition ${
               listening
