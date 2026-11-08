@@ -149,6 +149,8 @@ export default function CodeGenerationStudioPage() {
     setTab("preview");
 
     const prompt = [
+        `Project type: ${projectType}`,
+  `User's project idea: ${idea.trim()}`,
   "Return ONLY one valid JSON object. Do not use Markdown fences or explanations outside JSON.",
   'Use this exact structure: {"projectName":"Name","summary":"Short description","files":[{"path":"index.html","language":"html","content":"complete source"},{"path":"styles.css","language":"css","content":"complete source"},{"path":"script.js","language":"javascript","content":"complete source"}]}.',
   "IMPORTANT: Do not include previewHtml or duplicate any source code. The Studio creates the preview from the files automatically.",
