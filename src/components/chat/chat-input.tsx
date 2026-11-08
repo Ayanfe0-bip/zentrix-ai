@@ -58,7 +58,8 @@ const [voiceTranscribing, setVoiceTranscribing] = useState(false);
 const [voiceText, setVoiceText] = useState("");
 const [recordingSeconds, setRecordingSeconds] = useState(0);
 const [audioUrl, setAudioUrl] = useState("");
-
+const [audioPlaying, setAudioPlaying] = useState(false);
+const audioRef = useRef<HTMLAudioElement>(null);
 const mediaRecorderRef = useRef<MediaRecorder | null>(null);
 const audioChunksRef = useRef<Blob[]>([]);
 const audioBlobRef = useRef<Blob | null>(null);
@@ -337,7 +338,22 @@ const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
       mediaRecorderRef.current.stop();
     }
   }
+async function toggleAudioPlayback() {
+  const audio = audioRef.current;
+  if (!audio) return;
 
+  try {
+    if (audio.paused) {
+      await audio.play();
+      setAudioPlaying(true);
+    } else {
+      audio.pause();
+      setAudioPlaying(false);
+    }
+  } catch (error) {
+    console.error("Audio playback error:", error);
+  }
+}
   async function transcribeVoiceRecording(blob: Blob) {
     setVoiceTranscribing(true);
 
