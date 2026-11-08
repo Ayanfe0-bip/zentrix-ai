@@ -81,7 +81,8 @@ const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     } catch {
       setEnterToSend(true);
     }
-
+  }, []);
+  
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
       if (
