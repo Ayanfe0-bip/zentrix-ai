@@ -629,47 +629,7 @@ setAudioPlaying(false);
             )}
           </div>
         )}
-               {listening && (
-          <div className="mb-3 rounded-2xl border border-red-500/20 bg-[#1c1719] p-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="h-3 w-3 animate-pulse rounded-full bg-red-500" />
-                <span className="text-sm font-medium text-white">
-                  Recording voice...
-                </span>
-              </div>
-
-              <span className="font-mono text-sm text-red-400">
-                {formatRecordingTime(recordingSeconds)}
-              </span>
-            </div>
-
-            <div className="my-5 flex h-10 items-center justify-center gap-1">
-              {Array.from({ length: 35 }).map((_, index) => (
-                <span
-                  key={index}
-                  className="w-1 rounded-full bg-red-400"
-                  style={{
-                    height: `${10 + Math.random() * 28}px`,
-                    animation: `pulse 0.7s ease-in-out ${
-                      index * 0.04
-                    }s infinite alternate`,
-                  }}
-                />
-              ))}
-            </div>
-
-            <button
-              type="button"
-              onClick={stopVoiceRecording}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-500 py-3 text-sm font-semibold text-white hover:bg-red-600"
-            >
-              <Square size={16} />
-              Stop recording
-            </button>
-          </div>
-        )}
-
+              
         {voicePreview && (
           <div className="mb-3 rounded-2xl border border-white/10 bg-[#202020] p-4">
             <div className="mb-3 flex items-center justify-between">
