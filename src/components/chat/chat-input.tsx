@@ -597,7 +597,119 @@ const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
             )}
           </div>
         )}
+               {listening && (
+          <div className="mb-3 rounded-2xl border border-red-500/20 bg-[#1c1719] p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="h-3 w-3 animate-pulse rounded-full bg-red-500" />
+                <span className="text-sm font-medium text-white">
+                  Recording voice...
+                </span>
+              </div>
 
+              <span className="font-mono text-sm text-red-400">
+                {formatRecordingTime(recordingSeconds)}
+              </span>
+            </div>
+
+            <div className="my-5 flex h-10 items-center justify-center gap-1">
+              {Array.from({ length: 35 }).map((_, index) => (
+                <span
+                  key={index}
+                  className="w-1 rounded-full bg-red-400"
+                  style={{
+                    height: `${10 + Math.random() * 28}px`,
+                    animation: `pulse 0.7s ease-in-out ${
+                      index * 0.04
+                    }s infinite alternate`,
+                  }}
+                />
+              ))}
+            </div>
+
+            <button
+              type="button"
+              onClick={stopVoiceRecording}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-500 py-3 text-sm font-semibold text-white hover:bg-red-600"
+            >
+              <Square size={16} />
+              Stop recording
+            </button>
+          </div>
+        )}
+
+        {voicePreview && (
+          <div className="mb-3 rounded-2xl border border-white/10 bg-[#202020] p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <div>
+                <p className="text-sm font-semibold text-white">
+                  Voice message
+                </p>
+                <p className="text-xs text-gray-400">
+                  {formatRecordingTime(recordingSeconds)} recorded
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={discardVoice}
+                className="rounded-full p-2 text-gray-400 hover:bg-white/10 hover:text-red-400"
+                aria-label="Discard recording"
+              >
+                <Trash2 size={18} />
+              </button>
+            </div>
+
+            {audioUrl && (
+              <audio
+                controls
+                src={audioUrl}
+                className="mb-4 w-full"
+              />
+            )}
+
+            <p className="mb-2 text-xs font-medium text-gray-400">
+              TRANSCRIPTION
+            </p>
+
+            {voiceTranscribing ? (
+              <div className="rounded-xl bg-white/5 p-4 text-sm text-purple-300">
+                Transcribing your voice...
+              </div>
+            ) : (
+              <textarea
+                value={voiceText}
+                onChange={(event) => setVoiceText(event.target.value)}
+                placeholder="Your transcribed message will appear here..."
+                rows={3}
+                className="w-full resize-y rounded-xl border border-white/10 bg-black/20 p-3 text-sm leading-6 text-white outline-none placeholder:text-gray-500 focus:border-purple-500/50"
+              />
+            )}
+
+            <div className="mt-3 flex gap-2">
+              <button
+                type="button"
+                onClick={discardVoice}
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-white/10 py-3 text-sm text-gray-300 hover:bg-white/5"
+              >
+                <Trash2 size={16} />
+                Discard
+              </button>
+
+              <button
+                type="button"
+                onClick={sendVoiceText}
+                disabled={
+                  voiceTranscribing || !voiceText.trim() || disabled
+                }
+                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-white py-3 text-sm font-semibold text-black hover:bg-gray-200 disabled:opacity-30"
+              >
+                <Send size={16} />
+                Send message
+              </button>
+            </div>
+          </div>
+        )}
         <div className="flex items-end gap-2 rounded-[28px] border border-white/10 bg-[#171717] p-2 shadow-lg">
           <div ref={menuRef} className="relative shrink-0">
             <button
