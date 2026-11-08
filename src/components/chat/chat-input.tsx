@@ -468,6 +468,10 @@ setAudioPlaying(false);
     }
 
     if (disabled) return;
+    if (voicePreview) {
+  sendVoiceText();
+  return;
+    }
 
     const trimmedMessage = message.trim();
 
