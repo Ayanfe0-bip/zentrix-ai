@@ -116,6 +116,7 @@ export default function CodeGenerationStudioPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [savedProjects, setSavedProjects] = useState<Project[]>([]);
+ const [projectSearch, setProjectSearch] = useState("");
   const [project, setProject] = useState<Project | null>(null);
   const [selectedFile, setSelectedFile] = useState("");
   const [tab, setTab] = useState<"preview" | "code">("preview");
