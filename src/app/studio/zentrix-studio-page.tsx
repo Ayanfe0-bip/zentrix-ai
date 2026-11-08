@@ -184,7 +184,11 @@ export default function CodeGenerationStudioPage() {
       typeof item.content === "string"
     );
   })
-  .map((file) => ({
+  .map((file: {
+  path: string;
+  content: string;
+  language?: string;
+}) => ({
     path: file.path.replace(/^\/+/, "").replace(/\.\./g, ""),
     language: file.language || "text",
     content: file.content
