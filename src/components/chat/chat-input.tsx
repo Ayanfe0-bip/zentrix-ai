@@ -578,7 +578,7 @@ export default function ChatInput({
             placeholder={placeholder}
             rows={1}
             disabled={disabled || isGenerating}
-            className="max-h-[180px] min-h-[44px] flex-1 resize-none bg-transparent px-2 py-3 text-sm leading-6 text-white outline-none placeholder:text-gray-500 disabled:opacity-50"
+            className="chat-composer-textarea max-h-[180px] min-h-[44px] flex-1 resize-none bg-transparent px-2 py-3 text-sm leading-6 text-white outline-none placeholder:text-gray-500 disabled:opacity-50"
           />
 
           <button
