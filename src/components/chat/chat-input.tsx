@@ -411,9 +411,16 @@ async function toggleAudioPlayback() {
       recordingTimerRef.current = null;
     }
 
-    if (audioUrl) {
-      URL.revokeObjectURL(audioUrl);
-    }
+    if (audioRef.current) {
+  audioRef.current.pause();
+  audioRef.current.currentTime = 0;
+}
+
+if (audioUrl) {
+  URL.revokeObjectURL(audioUrl);
+}
+
+setAudioPlaying(false);
 
     mediaRecorderRef.current = null;
     audioChunksRef.current = [];
