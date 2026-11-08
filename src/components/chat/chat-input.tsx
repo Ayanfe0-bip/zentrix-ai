@@ -22,7 +22,6 @@ import {
   ArrowUp,
   Square,
   FileText,
-  Play,
 Trash2,
 Send,
 } from "lucide-react";
