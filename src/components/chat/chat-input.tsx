@@ -22,6 +22,9 @@ import {
   ArrowUp,
   Square,
   FileText,
+  Play,
+Trash2,
+Send,
 } from "lucide-react";
 
 interface ChatInputProps {
@@ -30,36 +33,6 @@ interface ChatInputProps {
   disabled?: boolean;
   isGenerating?: boolean;
   placeholder?: string;
-}
-
-interface SpeechAlternativeLike {
-  transcript: string;
-}
-
-interface SpeechResultLike {
-  readonly length: number;
-  readonly [index: number]: SpeechAlternativeLike;
-}
-
-interface SpeechEventLike {
-  resultIndex: number;
-  results: ArrayLike<SpeechResultLike>;
-}
-
-interface SpeechRecognitionLike {
-  lang: string;
-  continuous: boolean;
-  interimResults: boolean;
-  onresult: ((event: SpeechEventLike) => void) | null;
-  onerror: (() => void) | null;
-  onend: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-}
-
-interface SpeechWindow extends Window {
-  SpeechRecognition?: new () => SpeechRecognitionLike;
-  webkitSpeechRecognition?: new () => SpeechRecognitionLike;
 }
 
 const PREFERENCES_KEY = "zentrix-ai-preferences";
@@ -80,6 +53,16 @@ export default function ChatInput({
     Array<{ name: string; text: string }>
   >([]);
   const [listening, setListening] = useState(false);
+const [voicePreview, setVoicePreview] = useState(false);
+const [voiceTranscribing, setVoiceTranscribing] = useState(false);
+const [voiceText, setVoiceText] = useState("");
+const [recordingSeconds, setRecordingSeconds] = useState(0);
+const [audioUrl, setAudioUrl] = useState("");
+
+const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+const audioChunksRef = useRef<Blob[]>([]);
+const audioBlobRef = useRef<Blob | null>(null);
+const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
