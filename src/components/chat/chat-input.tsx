@@ -464,7 +464,7 @@ export default function ChatInput({
           </div>
         )}
 
-        <div className="flex items-end gap-2 rounded-[28px] border border-white/10 bg-[#171717] p-2 shadow-lg transition-colors focus-within:border-purple-500/40">
+        <div className="flex items-end gap-2 rounded-[28px] border border-white/10 bg-[#171717] p-2 shadow-lg">
           <div ref={menuRef} className="relative shrink-0">
             <button
               type="button"
