@@ -9,12 +9,18 @@ import {
 } from "react";
 
 import {
-  Paperclip,
+  Plus,
+  X,
+  FileUp,
+  Images,
   Camera,
   Mic,
+  MicOff,
   BrainCircuit,
   ImagePlus,
-  X,
+  PlugZap,
+  ArrowUp,
+  Square,
   FileText,
 } from "lucide-react";
 
@@ -63,36 +69,33 @@ export default function ChatInput({
   onStop,
   disabled = false,
   isGenerating = false,
-  placeholder = "Message ZENTRIX...",
+  placeholder = "Message ZENTRIX AI...",
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [enterToSend, setEnterToSend] = useState(true);
   const [thinkHarder, setThinkHarder] = useState(false);
   const [imageMode, setImageMode] = useState(false);
-
+  const [menuOpen, setMenuOpen] = useState(false);
   const [attachments, setAttachments] = useState<
     Array<{ name: string; text: string }>
   >([]);
-
   const [listening, setListening] = useState(false);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const photoRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
-
-  const recognitionRef =
-    useRef<SpeechRecognitionLike | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
 
   useEffect(() => {
     try {
-      const stored = localStorage.getItem(PREFERENCES_KEY);
-
-      if (stored) {
-        const preferences = JSON.parse(stored);
-
-        if (typeof preferences.enterToSend === "boolean") {
-          setEnterToSend(preferences.enterToSend);
-        }
+      const saved = localStorage.getItem(PREFERENCES_KEY);
+      if (saved) {
+        const preferences = JSON.parse(saved) as {
+          enterToSend?: boolean;
+        };
+        setEnterToSend(preferences.enterToSend !== false);
       }
     } catch {
       setEnterToSend(true);
@@ -103,61 +106,99 @@ export default function ChatInput({
     };
   }, []);
 
+  useEffect(() => {
+    function handleOutsideClick(event: MouseEvent) {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node)
+      ) {
+        setMenuOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
+
   function resizeTextarea() {
     const textarea = textareaRef.current;
-
     if (!textarea) return;
 
     textarea.style.height = "auto";
-    textarea.style.height = `${Math.min(
-      textarea.scrollHeight,
-      180
-    )}px`;
+    textarea.style.height = `${Math.min(textarea.scrollHeight, 180)}px`;
   }
 
-  async function handleFiles(files: FileList | null) {
-    if (!files) return;
+  function openFilePicker(type: "files" | "photos" | "camera") {
+    setMenuOpen(false);
+
+    if (type === "files") fileRef.current?.click();
+    if (type === "photos") photoRef.current?.click();
+    if (type === "camera") cameraRef.current?.click();
+  }
+
+  async function handleFiles(fileList: FileList | null) {
+    if (!fileList) return;
 
     const accepted: Array<{ name: string; text: string }> = [];
 
-    for (const file of Array.from(files)) {
+    for (const file of Array.from(fileList)) {
       if (file.size > 5 * 1024 * 1024) {
         alert(`${file.name} is larger than 5 MB.`);
         continue;
       }
 
-      if (
+      const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
+
+      const isText =
         file.type.startsWith("text/") ||
-        /\.(txt|md|csv|json|html|css|js|ts|tsx|jsx|xml|log)$/i.test(
-          file.name
-        )
+        [
+          "txt",
+          "md",
+          "csv",
+          "json",
+          "html",
+          "css",
+          "js",
+          "ts",
+          "tsx",
+          "jsx",
+          "xml",
+          "log",
+        ].includes(extension);
+
+      if (isText) {
+        try {
+          const text = await file.text();
+
+          accepted.push({
+            name: file.name,
+            text,
+          });
+        } catch {
+          alert(`Could not read ${file.name}.`);
+        }
+      } else if (
+        file.type === "application/pdf" ||
+        extension === "pdf"
       ) {
         accepted.push({
           name: file.name,
-          text: await file.text(),
-        });
-      } else if (file.type === "application/pdf") {
-        accepted.push({
-          name: file.name,
-          text: "[PDF text extraction is not enabled yet.]",
+          text: "[PDF selected. PDF reading will be connected next.]",
         });
       } else if (file.type.startsWith("image/")) {
         accepted.push({
           name: file.name,
-          text: "[Image attachment. Visual understanding is not connected yet.]",
+          text: "[Image selected. Visual understanding is not connected yet.]",
         });
       } else {
-        accepted.push({
-          name: file.name,
-          text: "[Unsupported file format.]",
-        });
+        alert(`${file.name} is not a supported file type.`);
       }
     }
 
-    setAttachments((previous) => [
-      ...previous,
-      ...accepted,
-    ]);
+    setAttachments((previous) => [...previous, ...accepted]);
   }
 
   function toggleVoice() {
@@ -174,7 +215,7 @@ export default function ChatInput({
       speechWindow.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      alert("Voice input is not supported. Try Chrome.");
+      alert("Voice input is not supported by this browser.");
       return;
     }
 
@@ -184,70 +225,82 @@ export default function ChatInput({
     recognition.continuous = true;
     recognition.interimResults = true;
 
-    recognition.onresult = (event: SpeechEventLike) => {
+    recognition.onresult = (event) => {
       let transcript = "";
 
       for (
-        let i = event.resultIndex;
-        i < event.results.length;
-        i++
+        let index = event.resultIndex;
+        index < event.results.length;
+        index++
       ) {
-        transcript += event.results[i][0].transcript;
+        transcript += event.results[index][0].transcript;
       }
 
-      setMessage((previous) =>
-        previous +
-        (previous && !previous.endsWith(" ") ? " " : "") +
-        transcript
-      );
+      if (transcript.trim()) {
+        setMessage((previous) =>
+          previous ? `${previous} ${transcript}` : transcript
+        );
+      }
     };
 
-    recognition.onerror = () => setListening(false);
-    recognition.onend = () => setListening(false);
+    recognition.onerror = () => {
+      setListening(false);
+    };
+
+    recognition.onend = () => {
+      setListening(false);
+    };
 
     recognitionRef.current = recognition;
-    recognition.start();
 
-    setListening(true);
-    textareaRef.current?.focus();
+    try {
+      recognition.start();
+      setListening(true);
+    } catch {
+      alert("Could not start voice input. Please try again.");
+    }
   }
 
-  function handleSend(
-    event?: FormEvent<HTMLFormElement>
-  ) {
+  function handleSend(event?: FormEvent) {
     event?.preventDefault();
 
-    const trimmedMessage = message.trim();
-
-    if (
-      (!trimmedMessage && attachments.length === 0) ||
-      disabled ||
-      isGenerating
-    ) {
+    if (isGenerating) {
+      onStop?.();
       return;
     }
 
-    const attachmentContext = attachments
-      .map(
-        (file) =>
-          `\n\n[Attached file: ${file.name}]\n${file.text}`
-      )
-      .join("");
+    if (disabled) return;
 
-    const modeInstruction = [
-      thinkHarder
-        ? "Think carefully through this task. Check your reasoning and provide an accurate, well-structured answer.\n\n"
-        : "",
-      imageMode
-        ? "Generate an image based on this request: "
-        : "",
-    ].join("");
+    const trimmedMessage = message.trim();
 
-    onSend(
-      `${modeInstruction}${
-        trimmedMessage || "Please review the attached files."
-      }${attachmentContext}`
-    );
+    if (!trimmedMessage && attachments.length === 0) return;
+
+    let finalMessage = trimmedMessage;
+
+    if (attachments.length > 0) {
+      const attachmentContent = attachments
+        .map(
+          (file) =>
+            `\n\n[Attached file: ${file.name}]\n${file.text}`
+        )
+        .join("\n");
+
+      finalMessage += attachmentContent;
+    }
+
+    if (thinkHarder) {
+      finalMessage =
+        "[Think harder: Take more time to reason carefully, check your work, and provide an accurate answer.]\n\n" +
+        finalMessage;
+    }
+
+    if (imageMode) {
+      finalMessage =
+        "Generate an image based on this request:\n\n" +
+        finalMessage;
+    }
+
+    onSend(finalMessage);
 
     setMessage("");
     setAttachments([]);
@@ -256,229 +309,278 @@ export default function ChatInput({
 
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
-      textareaRef.current.focus();
     }
+
+    if (fileRef.current) fileRef.current.value = "";
+    if (photoRef.current) photoRef.current.value = "";
+    if (cameraRef.current) cameraRef.current.value = "";
   }
 
-  function handleKeyDown(
-    event: KeyboardEvent<HTMLTextAreaElement>
-  ) {
-    const sendShortcut =
+  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (
       event.key === "Enter" &&
-      (event.ctrlKey || event.metaKey);
-
-    const normalSend =
-      event.key === "Enter" &&
-      enterToSend &&
       !event.shiftKey &&
-      !event.ctrlKey &&
-      !event.metaKey;
+      enterToSend
+    ) {
+      event.preventDefault();
+      handleSend();
+    }
 
-    if (sendShortcut || normalSend) {
+    if (
+      event.key === "Enter" &&
+      (event.ctrlKey || event.metaKey)
+    ) {
       event.preventDefault();
       handleSend();
     }
   }
 
-  const canSend =
-    (message.trim().length > 0 || attachments.length > 0) &&
-    !disabled &&
-    !isGenerating;
-
-  const toolClass =
-    "flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition disabled:opacity-40";
-
-  const inactiveClass =
-    "border-white/10 text-slate-400 hover:border-violet-400/40 hover:bg-violet-500/10 hover:text-violet-200";
-
-  const activeClass =
-    "border-violet-400/40 bg-violet-500/20 text-violet-200";
+  function removeAttachment(index: number) {
+    setAttachments((previous) =>
+      previous.filter((_, itemIndex) => itemIndex !== index)
+    );
+  }
 
   return (
     <div className="w-full">
       <form
         onSubmit={handleSend}
-        className="relative overflow-hidden rounded-[26px] border border-white/10 bg-[#15182a] shadow-2xl shadow-black/30 transition-all duration-200 focus-within:border-violet-400/40"
+        className="relative mx-auto w-full max-w-4xl"
       >
-        <textarea
-          ref={textareaRef}
-          value={message}
-          onChange={(event) => {
-            setMessage(event.target.value);
-            resizeTextarea();
-          }}
-          onKeyDown={handleKeyDown}
-          disabled={disabled || isGenerating}
-          placeholder={placeholder}
-          rows={1}
-          aria-label="Message ZENTRIX"
-          className="block max-h-[180px] min-h-[58px] w-full resize-none bg-transparent px-5 pb-2 pt-5 text-[15px] leading-6 text-white outline-none placeholder:text-slate-500 disabled:opacity-50"
+        <input
+          ref={fileRef}
+          type="file"
+          multiple
+          accept=".pdf,.txt,.md,.csv,.json,.html,.css,.js,.ts,.tsx,.jsx,.xml,.log,text/*"
+          className="hidden"
+          onChange={(event) => handleFiles(event.target.files)}
+        />
+
+        <input
+          ref={photoRef}
+          type="file"
+          multiple
+          accept="image/*"
+          className="hidden"
+          onChange={(event) => handleFiles(event.target.files)}
+        />
+
+        <input
+          ref={cameraRef}
+          type="file"
+          accept="image/*"
+          capture="environment"
+          className="hidden"
+          onChange={(event) => handleFiles(event.target.files)}
         />
 
         {attachments.length > 0 && (
-          <div className="flex flex-wrap gap-2 px-4 pb-3">
+          <div className="mb-2 flex flex-wrap gap-2">
             {attachments.map((file, index) => (
               <div
                 key={`${file.name}-${index}`}
-                className="flex items-center gap-2 rounded-xl border border-violet-400/20 bg-violet-500/10 px-3 py-2 text-xs text-violet-200"
+                className="flex max-w-full items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-gray-300"
               >
-                <FileText className="h-4 w-4" />
+                <FileText size={14} className="shrink-0" />
 
-                <span className="max-w-[120px] truncate">
+                <span className="max-w-[180px] truncate">
                   {file.name}
                 </span>
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setAttachments((previous) =>
-                      previous.filter((_, i) => i !== index)
-                    )
-                  }
-                  aria-label={`Remove ${file.name}`}
+                  onClick={() => removeAttachment(index)}
+                  className="text-gray-400 hover:text-red-400"
+                  aria-label="Remove attachment"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <X size={14} />
                 </button>
               </div>
             ))}
           </div>
         )}
 
-        <div className="flex flex-wrap items-center justify-between gap-3 px-3 pb-3 pl-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <input
-              ref={fileRef}
-              type="file"
-              multiple
-              className="hidden"
-              onChange={(event) => {
-                handleFiles(event.target.files);
-                event.target.value = "";
-              }}
-            />
-
-            <input
-              ref={cameraRef}
-              type="file"
-              accept="image/*"
-              capture="environment"
-              className="hidden"
-              onChange={(event) => {
-                handleFiles(event.target.files);
-                event.target.value = "";
-              }}
-            />
-
-            <button
-              type="button"
-              onClick={() => fileRef.current?.click()}
-              disabled={disabled || isGenerating}
-              className={`${toolClass} ${inactiveClass}`}
-              title="Upload files"
-              aria-label="Upload files"
-            >
-              <Paperclip className="h-4 w-4" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => cameraRef.current?.click()}
-              disabled={disabled || isGenerating}
-              className={`${toolClass} ${inactiveClass}`}
-              title="Take a photo"
-              aria-label="Take a photo"
-            >
-              <Camera className="h-4 w-4" />
-            </button>
-
-            <button
-              type="button"
-              onClick={toggleVoice}
-              disabled={disabled || isGenerating}
-              className={`${toolClass} ${
-                listening ? activeClass : inactiveClass
-              }`}
-              title="Voice input"
-              aria-label="Voice input"
-            >
-              <Mic className="h-4 w-4" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setThinkHarder(!thinkHarder)}
-              disabled={disabled || isGenerating}
-              className={`${toolClass} ${
-                thinkHarder ? activeClass : inactiveClass
-              }`}
-              title="Think harder"
-              aria-label="Think harder"
-            >
-              <BrainCircuit className="h-4 w-4" />
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setImageMode(!imageMode)}
-              disabled={disabled || isGenerating}
-              className={`${toolClass} ${
-                imageMode ? activeClass : inactiveClass
-              }`}
-              title="Image generation mode"
-              aria-label="Image generation mode"
-            >
-              <ImagePlus className="h-4 w-4" />
-            </button>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="hidden text-[10px] text-slate-500 sm:block">
-              {listening
-                ? "Listening..."
-                : enterToSend
-                  ? "Shift + Enter for new line"
-                  : "Ctrl + Enter to send"}
-            </span>
-
-            {isGenerating ? (
+        {(thinkHarder || imageMode) && (
+          <div className="mb-2 flex flex-wrap gap-2">
+            {thinkHarder && (
               <button
                 type="button"
-                onClick={onStop}
-                disabled={!onStop}
-                className="flex h-10 items-center gap-2 rounded-full border border-red-400/20 bg-red-500/10 px-4 text-xs font-semibold text-red-300 transition hover:bg-red-500/20 disabled:opacity-50"
+                onClick={() => setThinkHarder(false)}
+                className="flex items-center gap-1 rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1 text-xs text-purple-300"
               >
-                <span className="h-2.5 w-2.5 rounded-sm bg-red-400" />
-                Stop
+                <BrainCircuit size={13} />
+                Think harder
+                <X size={12} />
               </button>
-            ) : (
+            )}
+
+            {imageMode && (
               <button
-                type="submit"
-                disabled={!canSend}
-                aria-label="Send message"
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-violet-600 to-purple-600 text-white shadow-lg shadow-violet-900/20 transition hover:scale-105 hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-40"
+                type="button"
+                onClick={() => setImageMode(false)}
+                className="flex items-center gap-1 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-xs text-blue-300"
               >
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  className="h-5 w-5"
-                >
-                  <path
-                    d="M12 19V5m-7 7 7-7 7 7"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
+                <ImagePlus size={13} />
+                Create image
+                <X size={12} />
               </button>
             )}
           </div>
-        </div>
-      </form>
+        )}
 
-      <p className="mt-2 text-center text-[10px] leading-5 text-slate-500">
-        ZENTRIX AI can make mistakes. Verify important information.
-      </p>
+        <div className="flex items-end gap-2 rounded-[28px] border border-white/10 bg-[#171717] p-2 shadow-lg transition-colors focus-within:border-purple-500/40">
+          <div ref={menuRef} className="relative shrink-0">
+            <button
+              type="button"
+              onClick={() => setMenuOpen((previous) => !previous)}
+              disabled={disabled || isGenerating}
+              className={`flex h-11 w-11 items-center justify-center rounded-full transition ${
+                menuOpen
+                  ? "rotate-45 bg-purple-600 text-white"
+                  : "bg-white/5 text-gray-300 hover:bg-white/10"
+              }`}
+              aria-label="Open tools menu"
+              aria-expanded={menuOpen}
+            >
+              <Plus size={23} />
+            </button>
+
+            {menuOpen && (
+              <div className="absolute bottom-14 left-0 z-50 w-64 overflow-hidden rounded-2xl border border-white/10 bg-[#202020] p-2 shadow-2xl">
+                <p className="px-3 py-2 text-[11px] font-semibold uppercase tracking-wider text-gray-500">
+                  Add to your message
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() => openFilePicker("files")}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-gray-200 hover:bg-white/10"
+                >
+                  <FileUp size={19} className="text-blue-400" />
+                  <span>Upload files</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => openFilePicker("photos")}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-gray-200 hover:bg-white/10"
+                >
+                  <Images size={19} className="text-green-400" />
+                  <span>Photos</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => openFilePicker("camera")}
+                  className="flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm text-gray-200 hover:bg-white/10"
+                >
+                  <Camera size={19} className="text-orange-400" />
+                  <span>Take a photo</span>
+                </button>
+
+                <div className="my-2 border-t border-white/10" />
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setThinkHarder((previous) => !previous);
+                    setMenuOpen(false);
+                  }}
+                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm hover:bg-white/10 ${
+                    thinkHarder
+                      ? "text-purple-300"
+                      : "text-gray-200"
+                  }`}
+                >
+                  <BrainCircuit size={19} className="text-purple-400" />
+                  <span>Think harder</span>
+                  {thinkHarder && (
+                    <span className="ml-auto text-xs">✓</span>
+                  )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setImageMode((previous) => !previous);
+                    setMenuOpen(false);
+                  }}
+                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left text-sm hover:bg-white/10 ${
+                    imageMode
+                      ? "text-blue-300"
+                      : "text-gray-200"
+                  }`}
+                >
+                  <ImagePlus size={19} className="text-blue-400" />
+                  <span>Create image</span>
+                  {imageMode && (
+                    <span className="ml-auto text-xs">✓</span>
+                  )}
+                </button>
+
+                <div className="my-2 border-t border-white/10" />
+
+                <div className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-gray-500">
+                  <PlugZap size={19} />
+                  <span>Plugins</span>
+                  <span className="ml-auto rounded-full bg-white/10 px-2 py-1 text-[10px]">
+                    Coming soon
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <textarea
+            ref={textareaRef}
+            value={message}
+            onChange={(event) => {
+              setMessage(event.target.value);
+              resizeTextarea();
+            }}
+            onKeyDown={handleKeyDown}
+            placeholder={placeholder}
+            rows={1}
+            disabled={disabled || isGenerating}
+            className="max-h-[180px] min-h-[44px] flex-1 resize-none bg-transparent px-2 py-3 text-sm leading-6 text-white outline-none placeholder:text-gray-500 disabled:opacity-50"
+          />
+
+          <button
+            type="button"
+            onClick={toggleVoice}
+            disabled={disabled || isGenerating}
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition ${
+              listening
+                ? "animate-pulse bg-red-500 text-white"
+                : "bg-white/5 text-gray-300 hover:bg-white/10"
+            }`}
+            aria-label={listening ? "Stop voice input" : "Start voice input"}
+          >
+            {listening ? <MicOff size={20} /> : <Mic size={20} />}
+          </button>
+
+          <button
+            type={isGenerating ? "button" : "submit"}
+            onClick={isGenerating ? onStop : undefined}
+            disabled={
+              !isGenerating &&
+              (disabled || (!message.trim() && attachments.length === 0))
+            }
+            className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition ${
+              isGenerating
+                ? "bg-red-500 text-white hover:bg-red-600"
+                : "bg-white text-black hover:bg-gray-200 disabled:cursor-not-allowed disabled:opacity-30"
+            }`}
+            aria-label={isGenerating ? "Stop generating" : "Send message"}
+          >
+            {isGenerating ? <Square size={17} /> : <ArrowUp size={22} />}
+          </button>
+        </div>
+
+        <p className="mt-2 text-center text-[10px] text-gray-500">
+          ZENTRIX AI can make mistakes. Verify important information.
+        </p>
+      </form>
     </div>
   );
-  }
+}
