@@ -300,7 +300,47 @@ export default function CodeGenerationStudioPage() {
       );
     }
   }
+  function openSavedProject(item: Project) {
+    setProject(item);
+    setSelectedFile(item.files[0]?.path || "");
+    setTab("preview");
+    setPreviewKey((value) => value + 1);
+    setSaved(true);
+  }
 
+  function deleteSavedProject(item: Project) {
+    const confirmed = window.confirm(
+      `Delete "${item.projectName}" permanently?`
+    );
+
+    if (!confirmed) return;
+
+    const updatedProjects = savedProjects.filter(
+      (savedItem) =>
+        savedItem.id !== item.id &&
+        !(
+          !savedItem.id &&
+          savedItem.createdAt === item.createdAt &&
+          savedItem.projectName === item.projectName
+        )
+    );
+
+    localStorage.setItem(
+      STORAGE_KEY,
+      JSON.stringify(updatedProjects)
+    );
+
+    setSavedProjects(updatedProjects);
+
+    if (
+      project?.createdAt === item.createdAt &&
+      project?.projectName === item.projectName
+    ) {
+      setProject(null);
+      setSelectedFile("");
+      setSaved(false);
+    }
+  }
   async function copyCurrentFile() {
     if (!currentFile) return;
     try {
