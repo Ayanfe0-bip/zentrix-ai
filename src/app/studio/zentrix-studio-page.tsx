@@ -24,10 +24,28 @@ const STORAGE_KEY = "zentrix-code-studio-project-v1";
 function parseProjectJson(raw: string) {
   const start = raw.indexOf("{");
   const end = raw.lastIndexOf("}");
+
   if (start < 0 || end <= start) {
-    throw new Error("ZENTRIX did not return a valid project structure. Please try again.");
+    throw new Error(
+      "The AI response was incomplete. Please try again."
+    );
   }
-  return JSON.parse(raw.slice(start, end + 1));
+
+  try {
+    return JSON.parse(raw.slice(start, end + 1));
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "";
+
+    if (/unterminated string|unexpected end|end of json/i.test(message)) {
+      throw new Error(
+        "The AI response was cut off before the project finished. Try a shorter project description."
+      );
+    }
+
+    throw new Error(
+      "The AI returned an invalid project format. Please try again."
+    );
+  }
 }
 
 async function readAIStream(response: Response) {
