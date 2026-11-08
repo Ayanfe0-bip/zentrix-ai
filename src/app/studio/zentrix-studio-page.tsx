@@ -170,12 +170,25 @@ export default function CodeGenerationStudioPage() {
       }
 
       const files: ProjectFile[] = result.files
-        .filter((file: any) => file && typeof file.path === "string" && typeof file.content === "string")
-        .map((file: any) => ({
-          path: file.path.replace(/^\/+/, "").replace(/\.\./g, ""),
-          language: typeof file.language === "string" ? file.language : "text",
-          content: file.content
-        }));
+  .filter((file: unknown): file is {
+    path: string;
+    content: string;
+    language?: string;
+  } => {
+    if (!file || typeof file !== "object") return false;
+
+    const item = file as Record<string, unknown>;
+
+    return (
+      typeof item.path === "string" &&
+      typeof item.content === "string"
+    );
+  })
+  .map((file) => ({
+    path: file.path.replace(/^\/+/, "").replace(/\.\./g, ""),
+    language: file.language || "text",
+    content: file.content
+  }));
 
       if (!files.length) throw new Error("No usable source files were returned.");
 
