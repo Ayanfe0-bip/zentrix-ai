@@ -15,15 +15,16 @@ import {
   Images,
   Camera,
   Mic,
-  MicOff,
   BrainCircuit,
   ImagePlus,
   PlugZap,
   ArrowUp,
   Square,
   FileText,
-Trash2,
-Send,
+  Play,
+  Pause,
+  Trash2,
+  Send,
 } from "lucide-react";
 
 interface ChatInputProps {
