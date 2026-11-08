@@ -69,8 +69,6 @@ const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const photoRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const recognitionRef = useRef<SpeechRecognitionLike | null>(null);
-
   useEffect(() => {
     try {
       const saved = localStorage.getItem(PREFERENCES_KEY);
@@ -83,11 +81,7 @@ const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
     } catch {
       setEnterToSend(true);
     }
-
-    return () => {
-      recognitionRef.current?.stop();
-    };
-  }, []);
+2
 
   useEffect(() => {
     function handleOutsideClick(event: MouseEvent) {
@@ -250,66 +244,7 @@ const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   setAttachments((previous) => [...previous, ...accepted]);
   }
-  function toggleVoice() {
-    if (listening) {
-      recognitionRef.current?.stop();
-      setListening(false);
-      return;
-    }
-
-    const speechWindow = window as SpeechWindow;
-
-    const SpeechRecognition =
-      speechWindow.SpeechRecognition ||
-      speechWindow.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      alert("Voice input is not supported by this browser.");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-
-    recognition.lang = "en-NG";
-    recognition.continuous = true;
-    recognition.interimResults = true;
-
-    recognition.onresult = (event) => {
-      let transcript = "";
-
-      for (
-        let index = event.resultIndex;
-        index < event.results.length;
-        index++
-      ) {
-        transcript += event.results[index][0].transcript;
-      }
-
-      if (transcript.trim()) {
-        setMessage((previous) =>
-          previous ? `${previous} ${transcript}` : transcript
-        );
-      }
-    };
-
-    recognition.onerror = () => {
-      setListening(false);
-    };
-
-    recognition.onend = () => {
-      setListening(false);
-    };
-
-    recognitionRef.current = recognition;
-
-    try {
-      recognition.start();
-      setListening(true);
-    } catch {
-      alert("Could not start voice input. Please try again.");
-    }
-  }
-
+  
   function handleSend(event?: FormEvent) {
     event?.preventDefault();
 
