@@ -165,11 +165,11 @@ export default function CodeGenerationStudioPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          messages: [{ role: "user", content: prompt }],
-          model: selectedModel,
-          mode: "app-builder",
-          responseStyle: "balanced"
-        })
+  messages: [{ role: "user", content: prompt.join("\n") }],
+  model: selectedModel,
+  mode: "app-builder",
+  responseStyle: "balanced"
+})
       });
 
       if (!response.ok) {
