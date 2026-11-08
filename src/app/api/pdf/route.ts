@@ -1,5 +1,4 @@
-import "pdf-parse/worker";
-import { PDFParse } from "pdf-parse";
+import { extractText } from "unpdf";
 import { NextRequest, NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -9,8 +8,6 @@ const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const MAX_EXTRACTED_CHARACTERS = 100000;
 
 export async function POST(request: NextRequest) {
-  let parser: PDFParse | undefined;
-
   try {
     const formData = await request.formData();
     const file = formData.get("file");
@@ -53,11 +50,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    parser = new PDFParse({ data: bytes });
+    const result = await extractText(bytes, {
+      mergePages: true,
+    });
 
-    const result = await parser.getText();
+    const originalText = result.text || "";
 
-    const extractedText = result.text
+    const extractedText = originalText
       .replace(/\u0000/g, "")
       .trim()
       .slice(0, MAX_EXTRACTED_CHARACTERS);
@@ -76,8 +75,9 @@ export async function POST(request: NextRequest) {
       success: true,
       fileName: file.name.slice(0, 180),
       text: extractedText,
+      totalPages: result.totalPages,
       truncated:
-        result.text.length > MAX_EXTRACTED_CHARACTERS,
+        originalText.length > MAX_EXTRACTED_CHARACTERS,
     });
   } catch (error) {
     console.error("PDF extraction error:", error);
@@ -89,11 +89,5 @@ export async function POST(request: NextRequest) {
       },
       { status: 422 }
     );
-  } finally {
-    if (parser) {
-      await parser.destroy().catch((error: unknown) => {
-        console.error("PDF parser cleanup error:", error);
-      });
-    }
   }
-  }
+}
