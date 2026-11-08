@@ -457,9 +457,7 @@ export default function CodeGenerationStudioPage() {
               )}
               {error && <p role="alert" className="mt-4 rounded-xl border border-red-500/20 bg-red-500/5 p-3 text-sm leading-6 text-red-400">{error}</p>}
             </section>
-
-            {project ? (
-                  <section className="mb-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
+                        <section className="mb-6 rounded-2xl border border-[var(--border)] bg-[var(--surface)] p-4 sm:p-5">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h3 className="text-base font-bold">My Saved Projects</h3>
@@ -541,6 +539,7 @@ export default function CodeGenerationStudioPage() {
                   </p>
                 )}
             </section>
+            {project ? (
               <section className="overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--surface)]">
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border)] p-4">
                   <div className="min-w-0">
