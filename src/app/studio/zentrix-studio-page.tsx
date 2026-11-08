@@ -161,8 +161,9 @@ export default function CodeGenerationStudioPage() {
     [project, selectedFile]
   );
 
-  async function buildProject() {
+    async function buildProject() {
     if (!idea.trim() || loading) return;
+
     setLoading(true);
     setError("");
     setProject(null);
@@ -170,98 +171,92 @@ export default function CodeGenerationStudioPage() {
     setTab("preview");
 
     const prompt = [
-        `Project type: ${projectType}`,
-  `User's project idea: ${idea.trim()}`,
-  "Return ONLY one valid JSON object. Do not use Markdown fences or explanations outside JSON.",
-  'Use this exact structure: {"projectName":"Name","summary":"Short description","files":[{"path":"index.html","language":"html","content":"complete source"}]}.',
-  "IMPORTANT: Do not include previewHtml or duplicate any source code. The Studio creates the preview from the files automatically.",
-  "Generate complete connected source files, not snippets or TODO placeholders.",
-"Generate one complete index.html file with CSS and JavaScript embedded inside it. Keep the implementation compact and functional. Do not create separate CSS or JavaScript files.",
-  "Do not require npm, build tools, external scripts, API keys or backend services.",
-  "Use local demo data for backend-dependent features. Clearly label demo-only payments, authentication and database actions; never pretend they are real.",
-    "Create a polished, responsive, accessible, mobile-first interface with working interactions, validation and useful empty states.",
-  "Keep the entire response below 3500 tokens. Prioritize working core features over unnecessary extras. Return only one index.html file. Do not include explanations, Markdown fences or duplicate code. Escape all JSON string values correctly."
-];
+      `Project type: ${projectType}`,
+      `User's project idea: ${idea.trim()}`,
+      "Return ONLY one valid JSON object. Do not use Markdown fences or explanations outside JSON.",
+      'Use this exact structure: {"projectName":"Name","summary":"Short description","files":[{"path":"index.html","language":"html","content":"complete source"}]}.',
+      "IMPORTANT: Do not include previewHtml or duplicate any source code. The Studio creates the preview from the files automatically.",
+      "Generate complete connected source files, not snippets or TODO placeholders.",
+      "Generate one complete index.html file with CSS and JavaScript embedded inside it. Keep the implementation compact and functional. Do not create separate CSS or JavaScript files.",
+      "Do not require npm, build tools, external scripts, API keys or backend services.",
+      "Use local demo data for backend-dependent features. Clearly label demo-only payments, authentication and database actions; never pretend they are real.",
+      "Create a polished, responsive, accessible, mobile-first interface with working interactions, validation and useful empty states.",
+      "Keep the entire response below 3500 tokens. Prioritize working core features over unnecessary extras. Return only one index.html file. Do not include explanations, Markdown fences or duplicate code. Escape all JSON string values correctly."
+    ];
 
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-  messages: [{ role: "user", content: prompt.join("\n") }],
-  model: selectedModel,
-  mode: "app-builder",
-  responseStyle: "balanced"
-})
+          messages: [{ role: "user", content: prompt.join("\n") }],
+          model: selectedModel,
+          mode: "app-builder",
+          responseStyle: "balanced"
+        })
       });
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.error || "ZENTRIX could not build this project. Please try again.");
+        throw new Error(
+          data.error || "ZENTRIX could not build this project. Please try again."
+        );
       }
 
       const raw = await readAIStream(response);
       const result = parseProjectJson(raw);
+
       if (!Array.isArray(result.files) || !result.files.length) {
         throw new Error("The generated project did not contain any source files.");
       }
 
       const files: ProjectFile[] = result.files
-  .filter((file: unknown): file is {
-    path: string;
-    content: string;
-    language?: string;
-  } => {
-    if (!file || typeof file !== "object") return false;
+        .filter((file: unknown): file is {
+          path: string;
+          content: string;
+          language?: string;
+        } => {
+          if (!file || typeof file !== "object") return false;
 
-    const item = file as Record<string, unknown>;
+          const item = file as Record<string, unknown>;
 
-    return (
-      typeof item.path === "string" &&
-      typeof item.content === "string"
-    );
-  })
-  .map((file: {
-  path: string;
-  content: string;
-  language?: string;
-}) => ({
-    path: file.path.replace(/^\/+/, "").replace(/\.\./g, ""),
-    language: file.language || "text",
-    content: file.content
-  }));
+          return (
+            typeof item.path === "string" &&
+            typeof item.content === "string"
+          );
+        })
+        .map((file: {
+          path: string;
+          content: string;
+          language?: string;
+        }) => ({
+          path: file.path.replace(/^\/+/, "").replace(/\.\./g, ""),
+          language: file.language || "text",
+          content: file.content
+        }));
 
-        function saveProject() {
-    if (!project) return;
+      if (!files.length) {
+        throw new Error("No valid source files were generated.");
+      }
 
-    try {
-      const projectId = project.createdAt + "-" + cleanFileName(project.projectName);
-      const projectToSave = { ...project, id: projectId };
-
-      const updatedProjects = [
-        projectToSave,
-        ...savedProjects.filter((item) =>
-          (item as Project & { id?: string }).id !== projectId &&
-          !(item.createdAt === project.createdAt && item.projectName === project.projectName)
-        )
-      ];
-
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedProjects));
-      setSavedProjects(updatedProjects);
-      setProject(projectToSave);
-      setSaved(true);
-
-      window.setTimeout(() => setSaved(false), 2000);
-    } catch {
-      setError("Your browser storage is full. Download a project backup before saving more projects.");
-    }
-        }
+      const nextProject: Project = {
+        projectName: result.projectName || "Untitled Project",
+        summary: result.summary || "Generated with ZENTRIX AI",
+        files,
+        previewHtml: buildPreviewFromFiles(files),
+        createdAt: new Date().toISOString()
+      };
 
       setProject(nextProject);
       setSelectedFile(files[0].path);
       setPreviewKey((value) => value + 1);
+      setSaved(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong while building the project.");
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Something went wrong while building the project."
+      );
     } finally {
       setLoading(false);
     }
@@ -269,12 +264,38 @@ export default function CodeGenerationStudioPage() {
 
   function saveProject() {
     if (!project) return;
+
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(project));
+      const projectId =
+        project.createdAt + "-" + cleanFileName(project.projectName);
+
+      const projectToSave = {
+        ...project,
+        id: projectId
+      };
+
+      const updatedProjects = [
+        projectToSave,
+        ...savedProjects.filter((item) =>
+          item.createdAt !== project.createdAt ||
+          item.projectName !== project.projectName
+        )
+      ];
+
+      localStorage.setItem(
+        STORAGE_KEY,
+        JSON.stringify(updatedProjects)
+      );
+
+      setSavedProjects(updatedProjects);
+      setProject(projectToSave);
       setSaved(true);
+
       window.setTimeout(() => setSaved(false), 2000);
     } catch {
-      setError("This project is too large to save in this browser. Download a project backup instead.");
+      setError(
+        "Your browser storage is full. Download a project backup before saving more projects."
+      );
     }
   }
 
