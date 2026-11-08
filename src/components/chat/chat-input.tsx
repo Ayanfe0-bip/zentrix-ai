@@ -140,67 +140,103 @@ export default function ChatInput({
   }
 
   async function handleFiles(fileList: FileList | null) {
-    if (!fileList) return;
+  if (!fileList) return;
 
-    const accepted: Array<{ name: string; text: string }> = [];
+  const accepted: Array<{ name: string; text: string }> = [];
 
-    for (const file of Array.from(fileList)) {
-      if (file.size > 5 * 1024 * 1024) {
-        alert(`${file.name} is larger than 5 MB.`);
-        continue;
-      }
-
-      const extension = file.name.split(".").pop()?.toLowerCase() ?? "";
-
-      const isText =
-        file.type.startsWith("text/") ||
-        [
-          "txt",
-          "md",
-          "csv",
-          "json",
-          "html",
-          "css",
-          "js",
-          "ts",
-          "tsx",
-          "jsx",
-          "xml",
-          "log",
-        ].includes(extension);
-
-      if (isText) {
-        try {
-          const text = await file.text();
-
-          accepted.push({
-            name: file.name,
-            text,
-          });
-        } catch {
-          alert(`Could not read ${file.name}.`);
-        }
-      } else if (
-        file.type === "application/pdf" ||
-        extension === "pdf"
-      ) {
-        accepted.push({
-          name: file.name,
-          text: "[PDF selected. PDF reading will be connected next.]",
-        });
-      } else if (file.type.startsWith("image/")) {
-        accepted.push({
-          name: file.name,
-          text: "[Image selected. Visual understanding is not connected yet.]",
-        });
-      } else {
-        alert(`${file.name} is not a supported file type.`);
-      }
+  for (const file of Array.from(fileList)) {
+    if (file.size > 5 * 1024 * 1024) {
+      alert(`${file.name} is larger than 5 MB.`);
+      continue;
     }
 
-    setAttachments((previous) => [...previous, ...accepted]);
+    const extension =
+      file.name.split(".").pop()?.toLowerCase() ?? "";
+
+    const isText =
+      file.type.startsWith("text/") ||
+      [
+        "txt", "md", "csv", "json", "html",
+        "css", "js", "ts", "tsx", "jsx",
+        "xml", "log",
+      ].includes(extension);
+
+    if (isText) {
+      try {
+        const text = await file.text();
+
+        accepted.push({
+          name: file.name,
+          text,
+        });
+      } catch {
+        alert(`Could not read ${file.name}.`);
+      }
+
+      continue;
+    }
+
+    if (
+      file.type === "application/pdf" ||
+      extension === "pdf"
+    ) {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch("/api/pdf", {
+          method: "POST",
+          body: formData,
+        });
+
+        const result = (await response.json()) as {
+          success?: boolean;
+          text?: string;
+          totalPages?: number;
+          truncated?: boolean;
+          error?: string;
+        };
+
+        if (!response.ok || !result.success || !result.text) {
+          throw new Error(
+            result.error || "Could not extract PDF text."
+          );
+        }
+
+        accepted.push({
+          name: file.name,
+          text:
+            `[PDF CONTENT - ${result.totalPages ?? "Unknown"} pages]\n\n` +
+            result.text +
+            (result.truncated
+              ? "\n\n[Note: PDF text was shortened because it exceeded the extraction limit.]"
+              : ""),
+        });
+      } catch (error) {
+        alert(
+          error instanceof Error
+            ? error.message
+            : `Could not read ${file.name}.`
+        );
+      }
+
+      continue;
+    }
+
+    if (file.type.startsWith("image/")) {
+      accepted.push({
+        name: file.name,
+        text: "[Image selected. Visual understanding is not connected yet.]",
+      });
+
+      continue;
+    }
+
+    alert(`${file.name} is not a supported file type.`);
   }
 
+  setAttachments((previous) => [...previous, ...accepted]);
+  }
   function toggleVoice() {
     if (listening) {
       recognitionRef.current?.stop();
