@@ -833,8 +833,13 @@ setAudioPlaying(false);
             onClick={isGenerating ? onStop : undefined}
             disabled={
               !isGenerating &&
-              (disabled || (!message.trim() && attachments.length === 0))
-            }
+              disabled={
+  !isGenerating &&
+  (disabled ||
+    (voicePreview
+      ? voiceTranscribing || !voiceText.trim()
+      : !message.trim() && attachments.length === 0))
+    }
             className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full transition ${
               isGenerating
                 ? "bg-red-500 text-white hover:bg-red-600"
