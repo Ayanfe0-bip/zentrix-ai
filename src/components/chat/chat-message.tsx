@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import katex from "katex";
 import ZentrixLogo from "@/components/zentrix-logo";
 import MessageSources from "@/components/chat/message-sources";
 import StoredGeneratedImage from "@/components/chat/stored-generated-image";
@@ -53,10 +54,53 @@ function extractSources(content: string) {
 
 function renderInline(text: string): ReactNode[] {
   const parts = text.split(
-    /(\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g
+    /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|\$[^$\n]+\$|\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g
   );
 
   return parts.map((part, index) => {
+    const display =
+      (part.startsWith("$$") && part.endsWith("$$")) ||
+      (part.startsWith("\\[") && part.endsWith("\\]"));
+
+    const math =
+      display ||
+      (part.startsWith("\\(") && part.endsWith("\\)")) ||
+      (part.startsWith("$") && part.endsWith("$"));
+
+    if (math) {
+      let expression = part;
+
+      if (part.startsWith("$$")) {
+        expression = part.slice(2, -2);
+      } else if (
+        part.startsWith("\\[") ||
+        part.startsWith("\\(")
+      ) {
+        expression = part.slice(2, -2);
+      } else {
+        expression = part.slice(1, -1);
+      }
+
+      const html = katex.renderToString(expression, {
+        displayMode: display,
+        throwOnError: false,
+        strict: "ignore",
+        trust: false,
+      });
+
+      return (
+        <span
+          key={index}
+          className={
+            display
+              ? "my-3 block overflow-x-auto py-1"
+              : "inline-block align-middle"
+          }
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+      );
+    }
+
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
         <strong key={index} className="font-semibold text-white">
