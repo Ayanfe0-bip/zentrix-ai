@@ -337,7 +337,7 @@ export default function ChatMessage({
       .replace(/^#{1,6}\s+/gm, "")
 
       // Remove bold formatting
-      .replace(/\*\*(.*?)\*\*/gs, "$1")
+      .replace(/\*\*([\s\S]*?)\*\*/g, "$1")
 
       // Remove italic formatting
       .replace(/\*([^*\n]+)\*/g, "$1")
