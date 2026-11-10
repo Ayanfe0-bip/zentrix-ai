@@ -328,15 +328,62 @@ export default function ChatMessage({
     : extractSources(message.content);
 
   async function copyMessage() {
-    try {
-      await navigator.clipboard.writeText(message.content);
+  try {
+    const plainText = message.content
+      // Remove code block markers
+      .replace(/```[a-zA-Z]*\n?/g, "")
 
-      setCopied(true);
+      // Remove Markdown headings
+      .replace(/^#{1,6}\s+/gm, "")
 
-      window.setTimeout(() => setCopied(false), 1800);
-    } catch {
-      setCopied(false);
-    }
+      // Remove bold formatting
+      .replace(/\*\*(.*?)\*\*/gs, "$1")
+
+      // Remove italic formatting
+      .replace(/\*([^*\n]+)\*/g, "$1")
+
+      // Remove inline code formatting
+      .replace(/`([^`]+)`/g, "$1")
+
+      // Convert LaTeX fractions into readable fractions
+      .replace(
+        /\\(?:dfrac|tfrac|frac)\s*\{([^{}]*)\}\s*\{([^{}]*)\}/g,
+        "$1/$2"
+      )
+
+      // Convert common mathematical symbols
+      .replace(/\\times/g, "×")
+      .replace(/\\div/g, "÷")
+      .replace(/\\cdot/g, "·")
+      .replace(/\\pm/g, "±")
+      .replace(/\\leq/g, "≤")
+      .replace(/\\geq/g, "≥")
+      .replace(/\\neq/g, "≠")
+      .replace(/\\pi/g, "π")
+
+      // Remove LaTeX delimiters
+      .replace(/\\\(|\\\)|\\\[|\\\]|\$\$/g, "")
+      .replace(/\$([^$\n]+)\$/g, "$1")
+
+      // Clean remaining LaTeX braces
+      .replace(/[{}]/g, "")
+
+      // Remove unnecessary Markdown symbols
+      .replace(/^\s*>\s?/gm, "")
+
+      // Preserve readable spacing
+      .replace(/[ \t]+\n/g, "\n")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+
+    await navigator.clipboard.writeText(plainText);
+
+    setCopied(true);
+
+    window.setTimeout(() => setCopied(false), 1800);
+  } catch {
+    setCopied(false);
+  }
   }
 
   return (
