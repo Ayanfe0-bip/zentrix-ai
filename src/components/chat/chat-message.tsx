@@ -53,21 +53,25 @@ function extractSources(content: string) {
 }
 
 function renderInline(text: string): ReactNode[] {
-  const parts = text.split(
-    /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|\$[^$\n]+\$|\*\*[^*]+\*\*|`[^`]+`|\*[^*]+\*)/g
-  );
+  // Normalize escaped dollar signs from AI responses.
+  const normalized = text.replace(/\\\$/g, "$");
+
+  const mathPattern =
+    /(\$\$[\s\S]+?\$\$|\\\[[\s\S]+?\\\]|\\\([\s\S]+?\\\)|\$[^$\n]+?\$)/g;
+
+  const parts = normalized.split(mathPattern);
 
   return parts.map((part, index) => {
-    const display =
+    const isDisplay =
       (part.startsWith("$$") && part.endsWith("$$")) ||
       (part.startsWith("\\[") && part.endsWith("\\]"));
 
-    const math =
-      display ||
+    const isMath =
+      isDisplay ||
       (part.startsWith("\\(") && part.endsWith("\\)")) ||
       (part.startsWith("$") && part.endsWith("$"));
 
-    if (math) {
+    if (isMath) {
       let expression = part;
 
       if (part.startsWith("$$")) {
@@ -81,24 +85,33 @@ function renderInline(text: string): ReactNode[] {
         expression = part.slice(1, -1);
       }
 
-      const html = katex.renderToString(expression, {
-        displayMode: display,
-        throwOnError: false,
-        strict: "ignore",
-        trust: false,
-      });
+      try {
+        const html = katex.renderToString(expression.trim(), {
+          displayMode: isDisplay,
+          throwOnError: false,
+          strict: "ignore",
+          trust: false,
+          output: "htmlAndMathml",
+        });
 
-      return (
-        <span
-          key={index}
-          className={
-            display
-              ? "my-3 block overflow-x-auto py-1"
-              : "inline-block align-middle"
-          }
-          dangerouslySetInnerHTML={{ __html: html }}
-        />
-      );
+        return (
+          <span
+            key={index}
+            className={
+              isDisplay
+                ? "my-3 block max-w-full overflow-x-auto py-2"
+                : "inline-block align-middle"
+            }
+            dangerouslySetInnerHTML={{ __html: html }}
+          />
+        );
+      } catch {
+        return (
+          <span key={index}>
+            {expression}
+          </span>
+        );
+      }
     }
 
     if (part.startsWith("**") && part.endsWith("**")) {
@@ -127,6 +140,7 @@ function renderInline(text: string): ReactNode[] {
     return <span key={index}>{part}</span>;
   });
 }
+    
 
 function MarkdownContent({ content }: { content: string }) {
   const lines = content.replace(/\r\n/g, "\n").split("\n");
