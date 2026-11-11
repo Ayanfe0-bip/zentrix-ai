@@ -500,11 +500,11 @@ setAudioPlaying(false);
 
     if (attachments.length > 0) {
       const attachmentContent = attachments
-        .map(
-          (file) =>
-            `\n\n[Attached file: ${file.name}]\n${file.text}`
-        )
-        .join("\n");
+  .filter((file) => !file.imageData)
+  .map(
+    (file) => `\n\n[Attached file: ${file.name}]\n${file.text}`
+  )
+  .join("\n");
 
       finalMessage += attachmentContent;
     }
