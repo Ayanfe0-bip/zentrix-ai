@@ -242,39 +242,17 @@ const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
         const imageData = canvas.toDataURL("image/jpeg", 0.85);
         bitmap.close();
 
-        // Keep existing image understanding feature.
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const response = await fetch("/api/vision", {
-          method: "POST",
-          body: formData,
-        });
-
-        const result = (await response.json()) as {
-          success?: boolean;
-          text?: string;
-          error?: string;
-        };
-
-        if (!response.ok || !result.success || !result.text) {
-          throw new Error(
-            result.error || "Could not understand this image."
-          );
-        }
-
+                // Save the image immediately without waiting for AI analysis.
         accepted.push({
           name: file.name,
-          text:
-            `[IMAGE ANALYSIS - ${file.name}]\n\n` +
-            result.text,
+          text: "",
           imageData,
         });
       } catch (error) {
         alert(
           error instanceof Error
             ? error.message
-            : `Could not analyze ${file.name}.`
+            : `Could not load ${file.name}.`
         );
       }
 
