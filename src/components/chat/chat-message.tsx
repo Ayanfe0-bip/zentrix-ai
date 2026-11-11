@@ -205,7 +205,30 @@ function MarkdownContent({ content }: { content: string }) {
 
       continue;
     }
+    const imageMatch = line.match(/^!\[([^\]]*)\]\((https?:\/\/[^)]+)\)$/);
 
+    if (imageMatch) {
+      elements.push(
+        <a
+          key={`image-${index}`}
+          href={imageMatch[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="my-4 block overflow-hidden rounded-xl"
+        >
+          <img
+            src={imageMatch[2]}
+            alt={imageMatch[1] || "Web search image"}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            className="max-h-[420px] w-full rounded-xl object-contain"
+          />
+        </a>
+      );
+
+      index++;
+      continue;
+  }
     if (line.startsWith("#")) {
       const headingText = line.replace(/^#+\s*/, "");
       const level = line.match(/^#+/)?.[0].length || 1;
