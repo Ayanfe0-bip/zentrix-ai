@@ -3,7 +3,6 @@
 import { useMemo, useState } from "react";
 import AppSidebar from "@/components/layout/app-sidebar";
 import Topbar from "@/components/layout/topbar";
-import { useCallback, useEffect, useMemo, useState } from "react";
 const plugins = [
   {
     name: "GitHub",
