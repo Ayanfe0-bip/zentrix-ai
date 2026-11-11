@@ -456,7 +456,6 @@ const imageRequest =
          NORMAL AI CHAT
       ================================== */
 
-      const chatResponse = await fetch("/api/chat", {
               // Understand uploaded images after the user sends the message.
       const messagesForAI = updatedMessages.map((item) => ({
         role: item.role,
@@ -507,6 +506,7 @@ const imageRequest =
           "\n\n[UPLOADED IMAGE INFORMATION]\n" +
           imageDescriptions.join("\n\n");
       }
+      const chatResponse = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
