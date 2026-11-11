@@ -341,7 +341,10 @@ function requestsWebImages(message: string): boolean {
   return /\b(show|find|search|display|get|see|give me|look for)\b/i.test(message) &&
     /\b(images?|pictures?|photos?|photographs?|wallpapers?|visuals?)\b/i.test(message);
 }
-async function searchLiveWeb(query: string): Promise<string> {
+async function searchLiveWeb(
+  query: string,
+  includeImages = false
+): Promise<string> {
   const apiKey = process.env.TAVILY_API_KEY;
 
   if (!apiKey) {
@@ -359,8 +362,10 @@ async function searchLiveWeb(query: string): Promise<string> {
       search_depth: "advanced",
       topic: "general",
       max_results: 7,
-      include_answer: false,
-      include_raw_content: false,
+include_answer: false,
+include_raw_content: false,
+include_images: includeImages,
+include_image_descriptions: includeImages,
       
     }),
   });
