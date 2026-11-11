@@ -334,10 +334,21 @@ export default function PluginsPage() {
                         {plugin.icon}
                       </div>
 
-                      <span className="rounded-full border border-amber-400/20 bg-amber-400/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider text-amber-500">
-                        {plugin.status}
-                      </span>
-                    </div>
+                      <span
+  className={`rounded-full border px-2.5 py-1 text-[9px] font-bold uppercase tracking-wider ${
+    plugin.name === "GitHub" && githubConnected
+      ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-500"
+      : "border-amber-400/20 bg-amber-400/10 text-amber-500"
+  }`}
+>
+  {plugin.name === "GitHub"
+    ? githubLoading
+      ? "Checking..."
+      : githubConnected
+        ? "Connected"
+        : "Not connected"
+    : plugin.status}
+</span>
 
                     <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.16em] text-violet-400">
                       {plugin.category}
