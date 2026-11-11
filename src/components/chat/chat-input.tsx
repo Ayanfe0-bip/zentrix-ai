@@ -124,7 +124,11 @@ const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   async function handleFiles(fileList: FileList | null) {
   if (!fileList) return;
 
-  const accepted: Array<{ name: string; text: string }> = [];
+  const accepted: Array<{
+  name: string;
+  text: string;
+  imageData?: string;
+}> = [];
 
   for (const file of Array.from(fileList)) {
     if (file.size > 5 * 1024 * 1024) {
