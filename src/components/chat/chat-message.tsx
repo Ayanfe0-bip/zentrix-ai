@@ -420,10 +420,12 @@ export default function ChatMessage({
 
         <div
           className={`w-full text-sm leading-7 sm:text-[15px] ${
-            isUser
-              ? "rounded-2xl rounded-tr-sm border border-violet-400/20 bg-violet-500/15 px-4 py-3 text-white"
-              : "text-slate-200"
-          }`}
+  isUser && message.attachments?.length
+    ? "text-white"
+    : isUser
+      ? "rounded-2xl rounded-tr-sm border border-violet-400/20 bg-violet-500/15 px-4 py-3 text-white"
+      : "text-slate-200"
+}`}
         >
           {isUser ? (
   <div className="space-y-3">
