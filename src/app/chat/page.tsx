@@ -309,15 +309,15 @@ const imageRequest =
     }
 
     const userMessage: ChatMessageData = {
-      id: crypto.randomUUID(),
-      role: "user",
-      content: message,
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-      attachments: images,
-    }:
+  id: crypto.randomUUID(),
+  role: "user",
+  content: message,
+  timestamp: new Date().toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  }),
+  attachments: images,
+};
 
     const updatedMessages = [
       ...(activeConversation?.messages ?? []),
