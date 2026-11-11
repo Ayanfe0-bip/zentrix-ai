@@ -352,9 +352,10 @@ const imageRequest =
     /* UPDATE ASSISTANT MESSAGE */
 
     function updateAssistant(
-      content: string,
-      image?: ChatMessageData["image"]
-    ) {
+  content: string,
+  image?: ChatMessageData["image"],
+  agentProgress?: string[]
+) {
       setConversations((previous) =>
         previous.map((conversation) => {
           if (conversation.id !== conversationId) {
@@ -374,6 +375,9 @@ const imageRequest =
               minute: "2-digit",
             }),
             ...(image ? { image } : {}),
+            ...(agentProgress && agentProgress.length > 0
+  ? { agentProgress: [...agentProgress] }
+  : {}),
           };
 
           return {
