@@ -432,12 +432,12 @@ export default function ChatMessage({
         }`}
       >
         <div className="mb-2 flex items-center gap-2">
-          <span className="text-xs font-semibold text-slate-300">
+          <span className="text-xs font-semibold text-[var(--foreground)]">
             {isUser ? "You" : "ZENTRIX"}
           </span>
 
           {message.timestamp && (
-            <span className="text-[10px] text-slate-500">
+            <span className="text-[10px] text-[var(--muted)]">
               {message.timestamp}
             </span>
           )}
@@ -477,14 +477,14 @@ export default function ChatMessage({
             <>
   {message.agentProgress && message.agentProgress.length > 0 && (
     <div className="mb-4 space-y-2 rounded-xl border border-violet-400/15 bg-violet-500/[0.05] p-3">
-      <div className="text-xs font-semibold text-violet-300">
+      <div className="text-xs font-semibold text-[var(--primary)]">
         ZENTRIX is working
       </div>
 
       {message.agentProgress.map((step, index) => (
         <div
           key={index}
-          className="flex items-start gap-2 text-xs text-slate-400"
+          className="flex items-start gap-2 text-xs text-[var(--muted)]"
         >
           <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
           <span>{step}</span>
