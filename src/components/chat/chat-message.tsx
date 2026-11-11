@@ -119,7 +119,7 @@ function renderInline(text: string): ReactNode[] {
 
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
-        <strong key={index} className="font-semibold text-white">
+        <strong key={index} className="font-semibold text-[var(--foreground)]"
           {part.slice(2, -2)}
         </strong>
       );
@@ -129,7 +129,7 @@ function renderInline(text: string): ReactNode[] {
       return (
         <code
           key={index}
-          className="rounded-md bg-white/10 px-1.5 py-0.5 font-mono text-cyan-300"
+          className="rounded-md bg-[var(--surface-light)] px-1.5 py-0.5 font-mono text-[var(--secondary)]"
         >
           {part.slice(1, -1)}
         </code>
@@ -183,9 +183,9 @@ function MarkdownContent({ content }: { content: string }) {
       elements.push(
         <div
           key={`code-${index}`}
-          className="my-5 overflow-hidden rounded-xl border border-white/10 bg-[#080b18]"
+          className="my-5 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]"
         >
-          <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+          <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3"
             <span className="text-xs text-slate-400">
               {language}
             </span>
