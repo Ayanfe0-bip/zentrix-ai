@@ -628,7 +628,10 @@ const personalizedSystemPrompt =
   memoryContext;
     let liveSearchContext = "";
 
-if (needsLiveSearch(latestUserMessage.content)) {
+if (
+  needsLiveSearch(latestUserMessage.content) ||
+  requestsWebImages(latestUserMessage.content)
+) {
   try {
     liveSearchContext = await searchLiveWeb(
   latestUserMessage.content,
