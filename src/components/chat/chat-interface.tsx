@@ -172,7 +172,7 @@ export default function ChatInterface({
             )}
           </div>
 
-          <div className="relative z-10 shrink-0 border-t border-white/[0.06] bg-[#080817]/95 px-3 pb-[max(14px,env(safe-area-inset-bottom))] pt-4 backdrop-blur-xl sm:px-6">
+          <div className="relative z-10 shrink-0 border-t border-[var(--border)] bg-[var(--background)]/95 px-3 pb-[max(14px,env(safe-area-inset-bottom))] pt-4 backdrop-blur-xl sm:px-6">
             <div className="mx-auto w-full max-w-4xl">
               <ChatInput
                 onSend={onSend}
