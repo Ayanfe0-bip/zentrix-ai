@@ -279,10 +279,9 @@ return new Response(stream, {
 } catch (error) {
 console.error("GitHub agent setup failed:", error);
 
-return Response.json(
-  { error: "Unable to start the GitHub agent." },
-  { status: 500 }
-);
-
+   return Response.json(
+    { error: "Unable to start the GitHub agent." },
+    { status: 500 }
+  );
+  }
 }
-  
