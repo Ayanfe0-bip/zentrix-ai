@@ -119,7 +119,7 @@ function renderInline(text: string): ReactNode[] {
 
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
-        <strong key={index} className="font-semibold text-[var(--foreground)]"
+        <strong key={index} className="font-semibold text-[var(--foreground)]">
           {part.slice(2, -2)}
         </strong>
       );
@@ -193,7 +193,7 @@ function MarkdownContent({ content }: { content: string }) {
             <button
               type="button"
               onClick={() => navigator.clipboard.writeText(code)}
-              className="text-xs text-[var(--muted)] hover:text-white"
+              className="text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
             >
               Copy code
             </button>
