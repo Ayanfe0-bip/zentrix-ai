@@ -313,6 +313,7 @@ const imageRequest =
       role: "user",
       content: message,
       timestamp: new Date().toLocaleTimeString([], {
+        attachments: images,
         hour: "2-digit",
         minute: "2-digit",
       }),
