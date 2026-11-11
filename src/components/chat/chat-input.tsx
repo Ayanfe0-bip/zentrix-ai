@@ -7,7 +7,7 @@ import {
   type KeyboardEvent,
   type FormEvent,
 } from "react";
-
+import Link from "next/link";
 import {
   Plus,
   X,
@@ -767,14 +767,17 @@ onSend(finalMessage, images);
                   )}
                 </button>
 
-                <div className="my-2 border-t border-white/10" />
-
-                <div className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-gray-500">
-                  <PlugZap size={19} />
-                  <span>Plugins</span>
-                  <span className="ml-auto rounded-full bg-white/10 px-2 py-1 text-[10px]">
-                    Coming soon
-                  </span>
+                <Link
+  href="/plugins"
+  onClick={() => setMenuOpen(false)}
+  className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-gray-200 transition hover:bg-white/10"
+>
+  <PlugZap size={19} className="text-violet-400" />
+  <span>Plugins & Integrations</span>
+  <span className="ml-auto rounded-full bg-violet-500/10 px-2 py-1 text-[10px] text-violet-300">
+    Explore
+  </span>
+</Link>
                 </div>
               </div>
             )}
