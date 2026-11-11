@@ -58,7 +58,7 @@ export default function ChatInterface({
   }
 
   return (
-    <main className="flex h-[100dvh] w-full overflow-hidden bg-[#080817] text-white">
+    <main className="flex h-[100dvh] w-full overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
       <AppSidebar
         activeItem="AI Chat"
         chats={chats}
