@@ -209,44 +209,77 @@ const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
       continue;
     }
 
-    if (file.type.startsWith("image/")) {
-  try {
-    const formData = new FormData();
-    formData.append("file", file);
+        if (file.type.startsWith("image/")) {
+      try {
+        // Resize image for Cloudflare image editing.
+        const bitmap = await createImageBitmap(file);
 
-    const response = await fetch("/api/vision", {
-      method: "POST",
-      body: formData,
-    });
+        const maxSize = 512;
+        const scale = Math.min(
+          1,
+          maxSize / Math.max(bitmap.width, bitmap.height)
+        );
 
-    const result = (await response.json()) as {
-      success?: boolean;
-      text?: string;
-      error?: string;
-    };
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(bitmap.width * scale);
+        canvas.height = Math.round(bitmap.height * scale);
 
-    if (!response.ok || !result.success || !result.text) {
-      throw new Error(
-        result.error || "Could not understand this image."
-      );
-    }
+        const context = canvas.getContext("2d");
 
-    accepted.push({
-      name: file.name,
-      text:
-        `[IMAGE ANALYSIS - ${file.name}]\n\n` +
-        result.text,
-    });
-  } catch (error) {
-    alert(
-      error instanceof Error
-        ? error.message
-        : `Could not analyze ${file.name}.`
-    );
-  }
+        if (!context) {
+          bitmap.close();
+          throw new Error("Could not process this image.");
+        }
 
-  continue;
-    }
+        context.drawImage(
+          bitmap,
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+
+        const imageData = canvas.toDataURL("image/jpeg", 0.85);
+        bitmap.close();
+
+        // Keep existing image understanding feature.
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await fetch("/api/vision", {
+          method: "POST",
+          body: formData,
+        });
+
+        const result = (await response.json()) as {
+          success?: boolean;
+          text?: string;
+          error?: string;
+        };
+
+        if (!response.ok || !result.success || !result.text) {
+          throw new Error(
+            result.error || "Could not understand this image."
+          );
+        }
+
+        accepted.push({
+          name: file.name,
+          text:
+            `[IMAGE ANALYSIS - ${file.name}]\n\n` +
+            result.text,
+          imageData,
+        });
+      } catch (error) {
+        alert(
+          error instanceof Error
+            ? error.message
+            : `Could not analyze ${file.name}.`
+        );
+      }
+
+      continue;
+        }
 
     alert(`${file.name} is not a supported file type.`);
   }
