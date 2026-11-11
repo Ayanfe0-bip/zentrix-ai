@@ -436,7 +436,7 @@ export default function ChatMessage({
             key={index}
             src={src}
             alt={`Uploaded image ${index + 1}`}
-            className="max-h-72 max-w-full rounded-xl border border-white/10 object-contain"
+            className="max-h-72 max-w-full rounded-xl object-contain"
           />
         ))}
       </div>
