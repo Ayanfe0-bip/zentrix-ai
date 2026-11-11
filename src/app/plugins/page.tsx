@@ -413,8 +413,12 @@ export default function PluginsPage() {
       : "Connection Setup in Progress"}
   </button>
 )}
-          
-                    <div className="mt-10 rounded-2xl border border-violet-500/20 bg-violet-500/[0.05] p-6 text-center">
+                            </article>
+                ))}
+              </div>
+            )}
+
+            <div className="mt-10 rounded-2xl border border-violet-500/20 bg-violet-500/[0.05] p-6 text-center">
               <div className="text-2xl">🚀</div>
 
               <h3 className="mt-3 text-lg font-bold text-[var(--foreground)]">
@@ -436,4 +440,4 @@ export default function PluginsPage() {
       </main>
     </div>
   );
-  }
+}
