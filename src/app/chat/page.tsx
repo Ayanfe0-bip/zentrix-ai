@@ -455,7 +455,140 @@ const imageRequest =
 
         return;
       }
+            /* ==================================
+         GITHUB AGENT
+      ================================== */
 
+      const githubAgentRequest =
+        /\b(github|repo|repos|repository|repositories)\b/i.test(message) &&
+        /\b(inspect|check|review|analy[sz]e|list|read|open|explore|look at|scan)\b/i.test(message);
+
+      if (githubAgentRequest) {
+        const progressSteps: string[] = [];
+
+        updateAssistant(
+          "Starting a secure, read-only GitHub inspection..."
+        );
+
+        const githubResponse = await fetch("/api/agent/github", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            repository: "zentrix-ai",
+          }),
+          signal: controller.signal,
+        });
+
+        if (!githubResponse.ok) {
+          const result = await githubResponse.json().catch(() => ({}));
+
+          throw new Error(
+            result.error || "Unable to start the GitHub inspection."
+          );
+        }
+
+        if (!githubResponse.body) {
+          throw new Error(
+            "GitHub progress streaming is not available."
+          );
+        }
+
+        const githubReader = githubResponse.body.getReader();
+        const githubDecoder = new TextDecoder();
+
+        let githubBuffer = "";
+
+        function processGitHubEvent(event: string) {
+          const data = event
+            .split("\n")
+            .filter((line) => line.startsWith("data:"))
+            .map((line) => line.slice(5).trim())
+            .join("\n");
+
+          if (!data) return;
+
+          let parsed: {
+            type?: string;
+            message?: string;
+            content?: string;
+          };
+
+          try {
+            parsed = JSON.parse(data);
+          } catch {
+            return;
+          }
+
+          if (parsed.type === "progress" && parsed.message) {
+            progressSteps.push(parsed.message);
+
+            updateAssistant(
+              "",
+              undefined,
+              progressSteps
+            );
+
+            return;
+          }
+
+          if (parsed.type === "error") {
+            throw new Error(
+              parsed.message || "GitHub inspection failed."
+            );
+          }
+
+          if (
+            parsed.type === "result" &&
+            typeof parsed.content === "string"
+          ) {
+            reply = parsed.content;
+
+            updateAssistant(
+              reply,
+              undefined,
+              progressSteps
+            );
+          }
+        }
+
+        while (true) {
+          const { done, value } = await githubReader.read();
+
+          if (done) break;
+
+          githubBuffer += githubDecoder.decode(value, {
+            stream: true,
+          });
+
+          githubBuffer = githubBuffer.replace(/\r\n/g, "\n");
+
+          const events = githubBuffer.split("\n\n");
+
+          githubBuffer = events.pop() ?? "";
+
+          for (const event of events) {
+            processGitHubEvent(event);
+          }
+        }
+
+        githubBuffer += githubDecoder.decode();
+
+        if (githubBuffer.trim()) {
+          processGitHubEvent(githubBuffer);
+        }
+
+        if (controller.signal.aborted) return;
+
+        if (!reply.trim()) {
+          throw new Error(
+            "GitHub finished without returning repository results."
+          );
+        }
+
+        return;
+      }
       /* ==================================
          NORMAL AI CHAT
       ================================== */
