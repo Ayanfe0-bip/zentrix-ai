@@ -513,7 +513,7 @@ export default function ChatMessage({
             <button
               type="button"
               onClick={copyMessage}
-              className="rounded-lg px-2 py-1 text-[11px] text-slate-500 transition hover:bg-white/[0.06] hover:text-white"
+              className="rounded-lg px-2 py-1 text-[11px] text-[var(--muted)] transition hover:bg-[var(--surface-light)] hover:text-[var(--foreground)]"
             >
               {copied ? "Copied!" : "Copy"}
             </button>
