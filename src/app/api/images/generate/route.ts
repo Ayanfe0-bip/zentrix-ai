@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-const IMAGE_MODEL = "black-forest-labs/flux-3-image-klein";
+const IMAGE_MODEL = "@cf/black-forest-labs/flux-2-klein-4b";
 
 const ALLOWED_RESOLUTIONS = [
   "768",
@@ -35,14 +35,67 @@ const ALLOWED_RATIOS = [
 type Resolution = (typeof ALLOWED_RESOLUTIONS)[number];
 type AspectRatio = (typeof ALLOWED_RATIOS)[number];
 
+function getDimensions(
+  resolution: Resolution,
+  aspectRatio: AspectRatio
+) {
+  const sizes: Record<Resolution, number> = {
+    "768": 768,
+    "1K": 1024,
+    "1.5K": 1536,
+    "2K": 1792,
+    "4K": 1792,
+  };
+
+  const ratios: Record<string, number> = {
+    "1:1": 1,
+    "16:9": 16 / 9,
+    "9:16": 9 / 16,
+    "4:3": 4 / 3,
+    "3:4": 3 / 4,
+    "3:2": 3 / 2,
+    "2:3": 2 / 3,
+    "4:5": 4 / 5,
+    "5:4": 5 / 4,
+    "21:9": 21 / 9,
+    "2:1": 2,
+    "7:5": 7 / 5,
+    "5:7": 5 / 7,
+    "1:2": 1 / 2,
+    "9:21": 9 / 21,
+  };
+
+  const size = sizes[resolution];
+  const ratio = ratios[aspectRatio] || 1;
+
+  let width = size;
+  let height = size;
+
+  if (ratio >= 1) {
+    height = Math.round(size / ratio);
+  } else {
+    width = Math.round(size * ratio);
+  }
+
+  width = Math.min(1920, Math.max(256, width));
+  height = Math.min(1920, Math.max(256, height));
+
+  width = Math.max(256, Math.round(width / 8) * 8);
+  height = Math.max(256, Math.round(height / 8) * 8);
+
+  return { width, height };
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const apiKey = process.env.OPENROUTER_API_KEY;
+    const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
+    const apiToken = process.env.CLOUDFLARE_API_TOKEN;
 
-    if (!apiKey) {
+    if (!accountId || !apiToken) {
       return NextResponse.json(
         {
-          error: "Image generation is not configured.",
+          success: false,
+          error: "Cloudflare credentials are missing.",
         },
         { status: 503 }
       );
@@ -58,7 +111,10 @@ export async function POST(request: NextRequest) {
       body = await request.json();
     } catch {
       return NextResponse.json(
-        { error: "Invalid request data." },
+        {
+          success: false,
+          error: "Invalid request data.",
+        },
         { status: 400 }
       );
     }
@@ -70,7 +126,10 @@ export async function POST(request: NextRequest) {
 
     if (!prompt) {
       return NextResponse.json(
-        { error: "Please describe the image you want." },
+        {
+          success: false,
+          error: "Please describe the image you want.",
+        },
         { status: 400 }
       );
     }
@@ -78,6 +137,7 @@ export async function POST(request: NextRequest) {
     if (prompt.length > 4000) {
       return NextResponse.json(
         {
+          success: false,
           error: "Your image description is too long.",
         },
         { status: 400 }
@@ -96,6 +156,17 @@ export async function POST(request: NextRequest) {
       ? (body.aspectRatio as AspectRatio)
       : "1:1";
 
+    const { width, height } = getDimensions(
+      resolution,
+      aspectRatio
+    );
+
+    const formData = new FormData();
+
+    formData.append("prompt", prompt);
+    formData.append("width", String(width));
+    formData.append("height", String(height));
+
     const controller = new AbortController();
 
     const timeout = setTimeout(
@@ -107,48 +178,68 @@ export async function POST(request: NextRequest) {
 
     try {
       response = await fetch(
-        "https://openrouter.ai/api/v1/images",
+        `https://api.cloudflare.com/client/v4/accounts/${encodeURIComponent(
+          accountId
+        )}/ai/run/${IMAGE_MODEL}`,
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${apiKey}`,
-            "Content-Type": "application/json",
-            "HTTP-Referer":
-              process.env.NEXT_PUBLIC_APP_URL ||
-              "https://zentrix-ai.vercel.app",
-            "X-Title": "ZENTRIX AI",
+            Authorization: `Bearer ${apiToken}`,
           },
-          body: JSON.stringify({
-            model: IMAGE_MODEL,
-            prompt,
-            resolution,
-            aspect_ratio: aspectRatio,
-            output_format: "png",
-            n: 1,
-          }),
+          body: formData,
           signal: controller.signal,
+          cache: "no-store",
         }
       );
     } finally {
       clearTimeout(timeout);
     }
 
-    if (!response.ok) {
-      const errorData = await response
-        .json()
-        .catch(() => ({}));
+    const result = await response.json().catch(() => null);
+
+    if (!response.ok || result?.success === false) {
+      const cloudflareError =
+        Array.isArray(result?.errors)
+          ? result.errors
+              .map(
+                (item: { message?: string }) =>
+                  item.message
+              )
+              .filter(Boolean)
+              .join(" ")
+          : "";
 
       console.error(
-        "ZENTRIX image provider error:",
+        "Cloudflare image error:",
         response.status,
-        errorData
+        cloudflareError
       );
 
-      if (response.status === 429) {
+      if (
+        response.status === 401 ||
+        response.status === 403
+      ) {
         return NextResponse.json(
           {
+            success: false,
             error:
-              "Image generation is temporarily rate-limited. Please try again.",
+              "Cloudflare rejected the API token. Check its Workers AI permissions.",
+          },
+          { status: 502 }
+        );
+      }
+
+      if (
+        response.status === 429 ||
+        response.status === 402 ||
+        cloudflareError.toLowerCase().includes("neuron")
+      ) {
+        return NextResponse.json(
+          {
+            success: false,
+            error:
+              "Cloudflare Workers AI usage limit reached. Please try again after the quota resets. " +
+              cloudflareError,
           },
           { status: 429 }
         );
@@ -156,43 +247,46 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json(
         {
+          success: false,
           error:
-            "The image provider could not generate your image. Please try again.",
+            "Cloudflare could not generate your image. " +
+            (cloudflareError || "Please try again."),
         },
         { status: 502 }
       );
     }
 
-    const result = await response.json();
-
-    const generatedImage = result?.data?.[0];
+    const generatedImage = result?.result?.image;
 
     if (
-      !generatedImage ||
-      typeof generatedImage.b64_json !== "string"
+      typeof generatedImage !== "string" ||
+      !generatedImage
     ) {
       return NextResponse.json(
         {
+          success: false,
           error:
-            "The image provider returned no image. Please try again.",
+            "Cloudflare returned no generated image.",
         },
         { status: 502 }
       );
     }
+
+    const image = generatedImage.startsWith("data:")
+      ? generatedImage.slice(
+          generatedImage.indexOf(",") + 1
+        )
+      : generatedImage;
 
     return NextResponse.json(
       {
         success: true,
-        image: generatedImage.b64_json,
-        mediaType:
-          generatedImage.media_type || "image/png",
+        image,
+        mediaType: "image/png",
         model: IMAGE_MODEL,
-        resolution,
+        resolution: `${width}x${height}`,
         aspectRatio,
-        cost:
-          typeof result?.usage?.cost === "number"
-            ? result.usage.cost
-            : null,
+        cost: null,
       },
       {
         status: 200,
@@ -204,7 +298,9 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error(
       "ZENTRIX image generation error:",
-      error
+      error instanceof Error
+        ? error.message
+        : "Unknown error"
     );
 
     if (
@@ -213,6 +309,7 @@ export async function POST(request: NextRequest) {
     ) {
       return NextResponse.json(
         {
+          success: false,
           error:
             "Image generation took too long. Please try again.",
         },
@@ -222,10 +319,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       {
+        success: false,
         error:
           "Something went wrong while generating your image.",
       },
       { status: 500 }
     );
   }
-        }
+                  }
