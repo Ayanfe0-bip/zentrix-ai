@@ -274,18 +274,16 @@ export default function PluginsPage() {
                     </p>
 
                     <button
-                      type="button"
-                      disabled
-                      className="mt-5 w-full cursor-not-allowed rounded-xl border border-[var(--border)] bg-[var(--surface-light)] px-4 py-3 text-xs font-semibold text-slate-500"
-                    >
-                      Coming Soon
-                    </button>
-                  </article>
-                ))}
-              </div>
-            )}
-
-            <div className="mt-10 rounded-2xl border border-violet-500/20 bg-violet-500/[0.05] p-6 text-center">
+  type="button"
+  disabled
+  className="mt-5 w-full cursor-not-allowed rounded-xl border border-[var(--border)] bg-[var(--surface-light)] px-4 py-3 text-xs font-semibold text-slate-500"
+>
+  {plugin.status === "Already integrated"
+    ? "Available in Chat"
+    : "Connection Setup in Progress"}
+</button>
+          
+                    <div className="mt-10 rounded-2xl border border-violet-500/20 bg-violet-500/[0.05] p-6 text-center">
               <div className="text-2xl">🚀</div>
 
               <h3 className="mt-3 text-lg font-bold text-[var(--foreground)]">
