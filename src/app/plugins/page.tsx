@@ -362,15 +362,54 @@ export default function PluginsPage() {
                       {plugin.description}
                     </p>
 
-                    <button
-  type="button"
-  disabled
-  className="mt-5 w-full cursor-not-allowed rounded-xl border border-[var(--border)] bg-[var(--surface-light)] px-4 py-3 text-xs font-semibold text-slate-500"
->
-  {plugin.status === "Already integrated"
-    ? "Available in Chat"
-    : "Connection Setup in Progress"}
-</button>
+                 {plugin.name === "GitHub" ? (
+  <div className="mt-5 space-y-2">
+    {githubConnected && githubLogin && (
+      <p className="text-center text-xs text-emerald-500">
+        Connected as @{githubLogin}
+      </p>
+    )}
+
+    <button
+      type="button"
+      disabled={githubLoading || githubDisconnecting}
+      onClick={() => {
+        window.location.href =
+          "/api/integrations/github/connect";
+      }}
+      className="w-full rounded-xl bg-violet-600 px-4 py-3 text-xs font-semibold text-white transition hover:bg-violet-500 disabled:opacity-50"
+    >
+      {githubLoading
+        ? "Checking connection..."
+        : githubConnected
+          ? "Reconnect GitHub"
+          : "Connect GitHub"}
+    </button>
+
+    {githubConnected && (
+      <button
+        type="button"
+        disabled={githubDisconnecting}
+        onClick={disconnectGitHub}
+        className="w-full rounded-xl border border-red-500/30 px-4 py-3 text-xs font-semibold text-red-400 transition hover:bg-red-500/10 disabled:opacity-50"
+      >
+        {githubDisconnecting
+          ? "Disconnecting..."
+          : "Disconnect GitHub"}
+      </button>
+    )}
+  </div>
+) : (
+  <button
+    type="button"
+    disabled
+    className="mt-5 w-full cursor-not-allowed rounded-xl border border-[var(--border)] bg-[var(--surface-light)] px-4 py-3 text-xs font-semibold text-slate-500"
+  >
+    {plugin.status === "Already integrated"
+      ? "Available in Chat"
+      : "Connection Setup in Progress"}
+  </button>
+)}
           
                     <div className="mt-10 rounded-2xl border border-violet-500/20 bg-violet-500/[0.05] p-6 text-center">
               <div className="text-2xl">🚀</div>
