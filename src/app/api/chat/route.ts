@@ -614,8 +614,9 @@ const personalizedSystemPrompt =
 if (needsLiveSearch(latestUserMessage.content)) {
   try {
     liveSearchContext = await searchLiveWeb(
-      latestUserMessage.content
-    );
+  latestUserMessage.content,
+  requestsWebImages(latestUserMessage.content)
+);
   } catch (error) {
     console.error(
       "Tavily live search error:",
