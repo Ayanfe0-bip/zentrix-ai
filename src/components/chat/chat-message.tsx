@@ -16,6 +16,7 @@ export interface ChatMessageData {
     prompt: string;
     mediaType: string;
   };
+  attachments?: string[];
 }
 
 interface ChatMessageProps {
