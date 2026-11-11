@@ -221,7 +221,11 @@ export default function PluginsPage() {
           subtitle="Extend what ZENTRIX AI can do"
           onMenuClick={() => setSidebarOpen(true)}
         />
-
+       {githubMessage && (
+  <div className="mx-4 mt-4 rounded-xl border border-violet-500/20 bg-violet-500/10 px-4 py-3 text-sm text-[var(--foreground)] sm:mx-7 lg:mx-10">
+    {githubMessage}
+  </div>
+)}
         <section className="flex-1 overflow-y-auto px-4 py-7 sm:px-7 lg:px-10">
           <div className="mx-auto max-w-6xl">
 
