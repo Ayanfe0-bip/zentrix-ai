@@ -14,7 +14,7 @@ import { DEFAULT_MODEL } from "@/lib/ai/models";
 
 interface ChatInterfaceProps {
   messages: ChatMessageData[];
-  onSend: (message: string) => void;
+  onSend: (message: string, images?: string[]) => void;
   onNewChat?: () => void;
   onSelectChat?: (id: string) => void;
   chats?: ChatHistoryItem[];
