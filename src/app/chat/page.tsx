@@ -512,10 +512,7 @@ const imageRequest =
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          messages: updatedMessages.map((item) => ({
-            role: item.role,
-            content: item.content,
-          })),
+          messages: messagesForAI,
           model: selectedModel,
           responseStyle,
         }),
