@@ -767,22 +767,20 @@ onSend(finalMessage, images);
                   )}
                 </button>
 
-                <Link
-  href="/plugins"
-  onClick={() => setMenuOpen(false)}
-  className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-gray-200 transition hover:bg-white/10"
->
-  <PlugZap size={19} className="text-violet-400" />
-  <span>Plugins & Integrations</span>
-  <span className="ml-auto rounded-full bg-violet-500/10 px-2 py-1 text-[10px] text-violet-300">
-    Explore
-  </span>
-</Link>
-                </div>
+                              <Link
+                  href="/plugins"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-3 rounded-xl px-3 py-3 text-sm text-gray-200 transition hover:bg-white/10"
+                >
+                  <PlugZap size={19} className="text-violet-400" />
+                  <span>Plugins & Integrations</span>
+                  <span className="ml-auto rounded-full bg-violet-500/10 px-2 py-1 text-[10px] text-violet-300">
+                    Explore
+                  </span>
+                </Link>
               </div>
             )}
           </div>
-
           <>
   {audioUrl && (
     <audio
