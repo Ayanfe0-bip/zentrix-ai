@@ -599,31 +599,55 @@ onSend(finalMessage, images);
           onChange={(event) => handleFiles(event.target.files)}
         />
 
-        {attachments.length > 0 && (
-          <div className="mb-2 flex flex-wrap gap-2">
-            {attachments.map((file, index) => (
-              <div
-                key={`${file.name}-${index}`}
-                className="flex max-w-full items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs text-gray-300"
-              >
-                <FileText size={14} className="shrink-0" />
-
-                <span className="max-w-[180px] truncate">
-                  {file.name}
-                </span>
-
-                <button
-                  type="button"
-                  onClick={() => removeAttachment(index)}
-                  className="text-gray-400 hover:text-red-400"
-                  aria-label="Remove attachment"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ))}
+       {attachments.length > 0 && (
+  <div className="mb-3 flex flex-wrap gap-3">
+    {attachments.map((file, index) => (
+      <div
+        key={`${file.name}-${index}`}
+        className="relative"
+      >
+        {file.imageData ? (
+          <div className="relative">
+            <img
+              src={file.imageData}
+              alt={file.name}
+              className="h-20 w-20 rounded-xl border border-white/10 object-cover"
+            />
+            <button
+              type="button"
+              onClick={() =>
+                setAttachments((prev) =>
+                  prev.filter((_, i) => i !== index)
+                )
+              }
+              className="absolute -right-2 -top-2 flex h-6 w-6 items-center justify-center rounded-full bg-black/80 text-white hover:bg-red-500"
+            >
+              <X size={14} />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center gap-2 rounded-xl border border-white/10 px-3 py-2">
+            <FileText size={16} />
+            <span className="max-w-[120px] truncate text-sm">
+              {file.name}
+            </span>
+            <button
+              type="button"
+              onClick={() =>
+                setAttachments((prev) =>
+                  prev.filter((_, i) => i !== index)
+                )
+              }
+              className="text-gray-400 hover:text-red-500"
+            >
+              <X size={14} />
+            </button>
           </div>
         )}
+      </div>
+    ))}
+  </div>
+)}
 
         {(thinkHarder || imageMode) && (
           <div className="mb-2 flex flex-wrap gap-2">
