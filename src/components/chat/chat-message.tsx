@@ -19,7 +19,7 @@ export interface ChatMessageData {
     attachments?: string[];
   agentProgress?: string[];
 }
-}
+
 
 interface ChatMessageProps {
   message: ChatMessageData;
