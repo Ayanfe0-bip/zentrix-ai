@@ -543,7 +543,11 @@ setAudioPlaying(false);
         finalMessage;
     }
 
-    onSend(finalMessage);
+    const images = attachments.flatMap((file) =>
+  file.imageData ? [file.imageData] : []
+);
+
+onSend(finalMessage, images);
 
     setMessage("");
     setAttachments([]);
