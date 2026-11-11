@@ -298,7 +298,7 @@ function MarkdownContent({ content }: { content: string }) {
           className="my-3 list-disc space-y-2 pl-6 marker:text-violet-400"
         >
           {items.map((item, itemIndex) => (
-            <li key={itemIndex} className="pl-1 text-slate-300">
+            <li key={itemIndex} className="pl-1 text-[var(--foreground)]"
               {renderInline(item)}
             </li>
           ))}
@@ -327,7 +327,7 @@ function MarkdownContent({ content }: { content: string }) {
     elements.push(
       <p
         key={`paragraph-${index}`}
-        className="my-3 leading-7 text-slate-300"
+        className="my-3 leading-7 text-[var(--foreground)]"
       >
         {paragraph.map((part, partIndex) => (
           <span key={partIndex}>
