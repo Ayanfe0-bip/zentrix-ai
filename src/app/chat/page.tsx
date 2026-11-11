@@ -455,8 +455,7 @@ const imageRequest =
       /* ==================================
          NORMAL AI CHAT
       ================================== */
-
-              // Understand uploaded images after the user sends the message.
+     // Understand uploaded images after the user sends the message.
       const messagesForAI = updatedMessages.map((item) => ({
         role: item.role,
         content: item.content,
