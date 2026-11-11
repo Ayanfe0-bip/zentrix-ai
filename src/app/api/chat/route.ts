@@ -419,6 +419,23 @@ include_image_descriptions: includeImages,
       ].join("\n");
     })
     .join("\n\n");
+    const imageResults =
+    includeImages && Array.isArray(data.images)
+      ? data.images.slice(0, 4).map(
+          (image: {
+            url?: string;
+            description?: string;
+          }, index: number) => [
+            `[Image ${index + 1}]`,
+            `Image URL: ${image.url || ""}`,
+            `Description: ${image.description || "Image result"}`,
+          ].join("\n")
+        ).join("\n\n")
+      : "";
+
+  return [textResults, imageResults]
+    .filter(Boolean)
+    .join("\n\n");
 }
 async function searchOfficialSources(
   query: string
