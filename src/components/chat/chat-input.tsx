@@ -28,7 +28,7 @@ import {
 } from "lucide-react";
 
 interface ChatInputProps {
-  onSend: (message: string) => void;
+  onSend: (message: string, images?: string[]) => void;
   onStop?: () => void;
   disabled?: boolean;
   isGenerating?: boolean;
@@ -50,7 +50,11 @@ export default function ChatInput({
   const [imageMode, setImageMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [attachments, setAttachments] = useState<
-    Array<{ name: string; text: string }>
+    Array<{
+  name: string;
+  text: string;
+  imageData?: string;
+}>
   >([]);
   const [listening, setListening] = useState(false);
 const [voicePreview, setVoicePreview] = useState(false);
