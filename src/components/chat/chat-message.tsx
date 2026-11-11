@@ -186,20 +186,20 @@ function MarkdownContent({ content }: { content: string }) {
           className="my-5 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]"
         >
           <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3"
-            <span className="text-xs text-slate-400">
+            <span className="text-xs text-[var(--muted)]
               {language}
             </span>
 
             <button
               type="button"
               onClick={() => navigator.clipboard.writeText(code)}
-              className="text-xs text-slate-400 hover:text-white"
+              className="text-xs text-[var(--muted)] hover:text-white"
             >
               Copy code
             </button>
           </div>
 
-          <pre className="overflow-x-auto p-4 text-xs leading-6 text-cyan-100 sm:text-sm">
+          <pre className="overflow-x-auto p-4 text-xs leading-6 text-[var(--foreground)] sm:text-sm"
             <code>{code}</code>
           </pre>
         </div>
@@ -260,7 +260,7 @@ function MarkdownContent({ content }: { content: string }) {
       elements.push(
         <blockquote
           key={`quote-${index}`}
-          className="my-4 border-l-2 border-violet-400 bg-violet-500/[0.06] py-3 pl-4 text-slate-300"
+          className="my-4 border-l-2 border-violet-400 bg-violet-500/[0.06] py-3 pl-4 text-[var(--foreground)]"
         >
           {renderInline(quote)}
         </blockquote>
