@@ -457,6 +457,56 @@ const imageRequest =
       ================================== */
 
       const chatResponse = await fetch("/api/chat", {
+              // Understand uploaded images after the user sends the message.
+      const messagesForAI = updatedMessages.map((item) => ({
+        role: item.role,
+        content: item.content,
+      }));
+
+      if (images.length > 0) {
+        const imageDescriptions: string[] = [];
+
+        for (let index = 0; index < images.length; index++) {
+          const imageBlob = await fetch(images[index]).then((res) =>
+            res.blob()
+          );
+
+          const formData = new FormData();
+
+          formData.append(
+            "file",
+            new File(
+              [imageBlob],
+              `uploaded-image-${index + 1}.jpg`,
+              { type: imageBlob.type || "image/jpeg" }
+            )
+          );
+
+          const visionResponse = await fetch("/api/vision", {
+            method: "POST",
+            body: formData,
+            signal: controller.signal,
+          });
+
+          const visionResult = await visionResponse.json();
+
+          if (!visionResponse.ok || !visionResult.success) {
+            throw new Error(
+              visionResult.error || "Unable to understand the uploaded image."
+            );
+          }
+
+          imageDescriptions.push(
+            `Image ${index + 1} description:\n${visionResult.text}`
+          );
+        }
+
+        const latestMessage = messagesForAI[messagesForAI.length - 1];
+
+        latestMessage.content +=
+          "\n\n[UPLOADED IMAGE INFORMATION]\n" +
+          imageDescriptions.join("\n\n");
+      }
         method: "POST",
         headers: {
           "Content-Type": "application/json",
