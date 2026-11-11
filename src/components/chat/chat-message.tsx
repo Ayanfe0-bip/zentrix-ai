@@ -185,8 +185,8 @@ function MarkdownContent({ content }: { content: string }) {
           key={`code-${index}`}
           className="my-5 overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--surface)]"
         >
-          <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3"
-            <span className="text-xs text-[var(--muted)]
+        <div className="flex items-center justify-between border-b border-[var(--border)] px-4 py-3">
+            <span className="text-xs text-[var(--muted)]">
               {language}
             </span>
 
@@ -199,7 +199,7 @@ function MarkdownContent({ content }: { content: string }) {
             </button>
           </div>
 
-          <pre className="overflow-x-auto p-4 text-xs leading-6 text-[var(--foreground)] sm:text-sm"
+          <pre className="overflow-x-auto p-4 text-xs leading-6 text-[var(--foreground)] sm:text-sm">
             <code>{code}</code>
           </pre>
         </div>
@@ -244,7 +244,7 @@ function MarkdownContent({ content }: { content: string }) {
       elements.push(
         <HeadingTag
           key={`heading-${index}`}
-          className="my-4 text-xl font-bold text-white"
+          className="my-4 text-xl font-bold text-[var(--foreground)]"
         >
           {renderInline(headingText)}
         </HeadingTag>
