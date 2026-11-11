@@ -677,7 +677,7 @@ onSend(finalMessage, images);
           </div>
         )}
               
-        <div className="flex items-end gap-2 rounded-[28px] border border-white/10 bg-[#171717] p-2 shadow-lg">
+        <div className="flex items-end gap-2 rounded-[28px] border border-[var(--border)] bg-[var(--surface)] p-2 shadow-lg">
           <div ref={menuRef} className="relative shrink-0">
             <button
               type="button"
@@ -834,7 +834,7 @@ onSend(finalMessage, images);
       }
       rows={1}
       disabled={disabled || isGenerating || voiceTranscribing}
-      className="chat-composer-textarea max-h-[180px] min-h-[44px] flex-1 resize-none bg-transparent px-2 py-3 text-sm leading-6 text-white outline-none placeholder:text-gray-500 disabled:opacity-50"
+      className="chat-composer-textarea max-h-[180px] min-h-[44px] flex-1 resize-none bg-transparent px-2 py-3 text-sm leading-6 text-[var(--foreground)] outline-none placeholder:text-[var(--muted)] disabled:opacity-50"
     />
   )}
 
