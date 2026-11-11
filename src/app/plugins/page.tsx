@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import AppSidebar from "@/components/layout/app-sidebar";
 import Topbar from "@/components/layout/topbar";
-
+import { useCallback, useEffect, useMemo, useState } from "react";
 const plugins = [
   {
     name: "GitHub",
@@ -116,6 +116,84 @@ export default function PluginsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
+
+  const [githubConnected, setGithubConnected] = useState(false);
+  const [githubLogin, setGithubLogin] = useState("");
+  const [githubLoading, setGithubLoading] = useState(true);
+  const [githubDisconnecting, setGithubDisconnecting] = useState(false);
+  const [githubMessage, setGithubMessage] = useState("");
+
+  const checkGitHubConnection = useCallback(async () => {
+    try {
+      const response = await fetch(
+        "/api/integrations/github/status",
+        { cache: "no-store" }
+      );
+
+      const data = await response.json();
+
+      setGithubConnected(Boolean(data.connected));
+      setGithubLogin(data.githubLogin || "");
+    } catch {
+      setGithubConnected(false);
+      setGithubLogin("");
+    } finally {
+      setGithubLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    checkGitHubConnection();
+
+    const params = new URLSearchParams(window.location.search);
+    const githubStatus = params.get("github");
+
+    if (githubStatus === "connected") {
+      setGithubMessage("GitHub connected successfully!");
+    } else if (githubStatus) {
+      setGithubMessage(
+        "GitHub connection failed. Please try again."
+      );
+    }
+
+    if (githubStatus) {
+      window.history.replaceState(
+        {},
+        "",
+        window.location.pathname
+      );
+    }
+  }, [checkGitHubConnection]);
+
+  const disconnectGitHub = async () => {
+    setGithubDisconnecting(true);
+    setGithubMessage("");
+
+    try {
+      const response = await fetch(
+        "/api/integrations/github/disconnect",
+        { method: "POST" }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Unable to disconnect.");
+      }
+
+      setGithubConnected(false);
+      setGithubLogin("");
+      setGithubMessage("GitHub disconnected successfully!");
+    } catch (error) {
+      setGithubMessage(
+        error instanceof Error
+          ? error.message
+          : "Unable to disconnect GitHub."
+      );
+    } finally {
+      setGithubDisconnecting(false);
+    }
+  };
 
   const filteredPlugins = useMemo(() => {
     return plugins.filter((plugin) => {
