@@ -98,73 +98,68 @@ export default function GeneratedImage({
 
   return (
     <>
-      <div className="my-5 w-full max-w-xl overflow-hidden rounded-2xl border border-violet-400/20 bg-[#111426] shadow-xl shadow-black/20">
-        <button
-          type="button"
-          onClick={() => setIsExpanded(true)}
-          className="group relative block w-full overflow-hidden bg-black/20"
-          aria-label="View generated image in full screen"
-        >
-          <img
-            src={imageUrl}
-            alt={prompt || "AI generated image"}
-            className="block h-auto max-h-[520px] w-full object-contain transition duration-500 group-hover:scale-[1.02]"
-          />
+      <div className="relative my-5 w-full max-w-xl overflow-hidden">
+  {/* Small image action icons */}
+  <div className="absolute right-2 top-2 z-20 flex items-center gap-1.5">
+    {onEdit && (
+      <button
+        type="button"
+        onClick={() => onEdit(prompt)}
+        title="Edit or retouch image"
+        aria-label="Edit or retouch image"
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md transition hover:bg-violet-600"
+      >
+        <Icon name="edit" />
+      </button>
+    )}
 
-          <span className="absolute bottom-3 right-3 flex items-center gap-2 rounded-xl border border-white/15 bg-black/65 px-3 py-2 text-xs font-medium text-white opacity-0 backdrop-blur-md transition group-hover:opacity-100">
-            <Icon name="expand" />
-            Enlarge image
-          </span>
-        </button>
+    {onRegenerate && (
+      <button
+        type="button"
+        onClick={onRegenerate}
+        title="Generate another version"
+        aria-label="Generate another version"
+        className="flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md transition hover:bg-white/20"
+      >
+        <Icon name="refresh" />
+      </button>
+    )}
 
-        <div className="flex items-center justify-between gap-3 border-t border-white/[0.07] px-3 py-3">
-          <span className="text-xs font-medium text-slate-400">
-            Created with ZENTRIX
-          </span>
+    <button
+      type="button"
+      onClick={downloadImage}
+      title="Download image"
+      aria-label="Download image"
+      className="flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white backdrop-blur-md transition hover:bg-cyan-600"
+    >
+      <Icon name="download" />
+    </button>
+  </div>
 
-          <div className="flex items-center gap-1.5">
-            {onEdit && (
-              <button
-                type="button"
-                onClick={() => onEdit(prompt)}
-                title="Retouch image"
-                aria-label="Retouch image"
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-violet-400/20 bg-violet-500/10 text-violet-300 transition hover:border-violet-400/50 hover:bg-violet-500/20"
-              >
-                <Icon name="edit" />
-              </button>
-            )}
+  {/* Generated image */}
+  <button
+    type="button"
+    onClick={() => setIsExpanded(true)}
+    className="group relative block w-full overflow-hidden"
+    aria-label="View generated image in full screen"
+  >
+    <img
+      src={imageUrl}
+      alt={prompt || "AI generated image"}
+      className="block h-auto max-h-[520px] w-full object-contain transition duration-500 group-hover:scale-[1.02]"
+    />
 
-            {onRegenerate && (
-              <button
-                type="button"
-                onClick={onRegenerate}
-                title="Generate another version"
-                aria-label="Regenerate image"
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-white/10 bg-white/[0.04] text-slate-300 transition hover:bg-white/10 hover:text-white"
-              >
-                <Icon name="refresh" />
-              </button>
-            )}
+    <span className="absolute bottom-3 right-3 rounded-lg bg-black/60 px-2 py-1 text-xs text-white opacity-0 backdrop-blur-md transition group-hover:opacity-100">
+      Enlarge image
+    </span>
+  </button>
 
-            <button
-              type="button"
-              onClick={downloadImage}
-              title="Download image"
-              aria-label="Download image"
-              className="flex h-9 w-9 items-center justify-center rounded-xl border border-cyan-400/20 bg-cyan-500/10 text-cyan-300 transition hover:border-cyan-400/50 hover:bg-cyan-500/20"
-            >
-              <Icon name="download" />
-            </button>
-          </div>
-        </div>
-
-        {downloaded && (
-          <div className="border-t border-cyan-400/10 px-3 py-2 text-center text-xs text-cyan-300">
-            Your image download has started.
-          </div>
-        )}
-      </div>
+  {downloaded && (
+    <div className="py-2 text-xs text-cyan-300">
+      Your image download has started.
+    </div>
+  )}
+</div>
 
       {isExpanded && (
         <div
