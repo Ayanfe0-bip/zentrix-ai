@@ -352,7 +352,7 @@ export default function PluginsPage() {
         : "Not connected"
     : plugin.status}
 </span>
-
+</div>
                     <p className="mt-5 text-[10px] font-semibold uppercase tracking-[0.16em] text-violet-400">
                       {plugin.category}
                     </p>
