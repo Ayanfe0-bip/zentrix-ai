@@ -9,7 +9,7 @@ const GITHUB_API = "https://api.github.com";
 
 function githubHeaders(token: string) {
 return {
-Authorization: "Bearer ${token}",
+ Authorization: `Bearer ${token}`,
 Accept: "application/vnd.github+json",
 "X-GitHub-Api-Version": "2022-11-28",
 };
@@ -21,7 +21,7 @@ encoder: TextEncoder,
 event: Record<string, unknown>
 ) {
 controller.enqueue(
-encoder.encode("data: ${JSON.stringify(event)}\n\n")
+encoder.encode(`data: ${JSON.stringify(event)}\n\n`)
 );
 }
 
