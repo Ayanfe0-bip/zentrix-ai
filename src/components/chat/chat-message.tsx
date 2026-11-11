@@ -16,7 +16,9 @@ export interface ChatMessageData {
     prompt: string;
     mediaType: string;
   };
-  attachments?: string[];
+    attachments?: string[];
+  agentProgress?: string[];
+}
 }
 
 interface ChatMessageProps {
@@ -473,7 +475,25 @@ export default function ChatMessage({
   </div>
 ) : (
             <>
-              <MarkdownContent content={message.content} />
+  {message.agentProgress && message.agentProgress.length > 0 && (
+    <div className="mb-4 space-y-2 rounded-xl border border-violet-400/15 bg-violet-500/[0.05] p-3">
+      <div className="text-xs font-semibold text-violet-300">
+        ZENTRIX is working
+      </div>
+
+      {message.agentProgress.map((step, index) => (
+        <div
+          key={index}
+          className="flex items-start gap-2 text-xs text-slate-400"
+        >
+          <span className="mt-1 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400" />
+          <span>{step}</span>
+        </div>
+      ))}
+    </div>
+  )}
+
+  <MarkdownContent content={message.content} />
 
               {message.image && (
                 <StoredGeneratedImage
