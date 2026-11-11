@@ -114,7 +114,45 @@ export default function AppSidebar({
 }: AppSidebarProps) {
   const [profileName, setProfileName] = useState("ZENTRIX User");
   const [profileInitials, setProfileInitials] = useState("Z");
+  const [theme, setTheme] = useState<"dark" | "light">("dark");
 
+useEffect(() => {
+  const saved = localStorage.getItem("zentrix-ai-preferences");
+
+  if (saved) {
+    try {
+      const preferences = JSON.parse(saved);
+      setTheme(preferences.theme === "light" ? "light" : "dark");
+    } catch {
+      setTheme("dark");
+    }
+  }
+}, []);
+
+function toggleTheme() {
+  const nextTheme = theme === "dark" ? "light" : "dark";
+
+  setTheme(nextTheme);
+
+  document.documentElement.dataset.theme = nextTheme;
+  document.documentElement.style.colorScheme = nextTheme;
+
+  try {
+    const saved = localStorage.getItem("zentrix-ai-preferences");
+    const preferences = saved ? JSON.parse(saved) : {};
+
+    preferences.theme = nextTheme;
+
+    localStorage.setItem(
+      "zentrix-ai-preferences",
+      JSON.stringify(preferences)
+    );
+  } catch {
+    console.error("Unable to save theme preference.");
+  }
+
+  window.dispatchEvent(new Event("zentrix-theme-updated"));
+}
   useEffect(() => {
     function loadProfile(event?: Event) {
       try {
