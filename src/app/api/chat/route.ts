@@ -380,7 +380,7 @@ include_image_descriptions: includeImages,
     ? data.results
     : [];
 
-  return results
+  const textResults = results
     .map((item: {
       title?: string;
       url?: string;
