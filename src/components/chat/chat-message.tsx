@@ -426,10 +426,27 @@ export default function ChatMessage({
           }`}
         >
           {isUser ? (
-            <div className="whitespace-pre-wrap break-words">
-              {message.content}
-            </div>
-          ) : (
+  <div className="space-y-3">
+    {message.attachments && message.attachments.length > 0 && (
+      <div className="flex flex-wrap gap-2">
+        {message.attachments.map((src, index) => (
+          <img
+            key={index}
+            src={src}
+            alt={`Uploaded image ${index + 1}`}
+            className="max-h-72 max-w-full rounded-xl border border-white/10 object-contain"
+          />
+        ))}
+      </div>
+    )}
+
+    {message.content && (
+      <div className="whitespace-pre-wrap break-words">
+        {message.content}
+      </div>
+    )}
+  </div>
+) : (
             <>
               <MarkdownContent content={message.content} />
 
