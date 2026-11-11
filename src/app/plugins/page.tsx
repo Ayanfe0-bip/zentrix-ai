@@ -173,8 +173,8 @@ export default function PluginsPage() {
 
                 <div className="mt-7 flex flex-wrap gap-3">
                   <div className="rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3">
-                    <p className="text-xl font-bold text-white">10</p>
-                    <p className="text-[10px] text-slate-400">Planned Plugins</p>
+                    <p className="text-xl font-bold text-white">12</p>
+                     <p className="text-[10px] text-slate-400">Integrations & Tools</p>
                   </div>
 
                   <div className="rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3">
