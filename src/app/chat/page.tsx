@@ -263,10 +263,18 @@ export default function ChatPage() {
 
   /* SEND MESSAGE */
 
-  async function handleSend(message: string) {
+  async function handleSend(
+  message: string,
+  images: string[] = []
+) {
     if (isGenerating || !storageReady) return;
 
-    const imageRequest = isImageGenerationRequest(message);
+    const imageEditRequest =
+  images.length > 0 &&
+  /\b(edit|change|transform|replace|remove|retouch|enhance|modify|redesign|background|recolor|restore)\b/i.test(message);
+
+const imageRequest =
+  isImageGenerationRequest(message) || imageEditRequest;
 
     let conversationId = activeChatId;
 
@@ -399,10 +407,11 @@ export default function ChatPage() {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              prompt: message,
-              resolution: "768",
-              aspectRatio: "1:1",
-            }),
+  prompt: message,
+  resolution: "768",
+  aspectRatio: "1:1",
+  images,
+}),
             signal: controller.signal,
           }
         );
