@@ -30,7 +30,7 @@ async function createAgnesVideo(
   const payload: Record<string, unknown> = {
     model: AGNES_MODEL,
     prompt,
-    mode: imageDataUrl ? "img2video" : "text",
+    mode: imageDataUrl ? "keyframe" : "text",
     seconds: String(seconds),
     size: "720P",
     aspect_ratio: aspectRatio,
