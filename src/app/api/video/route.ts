@@ -265,105 +265,107 @@ async function createMagicHourVideo(
 }
 
 export async function POST(request: NextRequest) {
-  try {
-    const agnesKey = process.env.AGNES_API_KEY;
-    const magicHourKey = process.env.MAGIC_HOUR_API_KEY;
+try {
+const agnesKey = process.env.AGNES_API_KEY;
+const magicHourKey = process.env.MAGIC_HOUR_API_KEY;
 
-    if (!agnesKey) {
-      return jsonError("Agnes AI API key is missing.", 503);
-    }
+if (!agnesKey) {
+  return jsonError("Agnes AI API key is missing.", 503);
+}
 
-    const body = await request.json();
+const body = await request.json();
 
-    const prompt =
-      typeof body.prompt === "string"
-        ? body.prompt.trim()
-        : "";
+const prompt =
+  typeof body.prompt === "string"
+    ? body.prompt.trim()
+    : "";
 
-    if (!prompt) {
-      return jsonError("Please enter a video description.", 400);
-    }
+if (!prompt) {
+  return jsonError("Please enter a video description.", 400);
+}
 
-    if (prompt.length > 3000) {
-      return jsonError("Video description is too long.", 400);
-    }
+if (prompt.length > 3000) {
+  return jsonError("Video description is too long.", 400);
+}
 
-    const seconds = Math.min(
-      12,
-      Math.max(4, Number(body.seconds) || 5)
+const seconds = Math.min(
+  12,
+  Math.max(4, Number(body.seconds) || 5)
+);
+
+const allowedRatios = [
+  "16:9",
+  "9:16",
+  "1:1",
+  "4:3",
+  "3:4",
+  "21:9",
+];
+
+const aspectRatio = allowedRatios.includes(body.aspectRatio)
+  ? body.aspectRatio
+  : "16:9";
+
+let imageDataUrl: string | undefined;
+let imageBuffer: Buffer | undefined;
+let mimeType = "image/jpeg";
+
+if (body.imageDataUrl) {
+  if (typeof body.imageDataUrl !== "string") {
+    return jsonError("Invalid image upload.", 400);
+  }
+
+  const match = body.imageDataUrl.match(
+    /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/
+  );
+
+  if (!match) {
+    return jsonError(
+      "Please upload a JPG, PNG, or WebP image.",
+      400
     );
+  }
 
-    const allowedRatios = [
-      "16:9",
-      "9:16",
-      "1:1",
-      "4:3",
-      "3:4",
-      "21:9",
-    ];
+  mimeType = match[1];
+  imageBuffer = Buffer.from(match[2], "base64");
 
-    const aspectRatio = allowedRatios.includes(body.aspectRatio)
-      ? body.aspectRatio
-      : "16:9";
-
-    let imageDataUrl: string | undefined;
-    let imageBuffer: Buffer | undefined;
-    let mimeType = "image/jpeg";
-
-    if (body.imageDataUrl) {
-      if (typeof body.imageDataUrl !== "string") {
-        return jsonError("Invalid image upload.", 400);
-      }
-
-      const match = body.imageDataUrl.match(
-        /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/
-      );
-
-      if (!match) {
-        return jsonError(
-          "Please upload a JPG, PNG, or WebP image.",
-          400
-        );
-      }
-
-      mimeType = match[1];
-
-      imageBuffer = Buffer.from(match[2], "base64");
-
-      if (imageBuffer.length > 3 * 1024 * 1024) {
-        return jsonError(
-          "Please upload an image smaller than 3MB.",
-          400
-        );
-      }
-
-      imageDataUrl = body.imageDataUrl;
-    }
-
-    const agnes = await createAgnesVideo(
-      agnesKey,
-      prompt,
-      seconds,
-      aspectRatio,
-      imageDataUrl
+  if (imageBuffer.length > 3 * 1024 * 1024) {
+    return jsonError(
+      "Please upload an image smaller than 3MB.",
+      400
     );
+  }
 
-    if (agnes.success) {
-      return NextResponse.json({
-        success: true,
-        videoId: agnes.videoId,
-        provider: "agnes",
-        status: agnes.status,
-      });
-    }
+  imageDataUrl = body.imageDataUrl;
+}
 
-    console.error("Agnes video error:", agnes.message);
+// Try Agnes AI first.
+const agnes = await createAgnesVideo(
+  agnesKey,
+  prompt,
+  seconds,
+  aspectRatio,
+  imageDataUrl
+);
 
-    if (!isQueueFull(agnes.message)) {
-      return jsonError(agnes.message, 502);
-    }
+if (agnes.success) {
+  return NextResponse.json({
+    success: true,
+    videoId: agnes.videoId,
+    provider: "agnes",
+    status: agnes.status,
+  });
+}
 
-    if (
+console.error("Agnes video error:", agnes.message);
+
+// Only use Magic Hour when Agnes reports a full queue.
+if (!isQueueFull(agnes.message)) {
+  return jsonError(agnes.message, 502);
+}
+
+// Check whether backup is enabled.
+if (
   process.env.MAGIC_HOUR_FREE_FALLBACK_ENABLED !== "true"
 ) {
   return jsonError(
@@ -373,9 +375,13 @@ export async function POST(request: NextRequest) {
 }
 
 if (!magicHourKey) {
-  return jsonError("Magic Hour API key is missing.", 503);
+  return jsonError(
+    "Magic Hour API key is missing.",
+    503
+  );
 }
 
+// IMAGE-TO-VIDEO FALLBACK
 if (imageBuffer) {
   const magicHour = await createMagicHourVideo(
     magicHourKey,
@@ -398,6 +404,7 @@ if (imageBuffer) {
   });
 }
 
+// TEXT-TO-VIDEO FALLBACK
 const magicHour = await createMagicHourTextVideo(
   magicHourKey,
   prompt,
@@ -415,71 +422,19 @@ return NextResponse.json({
   provider: "magic-hour",
   status: magicHour.status,
 });
-    }
-          const magicHour = await createMagicHourTextVideo(
-      magicHourKey,
-      prompt,
-      seconds,
-      aspectRatio
-    );
 
-    if (!magicHour.success) {
-      return jsonError(magicHour.message, 502);
-    }
+} catch (error) {
+console.error("ZENTRIX video creation error:", error);
 
-    return NextResponse.json({
-      success: true,
-      videoId: `mh:${magicHour.videoId}`,
-      provider: "magic-hour",
-      status: magicHour.status,
-    });
-    }
+return jsonError(
+  error instanceof Error
+    ? error.message
+    : "Unable to start video generation.",
+  500
+);
 
-    if (!magicHourKey) {
-      return jsonError(
-        "Magic Hour API key is missing.",
-        503
-      );
-    }
-
-    if (imageBuffer) {
-      const magicHour = await createMagicHourVideo(
-        magicHourKey,
-        prompt,
-        seconds,
-        aspectRatio,
-        imageBuffer,
-        mimeType
-      );
-
-      if (!magicHour.success) {
-        return jsonError(magicHour.message, 502);
-      }
-
-      return NextResponse.json({
-        success: true,
-        videoId: `mh:${magicHour.videoId}`,
-        provider: "magic-hour",
-        status: magicHour.status,
-      });
-    }
-
-    return jsonError(
-      "Agnes AI's queue is full. Please try again later.",
-      503
-    );
-  } catch (error) {
-    console.error("ZENTRIX video creation error:", error);
-
-    return jsonError(
-      error instanceof Error
-        ? error.message
-        : "Unable to start video generation.",
-      500
-    );
-  }
 }
-
+}
 export async function GET(request: NextRequest) {
   try {
     const videoId = request.nextUrl.searchParams.get("video_id");
