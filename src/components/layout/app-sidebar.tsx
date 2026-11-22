@@ -29,6 +29,7 @@ const navigationItems = [
   { label: "Code Assistant", href: "/code", icon: "code" },
   { label: "Code Generation Studio", href: "/studio", icon: "code" },
     { label: "AI App Builder", href: "/app-builder", icon: "cpu" },
+  { label: "AI Video Generator", href: "/video", icon: "video" },
   { label: "Plugin Marketplace", href: "/plugins", icon: "plugin" },
   { label: "Saved Conversations", href: "/saved", icon: "bookmark" },
 ];
