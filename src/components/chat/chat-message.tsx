@@ -56,7 +56,6 @@ function extractSources(content: string) {
 }
 
 function renderInline(text: string): ReactNode[] {
-  // Normalize escaped dollar signs from AI responses.
   const normalized = text.replace(/\\\$/g, "$");
 
   const mathPattern =
@@ -64,7 +63,7 @@ function renderInline(text: string): ReactNode[] {
 
   const parts = normalized.split(mathPattern);
 
-  return parts.map((part, index) => {
+  return parts.flatMap((part, partIndex) => {
     const isDisplay =
       (part.startsWith("$$") && part.endsWith("$$")) ||
       (part.startsWith("\\[") && part.endsWith("\\]"));
@@ -97,62 +96,78 @@ function renderInline(text: string): ReactNode[] {
           output: "htmlAndMathml",
         });
 
-        return (
+        return [
           <span
-            key={index}
+            key={`math-${partIndex}`}
             className={
               isDisplay
                 ? "my-3 block max-w-full overflow-x-auto py-2"
                 : "inline-block align-middle"
             }
             dangerouslySetInnerHTML={{ __html: html }}
-          />
-        );
+          />,
+        ];
       } catch {
-        return (
-          <span key={index}>
+        return [
+          <span key={`math-${partIndex}`}>
             {expression}
-          </span>
-        );
+          </span>,
+        ];
       }
     }
-    if (
-      (part.startsWith("***") && part.endsWith("***") && part.length > 6) ||
-      (part.startsWith("___") && part.endsWith("___") && part.length > 6)
-    ) {
-      return (
-        <strong key={index} className="font-semibold text-[var(--foreground)]">
-          <em>{part.slice(3, -3)}</em>
-        </strong>
-      );
-    }
-    if (part.startsWith("**") && part.endsWith("**")) {
-      return (
-        <strong key={index} className="font-semibold text-[var(--foreground)]">
-          {part.slice(2, -2)}
-        </strong>
-      );
-    }
 
-    if (part.startsWith("`") && part.endsWith("`")) {
-      return (
-        <code
-          key={index}
-          className="rounded-md bg-[var(--surface-light)] px-1.5 py-0.5 font-mono text-[var(--secondary)]"
-        >
-          {part.slice(1, -1)}
-        </code>
-      );
-    }
+    const markdownPattern =
+      /(\*\*\*[^*\n]+?\*\*\*|___[^_\n]+?___|\*\*[^*\n]+?\*\*|__[^_\n]+?__|`[^`\n]+`|\*[^*\n]+\*|_[^_\n]+_)/g;
 
-    if (part.startsWith("*") && part.endsWith("*")) {
-      return <em key={index}>{part.slice(1, -1)}</em>;
-    }
+    const segments = part.split(markdownPattern);
 
-    return <span key={index}>{part}</span>;
+    return segments.map((segment, segmentIndex) => {
+      const key = `${partIndex}-${segmentIndex}`;
+
+      if (
+        (segment.startsWith("***") && segment.endsWith("***")) ||
+        (segment.startsWith("___") && segment.endsWith("___"))
+      ) {
+        return (
+          <strong key={key} className="font-semibold text-[var(--foreground)]">
+            <em>{segment.slice(3, -3)}</em>
+          </strong>
+        );
+      }
+
+      if (
+        (segment.startsWith("**") && segment.endsWith("**")) ||
+        (segment.startsWith("__") && segment.endsWith("__"))
+      ) {
+        return (
+          <strong key={key} className="font-semibold text-[var(--foreground)]">
+            {segment.slice(2, -2)}
+          </strong>
+        );
+      }
+
+      if (segment.startsWith("`") && segment.endsWith("`")) {
+        return (
+          <code
+            key={key}
+            className="rounded-md bg-[var(--surface-light)] px-1.5 py-0.5 font-mono text-[var(--secondary)]"
+          >
+            {segment.slice(1, -1)}
+          </code>
+        );
+      }
+
+      if (
+        (segment.startsWith("*") && segment.endsWith("*")) ||
+        (segment.startsWith("_") && segment.endsWith("_"))
+      ) {
+        return <em key={key}>{segment.slice(1, -1)}</em>;
+      }
+
+      return <span key={key}>{segment}</span>;
+    });
   });
 }
-    
 
 function MarkdownContent({ content }: { content: string }) {
   const lines = content.replace(/\r\n/g, "\n").split("\n");
