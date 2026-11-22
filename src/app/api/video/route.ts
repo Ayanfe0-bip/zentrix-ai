@@ -16,7 +16,7 @@ function jsonError(message: string, status = 500) {
   );
 }
 
-function isAgnesQueueFull(message: string) {
+function isQueueFull(message: string) {
   return message.toLowerCase().includes("queue is full");
 }
 
@@ -24,34 +24,43 @@ async function createAgnesVideo(
   apiKey: string,
   prompt: string,
   seconds: number,
-  aspectRatio: string
+  aspectRatio: string,
+  imageDataUrl?: string
 ) {
+  const payload: Record<string, unknown> = {
+    model: AGNES_MODEL,
+    prompt,
+    mode: imageDataUrl ? "img2video" : "text",
+    seconds: String(seconds),
+    size: "720P",
+    aspect_ratio: aspectRatio,
+    n: 1,
+  };
+
+  if (imageDataUrl) {
+    payload.first_frame = imageDataUrl;
+  }
+
   const response = await fetch(`${AGNES_URL}/v1/videos`, {
     method: "POST",
     headers: {
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      model: AGNES_MODEL,
-      prompt,
-      mode: "text",
-      seconds: String(seconds),
-      size: "720P",
-      aspect_ratio: aspectRatio,
-    }),
+    body: JSON.stringify(payload),
     cache: "no-store",
   });
 
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    const message =
-      data?.error?.message ||
-      data?.message ||
-      "Agnes AI could not start video generation.";
-
-    return { success: false as const, message };
+    return {
+      success: false as const,
+      message:
+        data?.error?.message ||
+        data?.message ||
+        "Agnes AI could not start video generation.",
+    };
   }
 
   const videoId = data?.video_id || data?.id;
@@ -70,14 +79,25 @@ async function createAgnesVideo(
   };
 }
 
-async function createMagicHourVideo(
+async function uploadMagicHourImage(
   apiKey: string,
-  prompt: string,
-  seconds: number,
-  aspectRatio: string
+  imageBuffer: Buffer,
+  mimeType: string
 ) {
-  const response = await fetch(
-    `${MAGIC_HOUR_URL}/v1/text-to-video`,
+  const extensions: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
+
+  const extension = extensions[mimeType];
+
+  if (!extension) {
+    throw new Error("Please use a JPG, PNG, or WebP image.");
+  }
+
+  const uploadResponse = await fetch(
+    `${MAGIC_HOUR_URL}/v1/files/upload-urls`,
     {
       method: "POST",
       headers: {
@@ -85,15 +105,81 @@ async function createMagicHourVideo(
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        name: "ZENTRIX AI Video",
+        items: [
+          {
+            type: "image",
+            extension,
+          },
+        ],
+      }),
+      cache: "no-store",
+    }
+  );
+
+  const uploadData = await uploadResponse.json().catch(() => null);
+
+  if (!uploadResponse.ok) {
+    throw new Error(
+      uploadData?.message ||
+      "Magic Hour could not prepare the image upload."
+    );
+  }
+
+  const uploadItem = uploadData?.items?.[0];
+
+  if (!uploadItem?.upload_url || !uploadItem?.file_path) {
+    throw new Error("Magic Hour returned an invalid upload URL.");
+  }
+
+  const putResponse = await fetch(uploadItem.upload_url, {
+    method: "PUT",
+    headers: {
+      "Content-Type": mimeType,
+    },
+    body: new Uint8Array(imageBuffer),
+  });
+
+  if (!putResponse.ok) {
+    throw new Error("Unable to upload your image to Magic Hour.");
+  }
+
+  return uploadItem.file_path;
+}
+
+async function createMagicHourVideo(
+  apiKey: string,
+  prompt: string,
+  seconds: number,
+  aspectRatio: string,
+  imageBuffer: Buffer,
+  mimeType: string
+) {
+  const filePath = await uploadMagicHourImage(
+    apiKey,
+    imageBuffer,
+    mimeType
+  );
+
+  const response = await fetch(
+    `${MAGIC_HOUR_URL}/v1/image-to-video`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: "ZENTRIX AI Image-to-Video",
         end_seconds: Math.min(5, Math.max(3, seconds)),
+        resolution: "480p",
+        model: MAGIC_HOUR_MODEL,
         aspect_ratio: aspectRatio,
+        assets: {
+          image_file_path: filePath,
+        },
         style: {
           prompt,
         },
-        model: MAGIC_HOUR_MODEL,
-        resolution: "480p",
-        audio: true,
       }),
       cache: "no-store",
     }
@@ -102,34 +188,26 @@ async function createMagicHourVideo(
   const data = await response.json().catch(() => null);
 
   if (!response.ok) {
-    console.error(
-      "Magic Hour creation error:",
-      response.status,
-      data
-    );
-
     return {
       success: false as const,
       message:
         data?.message ||
         data?.error?.message ||
-        (response.status === 402
-          ? "Magic Hour credits are insufficient. No further attempt was made."
-          : "Magic Hour could not start video generation."),
+        "Magic Hour could not start image-to-video generation.",
     };
   }
 
   if (!data?.id) {
     return {
       success: false as const,
-      message: "Magic Hour returned no video project ID.",
+      message: "Magic Hour returned no project ID.",
     };
   }
 
   return {
     success: true as const,
     videoId: data.id,
-    status: "queued",
+    status: data.status || "queued",
   };
 }
 
@@ -175,12 +253,46 @@ export async function POST(request: NextRequest) {
       ? body.aspectRatio
       : "16:9";
 
-    // Try Agnes first.
+    let imageDataUrl: string | undefined;
+    let imageBuffer: Buffer | undefined;
+    let mimeType = "image/jpeg";
+
+    if (body.imageDataUrl) {
+      if (typeof body.imageDataUrl !== "string") {
+        return jsonError("Invalid image upload.", 400);
+      }
+
+      const match = body.imageDataUrl.match(
+        /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/
+      );
+
+      if (!match) {
+        return jsonError(
+          "Please upload a JPG, PNG, or WebP image.",
+          400
+        );
+      }
+
+      mimeType = match[1];
+
+      imageBuffer = Buffer.from(match[2], "base64");
+
+      if (imageBuffer.length > 3 * 1024 * 1024) {
+        return jsonError(
+          "Please upload an image smaller than 3MB.",
+          400
+        );
+      }
+
+      imageDataUrl = body.imageDataUrl;
+    }
+
     const agnes = await createAgnesVideo(
       agnesKey,
       prompt,
       seconds,
-      aspectRatio
+      aspectRatio,
+      imageDataUrl
     );
 
     if (agnes.success) {
@@ -194,51 +306,59 @@ export async function POST(request: NextRequest) {
 
     console.error("Agnes video error:", agnes.message);
 
-    // Only consider Magic Hour when Agnes reports a full queue.
-    if (!isAgnesQueueFull(agnes.message)) {
+    if (!isQueueFull(agnes.message)) {
       return jsonError(agnes.message, 502);
     }
 
-    // Backup is disabled unless explicitly enabled in Vercel.
     if (
       process.env.MAGIC_HOUR_FREE_FALLBACK_ENABLED !== "true"
     ) {
       return jsonError(
-        "Agnes AI's queue is full. The Magic Hour backup is currently disabled.",
+        "Agnes AI's queue is full. Magic Hour backup is disabled.",
         503
       );
     }
 
     if (!magicHourKey) {
       return jsonError(
-        "Agnes AI's queue is full and the Magic Hour API key is missing.",
+        "Magic Hour API key is missing.",
         503
       );
     }
 
-    // Submit to Magic Hour.
-    const magicHour = await createMagicHourVideo(
-      magicHourKey,
-      prompt,
-      seconds,
-      aspectRatio
-    );
+    if (imageBuffer) {
+      const magicHour = await createMagicHourVideo(
+        magicHourKey,
+        prompt,
+        seconds,
+        aspectRatio,
+        imageBuffer,
+        mimeType
+      );
 
-    if (!magicHour.success) {
-      return jsonError(magicHour.message, 502);
+      if (!magicHour.success) {
+        return jsonError(magicHour.message, 502);
+      }
+
+      return NextResponse.json({
+        success: true,
+        videoId: `mh:${magicHour.videoId}`,
+        provider: "magic-hour",
+        status: magicHour.status,
+      });
     }
 
-    return NextResponse.json({
-      success: true,
-      videoId: `mh:${magicHour.videoId}`,
-      provider: "magic-hour",
-      status: magicHour.status,
-    });
+    return jsonError(
+      "Agnes AI's queue is full. Please try again later.",
+      503
+    );
   } catch (error) {
     console.error("ZENTRIX video creation error:", error);
 
     return jsonError(
-      "Unable to start video generation.",
+      error instanceof Error
+        ? error.message
+        : "Unable to start video generation.",
       500
     );
   }
@@ -252,22 +372,14 @@ export async function GET(request: NextRequest) {
       return jsonError("A valid video ID is required.", 400);
     }
 
-    // Magic Hour status check.
     if (videoId.startsWith("mh:")) {
       const apiKey = process.env.MAGIC_HOUR_API_KEY;
 
       if (!apiKey) {
-        return jsonError(
-          "Magic Hour API key is missing.",
-          503
-        );
+        return jsonError("Magic Hour API key is missing.", 503);
       }
 
       const projectId = videoId.slice(3);
-
-      if (!projectId) {
-        return jsonError("Invalid Magic Hour project ID.", 400);
-      }
 
       const response = await fetch(
         `${MAGIC_HOUR_URL}/v1/video-projects/${encodeURIComponent(projectId)}`,
@@ -317,7 +429,6 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Agnes status check.
     const apiKey = process.env.AGNES_API_KEY;
 
     if (!apiKey) {
@@ -361,4 +472,4 @@ export async function GET(request: NextRequest) {
       500
     );
   }
-    }
+          }
