@@ -7,7 +7,7 @@ export default function manifest(): MetadataRoute.Manifest {
     short_name: "ZENTRIX",
     description:
       "Your intelligent companion for creativity, productivity, learning and software development.",
-    start_url: "/",
+    start_url: "/chat",
     scope: "/",
     display: "standalone",
     orientation: "portrait",
