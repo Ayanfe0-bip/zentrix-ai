@@ -116,7 +116,16 @@ function renderInline(text: string): ReactNode[] {
         );
       }
     }
-
+    if (
+      (part.startsWith("***") && part.endsWith("***") && part.length > 6) ||
+      (part.startsWith("___") && part.endsWith("___") && part.length > 6)
+    ) {
+      return (
+        <strong key={index} className="font-semibold text-[var(--foreground)]">
+          <em>{part.slice(3, -3)}</em>
+        </strong>
+      );
+    }
     if (part.startsWith("**") && part.endsWith("**")) {
       return (
         <strong key={index} className="font-semibold text-[var(--foreground)]">
@@ -231,6 +240,16 @@ function MarkdownContent({ content }: { content: string }) {
       index++;
       continue;
   }
+        if (/^(?:\*{3,}|-{3,}|_{3,})$/.test(line)) {
+      elements.push(
+        <hr
+          key={`rule-${index}`}
+          className="my-5 border-0 border-t border-[var(--border)]"
+        />
+      );
+      index++;
+      continue;
+        }
     if (line.startsWith("#")) {
       const headingText = line.replace(/^#+\s*/, "");
       const level = line.match(/^#+/)?.[0].length || 1;
@@ -361,6 +380,10 @@ export default function ChatMessage({
 
       // Remove Markdown headings
       .replace(/^#{1,6}\s+/gm, "")
+
+            // Remove combined bold and italic formatting
+      .replace(/\*\*\*([\s\S]*?)\*\*\*/g, "$1")
+      .replace(/___([\s\S]*?)___/g, "$1")
 
       // Remove bold formatting
       .replace(/\*\*([\s\S]*?)\*\*/g, "$1")
