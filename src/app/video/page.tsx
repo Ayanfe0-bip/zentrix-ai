@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-
+import { useEffect, useRef, useState } from "react";
 type VideoResult = {
   success: boolean;
   videoId?: string;
@@ -217,6 +217,23 @@ export default function VideoGeneratorPage() {
 
   return (
     <main className="min-h-screen bg-[var(--background)] px-4 py-8 text-[var(--foreground)] sm:px-8">
+            <div className="mx-auto mb-5 max-w-3xl">
+        <Link
+          href="/chat"
+          className="inline-flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-sm font-semibold text-[var(--foreground)] transition hover:border-violet-500 hover:text-violet-400"
+        >
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="h-5 w-5"
+          >
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          Back to Dashboard
+        </Link>
+      </div>
       <div className="mx-auto max-w-3xl">
 
         <div className="mb-8">
