@@ -495,4 +495,4 @@ export default function VideoGeneratorPage() {
       </div>
     </main>
   );
-            }
+}
