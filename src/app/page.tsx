@@ -13,7 +13,16 @@ import {
   Zap,
 } from "lucide-react";
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (user) {
+    redirect("/chat");
+  }
+
   return (
     <main className="welcome-page">
       <div className="ambient-glow violet" />
