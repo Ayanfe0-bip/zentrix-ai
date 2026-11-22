@@ -789,4 +789,201 @@ export default async function Home() {
           font-size: 11px;
         }
 
-        .
+                .footer-brand {
+          color: #211a32;
+        }
+
+        @keyframes robot-float {
+          0%,100% {
+            transform: translateY(0);
+          }
+
+          50% {
+            transform: translateY(-12px);
+          }
+        }
+
+        @keyframes aurora-fade-up {
+          from {
+            opacity: 0;
+            transform: translateY(22px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @media(max-width:900px) {
+          .hero {
+            grid-template-columns: 1fr;
+            text-align: center;
+            padding-top: 70px;
+          }
+
+          .hero-description {
+            margin-left: auto;
+            margin-right: auto;
+          }
+
+          .hero-actions,
+          .hero-trust,
+          .hero-stats {
+            justify-content: center;
+          }
+
+          .hero-visual {
+            height: 480px;
+          }
+
+          .feature-grid {
+            grid-template-columns: repeat(2,1fr);
+          }
+        }
+
+        @media(max-width:550px) {
+          .navbar {
+            height: 72px;
+            padding: 0 17px;
+          }
+
+          .brand {
+            font-size: 17px;
+          }
+
+          .brand-icon {
+            width: 37px;
+            height: 37px;
+          }
+
+          .nav-links {
+            display: none;
+          }
+
+          .nav-button {
+            padding: 10px 12px;
+            font-size: 11px;
+          }
+
+          .hero {
+            padding: 60px 18px 35px;
+          }
+
+          .hero h1 {
+            font-size: 42px;
+            letter-spacing: -2px;
+          }
+
+          .hero-description {
+            font-size: 14px;
+          }
+
+          .hero-stats {
+            gap: 12px;
+          }
+
+          .hero-stats span {
+            font-size: 9px;
+          }
+
+          .hero-visual {
+            height: 360px;
+          }
+
+          .robot-halo {
+            width: 240px;
+            height: 240px;
+          }
+
+          .orbit-one {
+            width: 210px;
+            height: 210px;
+          }
+
+          .orbit-two {
+            width: 290px;
+            height: 290px;
+          }
+
+          .orbit-three {
+            width: 340px;
+            height: 340px;
+          }
+
+          .floating-card {
+            padding: 9px 10px;
+            font-size: 9px;
+            gap: 6px;
+          }
+
+          .card-left {
+            left: -4px;
+          }
+
+          .card-right {
+            right: -4px;
+          }
+
+          .features-section {
+            padding: 75px 17px;
+          }
+
+          .feature-grid {
+            grid-template-columns: 1fr;
+            gap: 13px;
+          }
+
+          .feature-card {
+            padding: 22px;
+          }
+
+          .about-section {
+            padding: 75px 17px;
+          }
+
+          .about-card {
+            padding: 40px 18px;
+          }
+
+          .footer {
+            justify-content: center;
+            text-align: center;
+            flex-direction: column;
+          }
+        }
+
+        @media(prefers-reduced-motion:reduce) {
+          .hero-content,
+          .hero-visual {
+            animation: none;
+          }
+
+          .feature-card,
+          .primary-button,
+          .secondary-button {
+            transition: none;
+          }
+        }
+      `}</style>
+    </main>
+  );
+}
+
+function Feature({
+  icon,
+  title,
+  description,
+}: {
+  icon: ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <article className="feature-card">
+      <div className="feature-icon">{icon}</div>
+      <h3>{title}</h3>
+      <p>{description}</p>
+    </article>
+  );
+}
