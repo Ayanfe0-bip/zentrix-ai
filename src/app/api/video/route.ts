@@ -145,7 +145,60 @@ async function uploadMagicHourImage(
 
   return uploadItem.file_path;
 }
+async function createMagicHourTextVideo(
+  apiKey: string,
+  prompt: string,
+  seconds: number,
+  aspectRatio: string
+) {
+  const response = await fetch(
+    `${MAGIC_HOUR_URL}/v1/text-to-video`,
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        name: "ZENTRIX AI Text-to-Video",
+        end_seconds: seconds,
+        resolution: "480p",
+        model: MAGIC_HOUR_MODEL,
+        aspect_ratio: aspectRatio,
+        audio: true,
+        style: {
+          prompt,
+        },
+      }),
+      cache: "no-store",
+    }
+  );
 
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    return {
+      success: false as const,
+      message:
+        data?.message ||
+        data?.error?.message ||
+        "Magic Hour could not start text-to-video generation.",
+    };
+  }
+
+  if (!data?.id) {
+    return {
+      success: false as const,
+      message: "Magic Hour returned no project ID.",
+    };
+  }
+
+  return {
+    success: true as const,
+    videoId: data.id,
+    status: data.status || "queued",
+  };
+      }
 async function createMagicHourVideo(
   apiKey: string,
   prompt: string,
