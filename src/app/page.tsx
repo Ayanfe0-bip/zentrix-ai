@@ -597,18 +597,33 @@ export default async function Home() {
           border-color: rgba(181,138,255,.15);
         }
 
-        .robot-image-container {
-          position: relative;
-          z-index: 2;
-          width: 100%;
-          height: 100%;
-          max-width: 550px;
-        }
+    .robot-image-container {
+  position: relative;
+  z-index: 2;
+  width: 112%;
+  height: 112%;
+  max-width: 620px;
+  margin-left: -6%;
+  background: transparent;
+}
 
-        .robot-image {
-          object-fit: contain;
-          filter: drop-shadow(0 20px 35px rgba(137,87,229,.16));
-        }
+.robot-image {
+  object-fit: contain;
+  mix-blend-mode: multiply;
+  filter: drop-shadow(0 25px 45px rgba(137,87,229,.20));
+  -webkit-mask-image: radial-gradient(
+    ellipse 68% 72% at 50% 48%,
+    #000 58%,
+    rgba(0,0,0,.92) 70%,
+    transparent 100%
+  );
+  mask-image: radial-gradient(
+    ellipse 68% 72% at 50% 48%,
+    #000 58%,
+    rgba(0,0,0,.92) 70%,
+    transparent 100%
+  );
+}
 
         .floating-card {
           position: absolute;
