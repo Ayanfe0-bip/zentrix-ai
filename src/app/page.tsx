@@ -130,7 +130,7 @@ export default async function Home() {
 
           <div className="robot-image-container">
             <Image
-              src="/images/zentrix-ai-robot.webp"
+              src="/images/zentrix-ai-robot.png"
               alt="ZENTRIX AI futuristic intelligent robot"
               fill
               priority
@@ -609,20 +609,8 @@ export default async function Home() {
 
 .robot-image {
   object-fit: contain;
-  mix-blend-mode: multiply;
+  object-position: center;
   filter: drop-shadow(0 25px 45px rgba(137,87,229,.20));
-  -webkit-mask-image: radial-gradient(
-    ellipse 68% 72% at 50% 48%,
-    #000 58%,
-    rgba(0,0,0,.92) 70%,
-    transparent 100%
-  );
-  mask-image: radial-gradient(
-    ellipse 68% 72% at 50% 48%,
-    #000 58%,
-    rgba(0,0,0,.92) 70%,
-    transparent 100%
-  );
 }
 
         .floating-card {
