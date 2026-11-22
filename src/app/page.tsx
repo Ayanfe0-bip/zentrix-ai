@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -7,14 +8,19 @@ import {
   ArrowUpRight,
   BrainCircuit,
   Code2,
-  Command,
   MessageSquare,
   Sparkles,
   Zap,
+  Image as ImageIcon,
+  Video,
+  Globe,
+  Command,
+  ShieldCheck,
 } from "lucide-react";
 
 export default async function Home() {
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -25,14 +31,20 @@ export default async function Home() {
 
   return (
     <main className="welcome-page">
-      <div className="ambient-glow violet" />
-      <div className="ambient-glow cyan" />
+      <div className="aurora-background">
+        <div className="aurora-blob blob-one" />
+        <div className="aurora-blob blob-two" />
+        <div className="aurora-blob blob-three" />
+      </div>
+
+      {/* NAVIGATION */}
 
       <nav className="navbar">
         <Link href="/" className="brand">
           <div className="brand-icon">
             <BrainCircuit size={25} />
           </div>
+
           <span>
             ZENTRIX<span className="brand-ai"> AI</span>
           </span>
@@ -44,15 +56,18 @@ export default async function Home() {
         </div>
 
         <Link href="/chat" className="nav-button">
-          Get Started <ArrowUpRight size={16} />
+          Get Started
+          <ArrowUpRight size={17} />
         </Link>
       </nav>
+
+      {/* HERO */}
 
       <section className="hero" id="start">
         <div className="hero-content">
           <div className="status-badge">
             <span className="status-dot" />
-            THE NEXT GENERATION OF AI
+            YOUR INTELLIGENCE, REIMAGINED
           </div>
 
           <h1>
@@ -76,57 +91,93 @@ export default async function Home() {
               <ArrowRight size={19} />
             </Link>
 
-            <a href="#about" className="secondary-button">
-              Discover More
+            <a href="#features" className="secondary-button">
+              Discover Features
             </a>
           </div>
 
           <div className="hero-trust">
             <div className="trust-icon">
-              <Sparkles size={17} />
+              <ShieldCheck size={19} />
             </div>
-            <span>Intelligence. Creativity. Possibility.</span>
+
+            <span>
+              Intelligence. Creativity. Possibility.
+            </span>
+          </div>
+
+          <div className="hero-stats">
+            <div>
+              <strong>AI</strong>
+              <span>Intelligent assistance</span>
+            </div>
+
+            <div className="stat-divider" />
+
+            <div>
+              <strong>∞</strong>
+              <span>Ideas without limits</span>
+            </div>
+
+            <div className="stat-divider" />
+
+            <div>
+              <strong>1</strong>
+              <span>Powerful workspace</span>
+            </div>
           </div>
         </div>
 
-        <div className="hero-visual">
-          <div className="orbit orbit-one" />
-          <div className="orbit orbit-two" />
-          <div className="orbit orbit-three" />
+        {/* ROBOT VISUAL */}
 
-          <div className="neural-core">
-            <div className="core-inner">
-              <BrainCircuit size={76} strokeWidth={1.2} />
-            </div>
+        <div className="hero-visual">
+          <div className="robot-halo" />
+
+          <div className="robot-orbit orbit-one" />
+          <div className="robot-orbit orbit-two" />
+          <div className="robot-orbit orbit-three" />
+
+          <div className="robot-image-container">
+            <Image
+              src="/images/zentrix-ai-robot.webp"
+              alt="ZENTRIX AI futuristic intelligent robot"
+              fill
+              priority
+              unoptimized
+              sizes="(max-width: 768px) 90vw, 550px"
+              className="robot-image"
+            />
           </div>
 
           <div className="floating-card card-top">
-            <Sparkles size={17} />
+            <Sparkles size={18} />
             <span>Creative Intelligence</span>
           </div>
 
           <div className="floating-card card-left">
-            <Code2 size={17} />
+            <Code2 size={18} />
             <span>Code Assistant</span>
           </div>
 
           <div className="floating-card card-right">
-            <MessageSquare size={17} />
+            <MessageSquare size={18} />
             <span>Smart Conversations</span>
           </div>
 
           <div className="floating-card card-bottom">
-            <Zap size={17} />
+            <Zap size={18} />
             <span>Next-Level Thinking</span>
           </div>
-
-          <div className="visual-glow" />
         </div>
       </section>
 
+      {/* FEATURES */}
+
       <section className="features-section" id="features">
         <div className="section-heading">
-          <span>ONE INTELLIGENT PLATFORM</span>
+          <span className="eyebrow">
+            ONE INTELLIGENT PLATFORM
+          </span>
 
           <h2>
             More than a chatbot.
@@ -143,65 +194,92 @@ export default async function Home() {
 
         <div className="feature-grid">
           <Feature
-            icon={<MessageSquare size={23} />}
+            icon={<MessageSquare size={24} />}
             title="Smart Conversations"
             description="Engage in natural conversations and explore ideas with an intelligent AI companion."
           />
 
           <Feature
-            icon={<Code2 size={23} />}
+            icon={<Code2 size={24} />}
             title="Code Assistant"
             description="Write, understand, debug and improve code in a dedicated programming workspace."
           />
 
           <Feature
-            icon={<BrainCircuit size={23} />}
+            icon={<BrainCircuit size={24} />}
             title="Intelligent Models"
             description="Choose from supported AI models to power different tasks and experiences."
           />
 
           <Feature
-            icon={<Sparkles size={23} />}
-            title="Creative Thinking"
-            description="Bring your imagination to life with assistance for writing, learning and innovation."
+            icon={<Sparkles size={24} />}
+            title="Creative Intelligence"
+            description="Bring your imagination to life with AI-powered creative experiences."
+          />
+
+          <Feature
+            icon={<ImageIcon size={24} />}
+            title="Image Creation"
+            description="Explore visual creativity and bring your ideas to life."
+          />
+
+          <Feature
+            icon={<Video size={24} />}
+            title="AI Video Studio"
+            description="Transform creative prompts into exciting video experiences."
+          />
+
+          <Feature
+            icon={<Globe size={24} />}
+            title="Live Web Search"
+            description="Explore information and discover useful knowledge from across the web."
+          />
+
+          <Feature
+            icon={<Zap size={24} />}
+            title="AI App Builder"
+            description="Turn your ideas into applications with intelligent building assistance."
           />
         </div>
       </section>
 
+      {/* ABOUT */}
+
       <section className="about-section" id="about">
-        <div className="about-icon">
-          <Command size={30} />
-        </div>
+        <div className="about-card">
+          <div className="about-icon">
+            <Command size={31} />
+          </div>
 
-        <span>BUILT FOR WHAT&apos;S NEXT</span>
-
-        <h2>
-          Your ideas deserve
-          <br />
-          <span className="gradient-text">
-            a powerful companion.
+          <span className="eyebrow">
+            BUILT FOR WHAT'S NEXT
           </span>
-        </h2>
 
-        <p>
-          ZENTRIX AI is being developed by Ayanfe Innovation
-          Labs Limited to make intelligent technology more
-          accessible, useful and inspiring.
-        </p>
+          <h2>
+            Your ideas deserve
+            <br />
+            <span className="gradient-text">
+              a powerful companion.
+            </span>
+          </h2>
 
-        <Link href="/chat" className="primary-button about-button">
-          Start Exploring
-          <ArrowRight size={18} />
-        </Link>
+          <p>
+            ZENTRIX AI is developed by Ayanfe Innovation Labs
+            Limited to make intelligent technology more
+            accessible, useful and inspiring.
+          </p>
 
-        <div className="coming-soon">
-          <span className="status-dot" />
-          EXPLORE THE ZENTRIX EXPERIENCE
+          <Link href="/chat" className="primary-button">
+            Start Exploring
+            <ArrowRight size={18} />
+          </Link>
         </div>
       </section>
 
+      {/* FOOTER */}
+
       <footer className="footer">
-        <Link href="/" className="brand">
+        <Link href="/" className="brand footer-brand">
           <div className="brand-icon small">
             <BrainCircuit size={19} />
           </div>
@@ -211,32 +289,79 @@ export default async function Home() {
           </span>
         </Link>
 
-        <p>Think Beyond. Build Without Limits.</p>
+        <p>
+          Think Beyond. Build Without Limits.
+        </p>
 
         <span>
           © {new Date().getFullYear()} Ayanfe Innovation Labs Limited.
         </span>
       </footer>
 
+      {/* PAGE DESIGN */}
+
       <style>{`
         .welcome-page {
           position: relative;
           min-height: 100vh;
           overflow: hidden;
-          background: #080b18;
+          isolation: isolate;
+          background: #fcfaff;
+          color: #211a32;
+          font-family: "DM Sans", sans-serif;
+        }
+
+        .aurora-background {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+          pointer-events: none;
+          z-index: -1;
+        }
+
+        .aurora-blob {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(100px);
+          opacity: .35;
+        }
+
+        .blob-one {
+          width: 450px;
+          height: 450px;
+          top: -180px;
+          right: -100px;
+          background: #d9c4ff;
+        }
+
+        .blob-two {
+          width: 400px;
+          height: 400px;
+          top: 400px;
+          left: -180px;
+          background: #eadfff;
+        }
+
+        .blob-three {
+          width: 350px;
+          height: 350px;
+          bottom: 100px;
+          right: -100px;
+          background: #cbb1ff;
+          opacity: .2;
         }
 
         .navbar {
           position: relative;
-          z-index: 5;
-          max-width: 1250px;
+          z-index: 10;
+          max-width: 1280px;
           height: 85px;
           margin: auto;
           padding: 0 35px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          border-bottom: 1px solid rgba(255,255,255,.06);
+          border-bottom: 1px solid rgba(137,87,229,.1);
         }
 
         .brand {
@@ -254,30 +379,31 @@ export default async function Home() {
           height: 43px;
           display: grid;
           place-items: center;
-          border-radius: 13px;
-          color: #c4b5fd;
-          background: linear-gradient(135deg,#6d28d9,#164e9b);
-          box-shadow: 0 0 25px rgba(139,92,246,.25);
+          border-radius: 14px;
+          color: white;
+          background: linear-gradient(135deg,#8957e5,#b58aff);
+          box-shadow: 0 8px 25px rgba(137,87,229,.25);
         }
 
         .brand-icon.small {
-          width: 34px;
-          height: 34px;
+          width: 35px;
+          height: 35px;
         }
 
         .brand-ai {
-          color: #a78bfa;
+          color: #8957e5;
         }
 
         .nav-links {
           display: flex;
-          gap: 35px;
-          color: #a3a8c0;
+          gap: 36px;
+          color: #777087;
           font-size: 14px;
+          font-weight: 500;
         }
 
         .nav-links a:hover {
-          color: white;
+          color: #8957e5;
         }
 
         .nav-button,
@@ -286,75 +412,81 @@ export default async function Home() {
           align-items: center;
           justify-content: center;
           gap: 10px;
-          background: linear-gradient(110deg,#7c3aed,#5b21b6);
-          border: 1px solid rgba(196,181,253,.25);
-          border-radius: 12px;
-          padding: 12px 19px;
-          font-weight: 600;
+          color: white;
+          background: linear-gradient(110deg,#8957e5,#a477f5);
+          border: 1px solid rgba(137,87,229,.2);
+          border-radius: 13px;
+          padding: 13px 20px;
+          font-weight: 700;
           font-size: 13px;
-          box-shadow: 0 8px 30px rgba(109,40,217,.2);
+          box-shadow: 0 8px 25px rgba(137,87,229,.2);
           transition: .3s ease;
         }
 
         .nav-button:hover,
         .primary-button:hover {
           transform: translateY(-3px);
-          box-shadow: 0 12px 35px rgba(139,92,246,.35);
+          box-shadow: 0 13px 32px rgba(137,87,229,.3);
         }
 
         .hero {
           position: relative;
-          z-index: 1;
-          max-width: 1250px;
-          min-height: 640px;
+          max-width: 1280px;
+          min-height: 690px;
           margin: auto;
-          padding: 90px 35px;
+          padding: 75px 35px;
           display: grid;
           grid-template-columns: 1.05fr .95fr;
           align-items: center;
-          gap: 30px;
+          gap: 20px;
         }
 
         .hero-content {
-          animation: fade-up .8s ease both;
+          animation: aurora-fade-up .8s ease both;
         }
 
-        .status-badge,
-        .coming-soon {
+        .status-badge {
           display: inline-flex;
           align-items: center;
           gap: 10px;
-          padding: 10px 14px;
-          border: 1px solid rgba(167,139,250,.22);
-          background: rgba(139,92,246,.08);
-          color: #c4b5fd;
+          padding: 10px 15px;
+          border: 1px solid rgba(137,87,229,.17);
+          background: rgba(255,255,255,.75);
+          color: #8957e5;
           border-radius: 30px;
           font-size: 10px;
-          font-weight: 700;
-          letter-spacing: 1.5px;
+          font-weight: 800;
+          letter-spacing: 1.4px;
         }
 
         .status-dot {
-          width: 7px;
-          height: 7px;
+          width: 8px;
+          height: 8px;
           border-radius: 50%;
-          background: #22d3ee;
-          box-shadow: 0 0 12px #22d3ee;
+          background: #8957e5;
+          box-shadow: 0 0 12px rgba(137,87,229,.6);
         }
 
         .hero h1 {
           margin-top: 30px;
           font-family: "Space Grotesk", sans-serif;
-          font-size: clamp(43px,5.5vw,72px);
+          font-size: clamp(43px,5.3vw,72px);
           line-height: 1.12;
           letter-spacing: -3px;
           font-weight: 700;
         }
 
+        .gradient-text {
+          background: linear-gradient(110deg,#8957e5,#b58aff,#d5a9ff);
+          -webkit-background-clip: text;
+          background-clip: text;
+          color: transparent;
+        }
+
         .hero-description {
-          max-width: 530px;
+          max-width: 535px;
           margin-top: 25px;
-          color: #a0a6bf;
+          color: #777087;
           font-size: 16px;
           line-height: 1.9;
         }
@@ -367,7 +499,7 @@ export default async function Home() {
         }
 
         .primary-button {
-          padding: 16px 22px;
+          padding: 16px 23px;
           font-size: 14px;
         }
 
@@ -376,171 +508,197 @@ export default async function Home() {
           align-items: center;
           justify-content: center;
           padding: 15px 22px;
-          border: 1px solid rgba(255,255,255,.12);
-          border-radius: 12px;
-          color: #d6d9e8;
+          border: 1px solid rgba(137,87,229,.2);
+          background: rgba(255,255,255,.7);
+          border-radius: 13px;
+          color: #8957e5;
           font-size: 14px;
+          font-weight: 600;
           transition: .3s;
         }
 
         .secondary-button:hover {
-          border-color: #8b5cf6;
-          background: rgba(139,92,246,.08);
+          border-color: #8957e5;
+          background: #f3eeff;
         }
 
         .hero-trust {
           display: flex;
           align-items: center;
           gap: 11px;
-          margin-top: 42px;
-          color: #858ca8;
+          margin-top: 35px;
+          color: #777087;
           font-size: 12px;
         }
 
         .trust-icon {
-          color: #22d3ee;
+          color: #8957e5;
+        }
+
+        .hero-stats {
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          margin-top: 38px;
+        }
+
+        .hero-stats div:not(.stat-divider) {
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+        }
+
+        .hero-stats strong {
+          color: #8957e5;
+          font-size: 21px;
+          font-family: "Space Grotesk",sans-serif;
+        }
+
+        .hero-stats span {
+          color: #89839a;
+          font-size: 10px;
+        }
+
+        .stat-divider {
+          width: 1px;
+          height: 35px;
+          background: rgba(137,87,229,.2);
         }
 
         .hero-visual {
           position: relative;
-          height: 470px;
+          height: 530px;
           display: grid;
           place-items: center;
-          animation: float 7s ease-in-out infinite;
+          animation: robot-float 7s ease-in-out infinite;
         }
 
-        .neural-core {
-          position: relative;
-          z-index: 2;
-          width: 190px;
-          height: 190px;
-          display: grid;
-          place-items: center;
-          border-radius: 50%;
-          background: radial-gradient(circle,#272052 0%,#11152c 65%,#080b18 100%);
-          border: 1px solid rgba(167,139,250,.5);
-          box-shadow: 0 0 70px rgba(139,92,246,.35),
-                      inset 0 0 35px rgba(34,211,238,.08);
-        }
-
-        .core-inner {
-          color: #c4b5fd;
-          filter: drop-shadow(0 0 18px #8b5cf6);
-        }
-
-        .orbit {
+        .robot-halo {
           position: absolute;
-          border: 1px solid rgba(139,92,246,.2);
+          width: 340px;
+          height: 340px;
+          border-radius: 50%;
+          background: radial-gradient(circle,#e8d9ff 0%,#f5efff 48%,transparent 72%);
+          filter: blur(10px);
+        }
+
+        .robot-orbit {
+          position: absolute;
+          border: 1px solid rgba(137,87,229,.15);
           border-radius: 50%;
           pointer-events: none;
         }
 
         .orbit-one {
-          width: 280px;
-          height: 280px;
+          width: 300px;
+          height: 300px;
         }
 
         .orbit-two {
-          width: 380px;
-          height: 380px;
-          border-color: rgba(34,211,238,.15);
+          width: 400px;
+          height: 400px;
+          border-style: dashed;
+          border-color: rgba(137,87,229,.18);
         }
 
         .orbit-three {
-          width: 455px;
-          height: 455px;
-          border-style: dashed;
-          border-color: rgba(167,139,250,.12);
+          width: 490px;
+          height: 490px;
+          border-color: rgba(181,138,255,.15);
+        }
+
+        .robot-image-container {
+          position: relative;
+          z-index: 2;
+          width: 100%;
+          height: 100%;
+          max-width: 550px;
+        }
+
+        .robot-image {
+          object-fit: contain;
+          filter: drop-shadow(0 20px 35px rgba(137,87,229,.16));
         }
 
         .floating-card {
           position: absolute;
-          z-index: 3;
+          z-index: 4;
           display: flex;
           align-items: center;
           gap: 10px;
           padding: 13px 15px;
-          border-radius: 12px;
-          border: 1px solid rgba(255,255,255,.1);
-          background: rgba(17,23,45,.85);
-          backdrop-filter: blur(15px);
-          color: #d8d5f7;
+          border-radius: 14px;
+          border: 1px solid rgba(137,87,229,.14);
+          background: rgba(255,255,255,.82);
+          backdrop-filter: blur(18px);
+          color: #514665;
           font-size: 11px;
-          box-shadow: 0 10px 35px rgba(0,0,0,.25);
+          font-weight: 600;
+          box-shadow: 0 12px 30px rgba(81,57,120,.09);
         }
 
         .floating-card svg {
-          color: #a78bfa;
+          color: #8957e5;
         }
 
         .card-top {
-          top: 22px;
+          top: 28px;
           left: 50%;
           transform: translateX(-50%);
         }
 
         .card-left {
-          left: -2px;
+          left: 0;
           top: 43%;
         }
 
         .card-right {
-          right: -2px;
+          right: 0;
           top: 43%;
         }
 
         .card-bottom {
-          bottom: 22px;
+          bottom: 28px;
           left: 50%;
           transform: translateX(-50%);
         }
 
-        .visual-glow {
-          position: absolute;
-          width: 280px;
-          height: 280px;
-          background: #6d28d9;
-          filter: blur(130px);
-          opacity: .22;
-        }
-
         .features-section {
           position: relative;
-          z-index: 1;
           padding: 100px 35px;
-          border-top: 1px solid rgba(255,255,255,.06);
-          background: rgba(15,19,38,.55);
+          background: rgba(243,238,255,.55);
+          border-top: 1px solid rgba(137,87,229,.1);
+          border-bottom: 1px solid rgba(137,87,229,.1);
         }
 
         .section-heading {
           text-align: center;
         }
 
-        .section-heading > span,
-        .about-section > span {
-          color: #22d3ee;
+        .eyebrow {
+          color: #8957e5;
           font-size: 10px;
-          font-weight: 700;
+          font-weight: 800;
           letter-spacing: 2px;
         }
 
         .section-heading h2,
         .about-section h2 {
           margin-top: 18px;
-          font-family: "Space Grotesk", sans-serif;
-          font-size: clamp(32px,4vw,48px);
+          font-family: "Space Grotesk",sans-serif;
+          font-size: clamp(32px,4vw,49px);
           line-height: 1.2;
           letter-spacing: -1.5px;
         }
 
         .section-heading p {
           margin-top: 15px;
-          color: #9298b3;
+          color: #777087;
           font-size: 14px;
         }
 
         .feature-grid {
-          max-width: 1100px;
+          max-width: 1120px;
           margin: 55px auto 0;
           display: grid;
           grid-template-columns: repeat(4,1fr);
@@ -549,45 +707,57 @@ export default async function Home() {
 
         .feature-card {
           padding: 26px 21px;
-          border: 1px solid rgba(255,255,255,.08);
-          background: rgba(17,23,45,.65);
-          border-radius: 18px;
-          transition: .3s;
+          border: 1px solid rgba(137,87,229,.12);
+          background: rgba(255,255,255,.88);
+          border-radius: 19px;
+          box-shadow: 0 8px 30px rgba(81,57,120,.035);
+          transition: .3s ease;
         }
 
         .feature-card:hover {
           transform: translateY(-6px);
-          border-color: rgba(139,92,246,.45);
-          box-shadow: 0 15px 40px rgba(0,0,0,.2);
+          border-color: rgba(137,87,229,.4);
+          box-shadow: 0 18px 40px rgba(137,87,229,.1);
         }
 
         .feature-icon {
-          width: 48px;
-          height: 48px;
+          width: 49px;
+          height: 49px;
           display: grid;
           place-items: center;
-          color: #c4b5fd;
-          border-radius: 14px;
-          background: rgba(139,92,246,.15);
+          color: #8957e5;
+          border-radius: 15px;
+          background: #f3eeff;
         }
 
         .feature-card h3 {
           margin-top: 22px;
-          font-size: 16px;
+          color: #302541;
+          font-size: 15px;
+          font-weight: 700;
         }
 
         .feature-card p {
           margin-top: 12px;
-          color: #9298b3;
+          color: #777087;
           font-size: 12px;
           line-height: 1.8;
         }
 
         .about-section {
           position: relative;
-          z-index: 1;
           padding: 110px 25px;
           text-align: center;
+        }
+
+        .about-card {
+          max-width: 780px;
+          margin: auto;
+          padding: 55px 25px;
+          border: 1px solid rgba(137,87,229,.14);
+          border-radius: 30px;
+          background: rgba(255,255,255,.8);
+          box-shadow: 0 20px 70px rgba(137,87,229,.07);
         }
 
         .about-icon {
@@ -596,48 +766,70 @@ export default async function Home() {
           display: grid;
           place-items: center;
           margin: 0 auto 25px;
-          color: #c4b5fd;
-          background: rgba(139,92,246,.13);
-          border: 1px solid rgba(139,92,246,.25);
+          color: white;
+          background: linear-gradient(135deg,#8957e5,#b58aff);
           border-radius: 20px;
+          box-shadow: 0 10px 30px rgba(137,87,229,.22);
         }
 
         .about-section p {
           max-width: 580px;
           margin: 22px auto;
-          color: #9298b3;
+          color: #777087;
           font-size: 14px;
           line-height: 1.9;
         }
 
-        .about-button {
+        .about-section .primary-button {
           margin-top: 10px;
-        }
-
-        .coming-soon {
-          margin-top: 25px;
         }
 
         .footer {
           position: relative;
-          z-index: 1;
           min-height: 100px;
           padding: 25px 35px;
-          border-top: 1px solid rgba(255,255,255,.07);
+          border-top: 1px solid rgba(137,87,229,.12);
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 20px;
           flex-wrap: wrap;
-          color: #858ca8;
+          background: rgba(255,255,255,.7);
+          color: #89839a;
           font-size: 11px;
         }
 
-        @media (max-width: 850px) {
+        .footer-brand {
+          color: #211a32;
+        }
+
+        @keyframes robot-float {
+          0%,100% {
+            transform: translateY(0);
+          }
+
+          50% {
+            transform: translateY(-12px);
+          }
+        }
+
+        @keyframes aurora-fade-up {
+          from {
+            opacity: 0;
+            transform: translateY(22px);
+          }
+
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+
+        @media(max-width:900px) {
           .hero {
             grid-template-columns: 1fr;
             text-align: center;
-            padding-top: 75px;
+            padding-top: 70px;
           }
 
           .hero-description {
@@ -646,12 +838,13 @@ export default async function Home() {
           }
 
           .hero-actions,
-          .hero-trust {
+          .hero-trust,
+          .hero-stats {
             justify-content: center;
           }
 
           .hero-visual {
-            height: 430px;
+            height: 480px;
           }
 
           .feature-grid {
@@ -659,7 +852,7 @@ export default async function Home() {
           }
         }
 
-        @media (max-width: 550px) {
+        @media(max-width:550px) {
           .navbar {
             height: 72px;
             padding: 0 17px;
@@ -670,8 +863,8 @@ export default async function Home() {
           }
 
           .brand-icon {
-            width: 36px;
-            height: 36px;
+            width: 37px;
+            height: 37px;
           }
 
           .nav-links {
@@ -684,11 +877,11 @@ export default async function Home() {
           }
 
           .hero {
-            padding: 65px 20px 45px;
+            padding: 60px 18px 35px;
           }
 
           .hero h1 {
-            font-size: 43px;
+            font-size: 42px;
             letter-spacing: -2px;
           }
 
@@ -696,22 +889,26 @@ export default async function Home() {
             font-size: 14px;
           }
 
+          .hero-stats {
+            gap: 12px;
+          }
+
+          .hero-stats span {
+            font-size: 9px;
+          }
+
           .hero-visual {
-            height: 340px;
+            height: 360px;
           }
 
-          .neural-core {
-            width: 145px;
-            height: 145px;
-          }
-
-          .core-inner svg {
-            width: 60px;
+          .robot-halo {
+            width: 240px;
+            height: 240px;
           }
 
           .orbit-one {
-            width: 220px;
-            height: 220px;
+            width: 210px;
+            height: 210px;
           }
 
           .orbit-two {
@@ -720,22 +917,22 @@ export default async function Home() {
           }
 
           .orbit-three {
-            width: 330px;
-            height: 330px;
+            width: 340px;
+            height: 340px;
           }
 
           .floating-card {
-            padding: 10px;
+            padding: 9px 10px;
             font-size: 9px;
             gap: 6px;
           }
 
           .card-left {
-            left: -5px;
+            left: -4px;
           }
 
           .card-right {
-            right: -5px;
+            right: -4px;
           }
 
           .features-section {
@@ -752,13 +949,30 @@ export default async function Home() {
           }
 
           .about-section {
-            padding: 80px 20px;
+            padding: 75px 17px;
+          }
+
+          .about-card {
+            padding: 40px 18px;
           }
 
           .footer {
             justify-content: center;
             text-align: center;
             flex-direction: column;
+          }
+        }
+
+        @media(prefers-reduced-motion:reduce) {
+          .hero-content,
+          .hero-visual {
+            animation: none;
+          }
+
+          .feature-card,
+          .primary-button,
+          .secondary-button {
+            transition: none;
           }
         }
       `}</style>
@@ -782,4 +996,4 @@ function Feature({
       <p>{description}</p>
     </article>
   );
-      }
+}
