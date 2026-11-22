@@ -198,7 +198,6 @@ async function createMagicHourTextVideo(
     videoId: data.id,
     status: data.status || "queued",
   };
-      }
 async function createMagicHourVideo(
   apiKey: string,
   prompt: string,
