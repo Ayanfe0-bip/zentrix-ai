@@ -37,14 +37,11 @@ export default async function Home() {
         <div className="aurora-blob blob-three" />
       </div>
 
-      {/* NAVIGATION */}
-
       <nav className="navbar">
         <Link href="/" className="brand">
           <div className="brand-icon">
             <BrainCircuit size={25} />
           </div>
-
           <span>
             ZENTRIX<span className="brand-ai"> AI</span>
           </span>
@@ -60,8 +57,6 @@ export default async function Home() {
           <ArrowUpRight size={17} />
         </Link>
       </nav>
-
-      {/* HERO */}
 
       <section className="hero" id="start">
         <div className="hero-content">
@@ -100,7 +95,6 @@ export default async function Home() {
             <div className="trust-icon">
               <ShieldCheck size={19} />
             </div>
-
             <span>
               Intelligence. Creativity. Possibility.
             </span>
@@ -128,11 +122,8 @@ export default async function Home() {
           </div>
         </div>
 
-        {/* ROBOT VISUAL */}
-
         <div className="hero-visual">
           <div className="robot-halo" />
-
           <div className="robot-orbit orbit-one" />
           <div className="robot-orbit orbit-two" />
           <div className="robot-orbit orbit-three" />
@@ -170,8 +161,6 @@ export default async function Home() {
           </div>
         </div>
       </section>
-
-      {/* FEATURES */}
 
       <section className="features-section" id="features">
         <div className="section-heading">
@@ -243,8 +232,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* ABOUT */}
-
       <section className="about-section" id="about">
         <div className="about-card">
           <div className="about-icon">
@@ -276,8 +263,6 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* FOOTER */}
-
       <footer className="footer">
         <Link href="/" className="brand footer-brand">
           <div className="brand-icon small">
@@ -298,15 +283,13 @@ export default async function Home() {
         </span>
       </footer>
 
-      {/* PAGE DESIGN */}
-
       <style>{`
         .welcome-page {
           position: relative;
           min-height: 100vh;
           overflow: hidden;
           isolation: isolate;
-          background: #fcfaff;
+          background: #f3f0e9;
           color: #211a32;
           font-family: "DM Sans", sans-serif;
         }
@@ -332,6 +315,7 @@ export default async function Home() {
           top: -180px;
           right: -100px;
           background: #d9c4ff;
+          opacity: .22;
         }
 
         .blob-two {
@@ -339,7 +323,8 @@ export default async function Home() {
           height: 400px;
           top: 400px;
           left: -180px;
-          background: #eadfff;
+          background: #e5dccc;
+          opacity: .25;
         }
 
         .blob-three {
@@ -347,8 +332,8 @@ export default async function Home() {
           height: 350px;
           bottom: 100px;
           right: -100px;
-          background: #cbb1ff;
-          opacity: .2;
+          background: #cbb8df;
+          opacity: .12;
         }
 
         .navbar {
@@ -451,7 +436,7 @@ export default async function Home() {
           gap: 10px;
           padding: 10px 15px;
           border: 1px solid rgba(137,87,229,.17);
-          background: rgba(255,255,255,.75);
+          background: rgba(249,246,239,.82);
           color: #8957e5;
           border-radius: 30px;
           font-size: 10px;
@@ -509,7 +494,7 @@ export default async function Home() {
           justify-content: center;
           padding: 15px 22px;
           border: 1px solid rgba(137,87,229,.2);
-          background: rgba(255,255,255,.7);
+          background: rgba(249,246,239,.82);
           border-radius: 13px;
           color: #8957e5;
           font-size: 14px;
@@ -519,7 +504,7 @@ export default async function Home() {
 
         .secondary-button:hover {
           border-color: #8957e5;
-          background: #f3eeff;
+          background: #eee7dc;
         }
 
         .hero-trust {
@@ -578,7 +563,12 @@ export default async function Home() {
           width: 340px;
           height: 340px;
           border-radius: 50%;
-          background: radial-gradient(circle,#e8d9ff 0%,#f5efff 48%,transparent 72%);
+          background: radial-gradient(
+            circle,
+            #e4d9e9 0%,
+            #eee8e3 48%,
+            transparent 72%
+          );
           filter: blur(10px);
         }
 
@@ -629,7 +619,7 @@ export default async function Home() {
           padding: 13px 15px;
           border-radius: 14px;
           border: 1px solid rgba(137,87,229,.14);
-          background: rgba(255,255,255,.82);
+          background: rgba(249,246,239,.86);
           backdrop-filter: blur(18px);
           color: #514665;
           font-size: 11px;
@@ -666,7 +656,7 @@ export default async function Home() {
         .features-section {
           position: relative;
           padding: 100px 35px;
-          background: rgba(243,238,255,.55);
+          background: rgba(236,228,216,.62);
           border-top: 1px solid rgba(137,87,229,.1);
           border-bottom: 1px solid rgba(137,87,229,.1);
         }
@@ -708,7 +698,7 @@ export default async function Home() {
         .feature-card {
           padding: 26px 21px;
           border: 1px solid rgba(137,87,229,.12);
-          background: rgba(255,255,255,.88);
+          background: rgba(249,246,239,.90);
           border-radius: 19px;
           box-shadow: 0 8px 30px rgba(81,57,120,.035);
           transition: .3s ease;
@@ -727,7 +717,7 @@ export default async function Home() {
           place-items: center;
           color: #8957e5;
           border-radius: 15px;
-          background: #f3eeff;
+          background: #eae1f0;
         }
 
         .feature-card h3 {
@@ -756,7 +746,7 @@ export default async function Home() {
           padding: 55px 25px;
           border: 1px solid rgba(137,87,229,.14);
           border-radius: 30px;
-          background: rgba(255,255,255,.8);
+          background: rgba(249,246,239,.86);
           box-shadow: 0 20px 70px rgba(137,87,229,.07);
         }
 
@@ -794,206 +784,9 @@ export default async function Home() {
           justify-content: space-between;
           gap: 20px;
           flex-wrap: wrap;
-          background: rgba(255,255,255,.7);
+          background: rgba(243,239,230,.85);
           color: #89839a;
           font-size: 11px;
         }
 
-        .footer-brand {
-          color: #211a32;
-        }
-
-        @keyframes robot-float {
-          0%,100% {
-            transform: translateY(0);
-          }
-
-          50% {
-            transform: translateY(-12px);
-          }
-        }
-
-        @keyframes aurora-fade-up {
-          from {
-            opacity: 0;
-            transform: translateY(22px);
-          }
-
-          to {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-
-        @media(max-width:900px) {
-          .hero {
-            grid-template-columns: 1fr;
-            text-align: center;
-            padding-top: 70px;
-          }
-
-          .hero-description {
-            margin-left: auto;
-            margin-right: auto;
-          }
-
-          .hero-actions,
-          .hero-trust,
-          .hero-stats {
-            justify-content: center;
-          }
-
-          .hero-visual {
-            height: 480px;
-          }
-
-          .feature-grid {
-            grid-template-columns: repeat(2,1fr);
-          }
-        }
-
-        @media(max-width:550px) {
-          .navbar {
-            height: 72px;
-            padding: 0 17px;
-          }
-
-          .brand {
-            font-size: 17px;
-          }
-
-          .brand-icon {
-            width: 37px;
-            height: 37px;
-          }
-
-          .nav-links {
-            display: none;
-          }
-
-          .nav-button {
-            padding: 10px 12px;
-            font-size: 11px;
-          }
-
-          .hero {
-            padding: 60px 18px 35px;
-          }
-
-          .hero h1 {
-            font-size: 42px;
-            letter-spacing: -2px;
-          }
-
-          .hero-description {
-            font-size: 14px;
-          }
-
-          .hero-stats {
-            gap: 12px;
-          }
-
-          .hero-stats span {
-            font-size: 9px;
-          }
-
-          .hero-visual {
-            height: 360px;
-          }
-
-          .robot-halo {
-            width: 240px;
-            height: 240px;
-          }
-
-          .orbit-one {
-            width: 210px;
-            height: 210px;
-          }
-
-          .orbit-two {
-            width: 290px;
-            height: 290px;
-          }
-
-          .orbit-three {
-            width: 340px;
-            height: 340px;
-          }
-
-          .floating-card {
-            padding: 9px 10px;
-            font-size: 9px;
-            gap: 6px;
-          }
-
-          .card-left {
-            left: -4px;
-          }
-
-          .card-right {
-            right: -4px;
-          }
-
-          .features-section {
-            padding: 75px 17px;
-          }
-
-          .feature-grid {
-            grid-template-columns: 1fr;
-            gap: 13px;
-          }
-
-          .feature-card {
-            padding: 22px;
-          }
-
-          .about-section {
-            padding: 75px 17px;
-          }
-
-          .about-card {
-            padding: 40px 18px;
-          }
-
-          .footer {
-            justify-content: center;
-            text-align: center;
-            flex-direction: column;
-          }
-        }
-
-        @media(prefers-reduced-motion:reduce) {
-          .hero-content,
-          .hero-visual {
-            animation: none;
-          }
-
-          .feature-card,
-          .primary-button,
-          .secondary-button {
-            transition: none;
-          }
-        }
-      `}</style>
-    </main>
-  );
-}
-
-function Feature({
-  icon,
-  title,
-  description,
-}: {
-  icon: ReactNode;
-  title: string;
-  description: string;
-}) {
-  return (
-    <article className="feature-card">
-      <div className="feature-icon">{icon}</div>
-      <h3>{title}</h3>
-      <p>{description}</p>
-    </article>
-  );
-}
+        .
