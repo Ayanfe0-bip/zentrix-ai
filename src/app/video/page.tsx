@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 type VideoResult = {
   success: boolean;
   videoId?: string;
+  provider?: string;
   status?: string;
   error?: string;
 };
@@ -19,6 +20,8 @@ type VideoStatus = {
 
 export default function VideoGeneratorPage() {
   const [prompt, setPrompt] = useState("");
+  const [imageDataUrl, setImageDataUrl] = useState("");
+  const [imageName, setImageName] = useState("");
   const [seconds, setSeconds] = useState("5");
   const [aspectRatio, setAspectRatio] = useState("16:9");
   const [loading, setLoading] = useState(false);
@@ -26,7 +29,9 @@ export default function VideoGeneratorPage() {
   const [status, setStatus] = useState("");
   const [videoUrl, setVideoUrl] = useState("");
   const [error, setError] = useState("");
+  const [provider, setProvider] = useState("");
 
+  const fileInput = useRef<HTMLInputElement>(null);
   const stopped = useRef(false);
 
   useEffect(() => {
@@ -34,6 +39,60 @@ export default function VideoGeneratorPage() {
       stopped.current = true;
     };
   }, []);
+
+  function handleImageUpload(
+    event: React.ChangeEvent<HTMLInputElement>
+  ) {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    setError("");
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      setError("Please select a JPG, PNG, or WebP image.");
+      event.target.value = "";
+      return;
+    }
+
+    if (file.size > 3 * 1024 * 1024) {
+      setError("Your image must be smaller than 3MB.");
+      event.target.value = "";
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setImageDataUrl(reader.result);
+        setImageName(file.name);
+        setVideoUrl("");
+        setProgress(0);
+      }
+    };
+
+    reader.onerror = () => {
+      setError("Unable to read your image. Please try again.");
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  function removeImage() {
+    setImageDataUrl("");
+    setImageName("");
+
+    if (fileInput.current) {
+      fileInput.current.value = "";
+    }
+  }
 
   async function generateVideo() {
     if (!prompt.trim() || loading) return;
@@ -43,6 +102,7 @@ export default function VideoGeneratorPage() {
     setError("");
     setVideoUrl("");
     setProgress(0);
+    setProvider("");
     setStatus("Starting video generation...");
 
     try {
@@ -55,6 +115,7 @@ export default function VideoGeneratorPage() {
           prompt: prompt.trim(),
           seconds: Number(seconds),
           aspectRatio,
+          ...(imageDataUrl ? { imageDataUrl } : {}),
         }),
       });
 
@@ -66,12 +127,15 @@ export default function VideoGeneratorPage() {
         );
       }
 
+      setProvider(result.provider || "agnes");
       setStatus("Your video is being created...");
 
       for (let attempt = 0; attempt < 120; attempt++) {
         if (stopped.current) return;
 
-        await new Promise((resolve) => setTimeout(resolve, 5000));
+        await new Promise((resolve) =>
+          setTimeout(resolve, 5000)
+        );
 
         if (stopped.current) return;
 
@@ -94,15 +158,23 @@ export default function VideoGeneratorPage() {
           Math.min(100, Math.max(0, currentProgress))
         );
 
-        const currentStatus = (data.status || "processing").toLowerCase();
+        const currentStatus = (
+          data.status || "processing"
+        ).toLowerCase();
 
         if (
-          ["completed", "complete", "success", "succeeded", "finished"].includes(
-            currentStatus
-          )
+          [
+            "completed",
+            "complete",
+            "success",
+            "succeeded",
+            "finished",
+          ].includes(currentStatus)
         ) {
           if (!data.videoUrl) {
-            throw new Error("Video finished, but no video link was returned.");
+            throw new Error(
+              "Video finished, but no video link was returned."
+            );
           }
 
           setVideoUrl(data.videoUrl);
@@ -112,18 +184,23 @@ export default function VideoGeneratorPage() {
         }
 
         if (
-          ["failed", "error", "cancelled", "canceled"].includes(
-            currentStatus
-          )
+          [
+            "failed",
+            "error",
+            "cancelled",
+            "canceled",
+          ].includes(currentStatus)
         ) {
-          throw new Error(data.error || "Video generation failed.");
+          throw new Error(
+            data.error || "Video generation failed."
+          );
         }
 
         setStatus("Generating your video...");
       }
 
       throw new Error(
-        "Video generation is taking longer than expected. Please try checking again later."
+        "Video generation is taking longer than expected. Please try again later."
       );
     } catch (err) {
       setError(
@@ -131,6 +208,7 @@ export default function VideoGeneratorPage() {
           ? err.message
           : "Something went wrong."
       );
+
       setStatus("");
     } finally {
       setLoading(false);
@@ -140,6 +218,7 @@ export default function VideoGeneratorPage() {
   return (
     <main className="min-h-screen bg-[var(--background)] px-4 py-8 text-[var(--foreground)] sm:px-8">
       <div className="mx-auto max-w-3xl">
+
         <div className="mb-8">
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-violet-400">
             ZENTRIX AI CREATIVE TOOLS
@@ -150,24 +229,105 @@ export default function VideoGeneratorPage() {
           </h1>
 
           <p className="mt-3 max-w-xl text-sm leading-7 text-slate-400">
-            Turn your imagination into videos. Describe the scene
-            you want and let ZENTRIX bring it to life.
+            Transform your imagination or photographs into
+            cinematic videos with ZENTRIX AI.
           </p>
         </div>
 
         <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface)] p-5 shadow-xl sm:p-7">
+
+          <div className="mb-6">
+            <h2 className="mb-3 text-sm font-semibold">
+              Upload an image
+              <span className="ml-2 font-normal text-slate-500">
+                Optional
+              </span>
+            </h2>
+
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleImageUpload}
+              disabled={loading}
+              className="hidden"
+            />
+
+            {imageDataUrl ? (
+              <div className="overflow-hidden rounded-2xl border border-violet-500/30 bg-[var(--background)] p-3">
+
+                <img
+                  src={imageDataUrl}
+                  alt="Uploaded image preview"
+                  className="max-h-80 w-full rounded-xl object-contain"
+                />
+
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
+                  <p className="max-w-[65%] truncate text-xs text-slate-400">
+                    {imageName}
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={removeImage}
+                    disabled={loading}
+                    className="rounded-lg border border-red-500/30 px-3 py-2 text-xs font-semibold text-red-400 hover:bg-red-500/10"
+                  >
+                    Remove image
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => fileInput.current?.click()}
+                disabled={loading}
+                className="flex w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[var(--border)] bg-[var(--background)] px-5 py-10 text-center transition hover:border-violet-500"
+              >
+                <span className="mb-3 text-4xl">
+                  🖼️
+                </span>
+
+                <span className="text-sm font-semibold">
+                  Upload an image
+                </span>
+
+                <span className="mt-2 text-xs text-slate-500">
+                  JPG, PNG or WebP · Maximum 3MB
+                </span>
+              </button>
+            )}
+
+            {imageDataUrl && (
+              <button
+                type="button"
+                onClick={() => fileInput.current?.click()}
+                disabled={loading}
+                className="mt-3 w-full rounded-xl border border-violet-500/30 px-4 py-3 text-sm font-semibold text-violet-400 hover:bg-violet-500/10"
+              >
+                Change image
+              </button>
+            )}
+          </div>
+
           <label
             htmlFor="video-prompt"
             className="mb-3 block text-sm font-semibold"
           >
-            Describe your video
+            {imageDataUrl
+              ? "Describe how the image should move"
+              : "Describe your video"}
           </label>
 
           <textarea
             id="video-prompt"
             value={prompt}
             onChange={(event) => setPrompt(event.target.value)}
-            placeholder="Example: A cinematic drone shot flying over a beautiful tropical beach at sunset, realistic lighting, gentle ocean waves..."
+            placeholder={
+              imageDataUrl
+                ? "Example: Make the person slowly turn around, smile naturally and walk towards the camera. Use cinematic camera movement..."
+                : "Example: A cinematic drone shot flying over a beautiful tropical beach at sunset..."
+            }
             maxLength={3000}
             rows={6}
             disabled={loading}
@@ -179,6 +339,7 @@ export default function VideoGeneratorPage() {
           </div>
 
           <div className="mt-6 grid gap-5 sm:grid-cols-2">
+
             <div>
               <label
                 htmlFor="video-duration"
@@ -190,15 +351,19 @@ export default function VideoGeneratorPage() {
               <select
                 id="video-duration"
                 value={seconds}
-                onChange={(event) => setSeconds(event.target.value)}
+                onChange={(event) =>
+                  setSeconds(event.target.value)
+                }
                 disabled={loading}
                 className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] p-3 text-sm outline-none focus:border-violet-500"
               >
-                {[4, 5, 6, 7, 8, 9, 10, 11, 12].map((value) => (
-                  <option key={value} value={value}>
-                    {value} seconds
-                  </option>
-                ))}
+                {[4, 5, 6, 7, 8, 9, 10, 11, 12].map(
+                  (value) => (
+                    <option key={value} value={value}>
+                      {value} seconds
+                    </option>
+                  )
+                )}
               </select>
             </div>
 
@@ -213,7 +378,9 @@ export default function VideoGeneratorPage() {
               <select
                 id="video-ratio"
                 value={aspectRatio}
-                onChange={(event) => setAspectRatio(event.target.value)}
+                onChange={(event) =>
+                  setAspectRatio(event.target.value)
+                }
                 disabled={loading}
                 className="w-full rounded-xl border border-[var(--border)] bg-[var(--background)] p-3 text-sm outline-none focus:border-violet-500"
               >
@@ -225,6 +392,7 @@ export default function VideoGeneratorPage() {
                 <option value="21:9">Cinematic (21:9)</option>
               </select>
             </div>
+
           </div>
 
           <button
@@ -239,7 +407,9 @@ export default function VideoGeneratorPage() {
                 Creating your video...
               </>
             ) : (
-              "Generate Video"
+              imageDataUrl
+                ? "Animate My Image"
+                : "Generate Video"
             )}
           </button>
 
@@ -267,9 +437,17 @@ export default function VideoGeneratorPage() {
 
           {videoUrl && (
             <div className="mt-7">
-              <h2 className="mb-4 text-lg font-bold text-emerald-400">
+
+              <h2 className="mb-2 text-lg font-bold text-emerald-400">
                 Your video is ready!
               </h2>
+
+              <p className="mb-4 text-xs text-slate-500">
+                Generated with{" "}
+                {provider === "magic-hour"
+                  ? "Magic Hour"
+                  : "Agnes AI"}
+              </p>
 
               <video
                 src={videoUrl}
@@ -287,14 +465,17 @@ export default function VideoGeneratorPage() {
               >
                 Preview / Download Video
               </a>
+
             </div>
           )}
+
         </section>
 
         <p className="mt-5 text-center text-xs leading-6 text-slate-500">
-          Powered by Agnes AI · Video generation may take several minutes.
+          Powered by Agnes AI · Magic Hour backup available.
         </p>
+
       </div>
     </main>
   );
-}
+            }
