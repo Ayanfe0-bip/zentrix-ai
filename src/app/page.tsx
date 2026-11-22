@@ -130,7 +130,7 @@ export default async function Home() {
 
           <div className="robot-image-container">
             <Image
-              src="/images/zentrix-ai-robot.png"
+              src="/images/zentrix-ai-robot-transparent.png"
               alt="ZENTRIX AI futuristic intelligent robot"
               fill
               priority
