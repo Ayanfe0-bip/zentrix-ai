@@ -370,6 +370,51 @@ export async function POST(request: NextRequest) {
     "Agnes AI's queue is full. Magic Hour backup is disabled.",
     503
   );
+}
+
+if (!magicHourKey) {
+  return jsonError("Magic Hour API key is missing.", 503);
+}
+
+if (imageBuffer) {
+  const magicHour = await createMagicHourVideo(
+    magicHourKey,
+    prompt,
+    seconds,
+    aspectRatio,
+    imageBuffer,
+    mimeType
+  );
+
+  if (!magicHour.success) {
+    return jsonError(magicHour.message, 502);
+  }
+
+  return NextResponse.json({
+    success: true,
+    videoId: `mh:${magicHour.videoId}`,
+    provider: "magic-hour",
+    status: magicHour.status,
+  });
+}
+
+const magicHour = await createMagicHourTextVideo(
+  magicHourKey,
+  prompt,
+  seconds,
+  aspectRatio
+);
+
+if (!magicHour.success) {
+  return jsonError(magicHour.message, 502);
+}
+
+return NextResponse.json({
+  success: true,
+  videoId: `mh:${magicHour.videoId}`,
+  provider: "magic-hour",
+  status: magicHour.status,
+});
     }
           const magicHour = await createMagicHourTextVideo(
       magicHourKey,
