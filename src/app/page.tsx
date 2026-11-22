@@ -252,7 +252,7 @@ export default async function Home() {
           </div>
 
           <span className="eyebrow">
-            BUILT FOR WHAT'S NEXT
+            BUILT FOR WHAT&apos;S NEXT
           </span>
 
           <h2>
