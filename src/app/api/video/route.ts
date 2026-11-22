@@ -366,10 +366,23 @@ export async function POST(request: NextRequest) {
     if (
       process.env.MAGIC_HOUR_FREE_FALLBACK_ENABLED !== "true"
     ) {
-      return jsonError(
-        "Agnes AI's queue is full. Magic Hour backup is disabled.",
-        503
-      );
+          const magicHour = await createMagicHourTextVideo(
+      magicHourKey,
+      prompt,
+      seconds,
+      aspectRatio
+    );
+
+    if (!magicHour.success) {
+      return jsonError(magicHour.message, 502);
+    }
+
+    return NextResponse.json({
+      success: true,
+      videoId: `mh:${magicHour.videoId}`,
+      provider: "magic-hour",
+      status: magicHour.status,
+    });
     }
 
     if (!magicHourKey) {
