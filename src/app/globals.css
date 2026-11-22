@@ -4,33 +4,59 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =========================================
+   ZENTRIX AI — AURORA GLASS DESIGN SYSTEM
+========================================= */
+
 :root {
-  color-scheme: dark;
-  --background: #080b18;
-  --foreground: #f5f5ff;
-  --surface: #101529;
-  --surface-light: #171d35;
-  --primary: #8b5cf6;
-  --primary-bright: #a78bfa;
-  --secondary: #22d3ee;
-  --muted: #9298b3;
-  --border: rgba(255, 255, 255, 0.09);
-  --glass: rgba(17, 23, 45, 0.72);
+  color-scheme: light;
+
+  --background: #fcfaff;
+  --foreground: #211a32;
+
+  --surface: #ffffff;
+  --surface-light: #f3eeff;
+
+  --primary: #8957e5;
+  --primary-bright: #a477f5;
+
+  --secondary: #b58aff;
+  --muted: #777087;
+
+  --border: rgba(137, 87, 229, 0.13);
+  --glass: rgba(255, 255, 255, 0.78);
+
+  --purple-glow: rgba(137, 87, 229, 0.16);
+  --lavender-glow: rgba(181, 138, 255, 0.18);
 }
 
-:root[data-theme="light"] {
-  color-scheme: light;
-  --background: #f5f6fc;
-  --foreground: #17152b;
-  --surface: #ffffff;
-  --surface-light: #ecebfa;
-  --primary: #7041d8;
-  --primary-bright: #8055e8;
-  --secondary: #0891b2;
-  --muted: #65647a;
-  --border: rgba(30, 25, 60, 0.12);
-  --glass: rgba(255, 255, 255, 0.88);
+/* Preserve the existing dark theme option */
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+
+  --background: #080b18;
+  --foreground: #f5f5ff;
+
+  --surface: #101529;
+  --surface-light: #171d35;
+
+  --primary: #8b5cf6;
+  --primary-bright: #a78bfa;
+
+  --secondary: #22d3ee;
+  --muted: #9298b3;
+
+  --border: rgba(255, 255, 255, 0.09);
+  --glass: rgba(17, 23, 45, 0.72);
+
+  --purple-glow: rgba(139, 92, 246, 0.18);
+  --lavender-glow: rgba(34, 211, 238, 0.12);
 }
+
+/* =========================================
+   GLOBAL RESET
+========================================= */
 
 * {
   box-sizing: border-box;
@@ -68,7 +94,7 @@ button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  outline: 2px solid var(--secondary);
+  outline: 2px solid var(--primary);
   outline-offset: 3px;
 }
 
@@ -78,9 +104,13 @@ a {
 }
 
 ::selection {
-  background: rgba(139, 92, 246, 0.4);
-  color: white;
+  background: rgba(137, 87, 229, 0.25);
+  color: #211a32;
 }
+
+/* =========================================
+   SCROLLBAR
+========================================= */
 
 ::-webkit-scrollbar {
   width: 7px;
@@ -91,24 +121,39 @@ a {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #62518e;
+  background: #c4a9f5;
   border-radius: 20px;
 }
 
-.glass {
-  background: var(--glass);
-  border: 1px solid var(--border);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb {
+  background: #62518e;
 }
 
+/* =========================================
+   GRADIENTS
+========================================= */
+
 .gradient-text {
+  background: linear-gradient(
+    110deg,
+    #8957e5 0%,
+    #b58aff 50%,
+    #e1c8ff 100%
+  );
+
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+:root[data-theme="dark"] .gradient-text {
   background: linear-gradient(
     100deg,
     #ffffff 0%,
     #a78bfa 45%,
     #22d3ee 100%
   );
+
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -117,41 +162,78 @@ a {
 .gradient-border {
   position: relative;
   border: 1px solid transparent;
+
   background:
     linear-gradient(var(--surface), var(--surface)) padding-box,
-    linear-gradient(120deg, #8b5cf6, #22d3ee) border-box;
+    linear-gradient(
+      120deg,
+      #8957e5,
+      #d5b9ff,
+      #b58aff
+    ) border-box;
+}
+
+/* =========================================
+   GLASS EFFECTS
+========================================= */
+
+.glass {
+  background: var(--glass);
+  border: 1px solid var(--border);
+
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 .glow-violet {
-  box-shadow: 0 0 45px rgba(139, 92, 246, 0.18);
+  box-shadow: 0 0 45px var(--purple-glow);
 }
 
 .glow-cyan {
-  box-shadow: 0 0 45px rgba(34, 211, 238, 0.14);
+  box-shadow: 0 0 45px var(--lavender-glow);
 }
+
+/* =========================================
+   AMBIENT BACKGROUND EFFECTS
+========================================= */
 
 .ambient-glow {
   position: fixed;
+
   width: 420px;
   height: 420px;
+
   border-radius: 50%;
   filter: blur(120px);
-  opacity: 0.13;
+
+  opacity: 0.15;
   pointer-events: none;
   z-index: 0;
 }
 
 .ambient-glow.violet {
-  background: #7c3aed;
+  background: #8957e5;
   top: -180px;
   left: -120px;
 }
 
 .ambient-glow.cyan {
-  background: #0891b2;
+  background: #d5b9ff;
   bottom: -200px;
   right: -150px;
 }
+
+:root[data-theme="dark"] .ambient-glow.violet {
+  background: #7c3aed;
+}
+
+:root[data-theme="dark"] .ambient-glow.cyan {
+  background: #0891b2;
+}
+
+/* =========================================
+   ANIMATIONS
+========================================= */
 
 @keyframes float {
   0%, 100% {
@@ -187,6 +269,18 @@ a {
   }
 }
 
+@keyframes aurora-pulse {
+  0%, 100% {
+    opacity: 0.55;
+    filter: blur(70px);
+  }
+
+  50% {
+    opacity: 0.9;
+    filter: blur(95px);
+  }
+}
+
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
@@ -199,7 +293,13 @@ a {
   animation: fade-up 0.7s ease-out both;
 }
 
-/* GLOBAL LIGHT THEME */
+.animate-aurora {
+  animation: aurora-pulse 7s ease-in-out infinite;
+}
+
+/* =========================================
+   LIGHT THEME COMPATIBILITY
+========================================= */
 
 :root[data-theme="light"] body {
   background: var(--background);
@@ -207,20 +307,8 @@ a {
 }
 
 :root[data-theme="light"] ::selection {
-  background: rgba(112, 65, 216, 0.25);
-  color: #17152b;
-}
-
-:root[data-theme="light"] .gradient-text {
-  background: linear-gradient(
-    100deg,
-    #39216f 0%,
-    #7041d8 50%,
-    #087e99 100%
-  );
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  background: rgba(137, 87, 229, 0.25);
+  color: #211a32;
 }
 
 :root[data-theme="light"] .glass {
@@ -228,7 +316,7 @@ a {
   border-color: var(--border);
 }
 
-/* Main dark workspace backgrounds */
+/* Existing dark workspace backgrounds */
 
 :root[data-theme="light"] [class*="bg-[#070817]"],
 :root[data-theme="light"] [class*="bg-[#080817]"],
@@ -237,70 +325,72 @@ a {
   background-color: var(--background) !important;
 }
 
-/* Dark translucent panels */
+/* Translucent panels */
 
 :root[data-theme="light"] [class*="bg-white/["] {
-  background-color: rgba(255, 255, 255, 0.78) !important;
+  background-color: rgba(255, 255, 255, 0.85) !important;
 }
 
 /* Text contrast */
 
 :root[data-theme="light"] .text-white {
-  color: #17152b !important;
+  color: #211a32 !important;
 }
 
 :root[data-theme="light"] .text-slate-300 {
-  color: #45435c !important;
+  color: #454056 !important;
 }
 
 :root[data-theme="light"] .text-slate-400 {
-  color: #65647a !important;
+  color: #777087 !important;
 }
 
 :root[data-theme="light"] .text-slate-500 {
-  color: #77758a !important;
+  color: #89839a !important;
 }
 
 :root[data-theme="light"] .text-slate-600 {
-  color: #858397 !important;
+  color: #9690a5 !important;
 }
 
 /* Borders */
 
 :root[data-theme="light"] [class*="border-white/"] {
-  border-color: rgba(35, 29, 70, 0.12) !important;
+  border-color: rgba(137, 87, 229, 0.13) !important;
 }
 
-/* Inputs and editable fields */
+/* Inputs */
 
 :root[data-theme="light"] input,
 :root[data-theme="light"] textarea,
 :root[data-theme="light"] select {
-  color: #17152b;
-  border-color: rgba(35, 29, 70, 0.18);
+  color: #211a32;
+  border-color: rgba(137, 87, 229, 0.18);
 }
 
 :root[data-theme="light"] input::placeholder,
 :root[data-theme="light"] textarea::placeholder {
-  color: #89869b;
+  color: #9891a8;
 }
 
-/* Dropdown menus and popups */
+/* Dropdowns */
 
 :root[data-theme="light"] [role="menu"],
 :root[data-theme="light"] [role="listbox"] {
   background-color: #ffffff;
-  color: #17152b;
+  color: #211a32;
   border-color: var(--border);
 }
 
-/* Light theme ambient effects */
+/* Ambient effects */
 
 :root[data-theme="light"] .ambient-glow {
-  opacity: 0.08;
+  opacity: 0.12;
 }
 
-/* Smooth theme transitions */
+/* =========================================
+   GLOBAL TRANSITIONS
+========================================= */
 
 body,
 main,
@@ -319,6 +409,21 @@ select,
     color 0.25s ease;
 }
 
+/* =========================================
+   CHAT COMPOSER FOCUS FIX
+========================================= */
+
+.chat-composer-textarea:focus,
+.chat-composer-textarea:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+  box-shadow: none !important;
+}
+
+/* =========================================
+   ACCESSIBILITY
+========================================= */
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -328,11 +433,4 @@ select,
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
   }
-}
-/* Remove the cyan focus box from the ZENTRIX message composer */
-.chat-composer-textarea:focus,
-.chat-composer-textarea:focus-visible {
-  outline: none !important;
-  outline-offset: 0 !important;
-  box-shadow: none !important;
-}
+                     }
