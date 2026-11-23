@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import ThemeToggle from "@/components/theme-toggle";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -51,7 +52,7 @@ export default async function Home() {
           <a href="#features">Features</a>
           <a href="#about">About</a>
         </div>
-
+        <ThemeToggle />
         <Link href="/chat" className="nav-button">
           Get Started
           <ArrowUpRight size={17} />
@@ -284,6 +285,23 @@ export default async function Home() {
       </footer>
 
       <style>{`
+    .landing-theme-toggle {
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(137,87,229,.22);
+  border-radius: 13px;
+  background: rgba(255,255,255,.55);
+  color: #8957e5;
+  transition: .25s ease;
+}
+
+.landing-theme-toggle:hover {
+  background: rgba(137,87,229,.12);
+  transform: translateY(-2px);
+}
         .welcome-page {
           position: relative;
           min-height: 100vh;
