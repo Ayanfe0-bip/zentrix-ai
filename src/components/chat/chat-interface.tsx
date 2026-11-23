@@ -98,12 +98,12 @@ export default function ChatInterface({
                     Welcome to ZENTRIX
                   </p>
 
-                  <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-5xl">
-                    Welcome!
-                    <span className="mt-2 block bg-gradient-to-r from-violet-300 via-purple-300 to-cyan-300 bg-clip-text text-transparent">
-                      How can I help you today?
-                    </span>
-                  </h1>
+                  <h1 className="text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-5xl">
+  Welcome!
+  <span className="gradient-text mt-2 block">
+    How can I help you today?
+  </span>
+</h1>
 
                   <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-slate-400 sm:text-base">
                     Ask anything, explore ideas, solve problems,
