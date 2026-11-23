@@ -986,6 +986,90 @@ export default async function Home() {
             transition: none;
           }
         }
+        /* =================================
+   ZENTRIX DARK THEME
+================================= */
+
+html[data-theme="dark"] .welcome-page {
+  background: #080b18;
+  color: #f5f5ff;
+}
+
+html[data-theme="dark"] .navbar {
+  border-bottom-color: rgba(255,255,255,.08);
+}
+
+html[data-theme="dark"] .nav-links {
+  color: #c4bfd5;
+}
+
+html[data-theme="dark"] .hero-description,
+html[data-theme="dark"] .hero-trust,
+html[data-theme="dark"] .section-heading p,
+html[data-theme="dark"] .about-section p {
+  color: #b8b4c9;
+}
+
+html[data-theme="dark"] .status-badge,
+html[data-theme="dark"] .secondary-button {
+  background: rgba(25,29,49,.85);
+  color: #c4a7ff;
+}
+
+html[data-theme="dark"] .secondary-button:hover {
+  background: rgba(137,87,229,.2);
+}
+
+html[data-theme="dark"] .features-section {
+  background: rgba(12,16,34,.88);
+}
+
+html[data-theme="dark"] .feature-card,
+html[data-theme="dark"] .about-card {
+  background: rgba(20,25,46,.92);
+  border-color: rgba(181,138,255,.18);
+}
+
+html[data-theme="dark"] .feature-card h3,
+html[data-theme="dark"] .about-section h2,
+html[data-theme="dark"] .section-heading h2 {
+  color: #f5f2ff;
+}
+
+html[data-theme="dark"] .feature-card p {
+  color: #b8b4c9;
+}
+
+html[data-theme="dark"] .feature-icon {
+  background: rgba(137,87,229,.2);
+}
+
+html[data-theme="dark"] .floating-card {
+  background: rgba(20,25,46,.92);
+  color: #eee9ff;
+  border-color: rgba(181,138,255,.2);
+}
+
+html[data-theme="dark"] .footer {
+  background: rgba(8,11,24,.95);
+  color: #aaa5bd;
+  border-top-color: rgba(181,138,255,.15);
+}
+
+html[data-theme="dark"] .footer-brand {
+  color: #f5f2ff;
+}
+
+html[data-theme="dark"] .landing-theme-toggle {
+  background: rgba(20,25,46,.9);
+  color: #f5d78e;
+  border-color: rgba(181,138,255,.3);
+}
+
+/* Keep the original Aurora graphics */
+html[data-theme="dark"] .aurora-background {
+  opacity: 1;
+}
       `}</style>
     </main>
   );
