@@ -59,6 +59,7 @@ export default function ChatInterface({
 
   return (
     <main className="flex h-[100dvh] w-full overflow-hidden bg-[var(--background)] text-[var(--foreground)]">
+
       <AppSidebar
         activeItem="AI Chat"
         chats={chats}
@@ -71,6 +72,7 @@ export default function ChatInterface({
       />
 
       <section className="relative flex min-w-0 flex-1 flex-col overflow-hidden">
+
         <Topbar
           title="ZENTRIX"
           subtitle="Your intelligent workspace"
@@ -78,49 +80,69 @@ export default function ChatInterface({
           onNewChat={handleNewChat}
         />
 
-        <div className="relative flex min-h-0 flex-1 flex-col">
+        <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
+
+          {/* Aurora background effects */}
           <div className="pointer-events-none absolute -left-40 top-10 h-80 w-80 rounded-full bg-violet-600/[0.07] blur-[120px]" />
 
           <div className="pointer-events-none absolute -bottom-40 right-0 h-96 w-96 rounded-full bg-cyan-500/[0.05] blur-[130px]" />
 
+          {/* Main chat area */}
           <div className="relative min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+
             {!hasMessages ? (
+
+              /* Welcome screen */
               <div className="flex min-h-full flex-col items-center justify-center px-5 py-12">
+
                 <div className="mb-7 flex h-20 w-20 items-center justify-center rounded-2xl border border-violet-400/20 bg-gradient-to-br from-violet-500/20 to-cyan-400/10 shadow-[0_0_45px_rgba(139,92,246,0.12)]">
+
                   <ZentrixLogo
                     size="large"
                     showName={false}
                   />
+
                 </div>
 
                 <div className="max-w-2xl text-center">
-                  <p className="mb-4 text-xs font-semibold uppercase tracking-[0.25em] text-violet-400">
+
+                  <p className="mb-4 text-xs font-semibold uppercase tracking-[0.25em] text-violet-500 dark:text-violet-400">
                     Welcome to ZENTRIX
                   </p>
 
                   <h1 className="text-3xl font-semibold tracking-tight text-[var(--foreground)] sm:text-5xl">
-  Welcome!
-  <span className="gradient-text mt-2 block">
-    How can I help you today?
-  </span>
-</h1>
 
-                  <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-slate-400 sm:text-base">
+                    Welcome!
+
+                    <span className="gradient-text mt-2 block">
+                      How can I help you today?
+                    </span>
+
+                  </h1>
+
+                  <p className="mx-auto mt-5 max-w-md text-sm leading-7 text-[var(--muted)] sm:text-base">
                     Ask anything, explore ideas, solve problems,
                     or bring your next big project to life.
                   </p>
 
-                  <p className="mt-7 text-xs leading-6 text-slate-500">
+                  <p className="mt-7 text-xs leading-6 text-[var(--muted)]">
                     Try asking a question, writing something,
                     learning a skill, or sharing an idea.
                   </p>
+
                 </div>
+
               </div>
+
             ) : (
+
+              /* Conversation screen */
               <div className="mx-auto w-full max-w-4xl px-4 py-7 sm:px-8">
+
                 <div className="mb-7 flex items-center justify-between">
+
                   <div>
-                    <p className="text-xs font-medium uppercase tracking-wider text-slate-500">
+                    <p className="text-xs font-medium uppercase tracking-wider text-[var(--muted)]">
                       Conversation
                     </p>
                   </div>
@@ -129,14 +151,15 @@ export default function ChatInterface({
                     type="button"
                     onClick={onToggleSave}
                     disabled={!onToggleSave || isGenerating}
-                    className={`rounded-xl border px-4 py-2 text-xs font-medium transition disabled:opacity-50 ${
+                    className={`rounded-xl border border-[var(--border)] px-4 py-2 text-xs font-medium transition disabled:opacity-50 ${
                       isSaved
-                        ? "border-violet-400/30 bg-violet-500/15 text-violet-300"
-                        : "border-white/10 text-slate-300 hover:border-violet-400/30 hover:bg-violet-500/10"
+                        ? "bg-violet-500/15 text-violet-700 dark:text-violet-300"
+                        : "text-[var(--foreground)] hover:border-violet-400/40 hover:bg-violet-500/10"
                     }`}
                   >
                     {isSaved ? "★ Saved" : "☆ Save chat"}
                   </button>
+
                 </div>
 
                 {messages.map((message) => (
@@ -147,43 +170,64 @@ export default function ChatInterface({
                 ))}
 
                 {isGenerating && (
+
                   <div className="flex items-center gap-3 py-6">
+
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-violet-400/20 bg-violet-500/10">
+
                       <ZentrixLogo
                         size="small"
                         showName={false}
                       />
+
                     </div>
 
                     <div className="flex items-center gap-1.5">
+
                       <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400" />
+
                       <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400 [animation-delay:150ms]" />
+
                       <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-violet-400 [animation-delay:300ms]" />
 
-                      <span className="ml-2 text-xs text-slate-500">
+                      <span className="ml-2 text-xs text-[var(--muted)]">
                         ZENTRIX is thinking...
                       </span>
+
                     </div>
+
                   </div>
+
                 )}
 
                 <div ref={messagesEndRef} />
+
               </div>
+
             )}
+
           </div>
 
+          {/* Chat composer */}
           <div className="relative z-10 shrink-0 border-t border-[var(--border)] bg-[var(--background)]/95 px-3 pb-[max(14px,env(safe-area-inset-bottom))] pt-4 backdrop-blur-xl sm:px-6">
+
             <div className="mx-auto w-full max-w-4xl">
+
               <ChatInput
                 onSend={onSend}
                 onStop={onStop}
                 disabled={isGenerating}
                 isGenerating={isGenerating}
               />
+
             </div>
+
           </div>
+
         </div>
+
       </section>
+
     </main>
   );
-  }
+                }
